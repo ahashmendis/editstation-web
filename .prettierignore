@@ -1,0 +1,11 @@
+.next/
+out/
+build/
+coverage/
+node_modules/
+package-lock.json
+next-env.d.ts
+supabase/.temp/
+supabase/.branches/
+# Source-of-truth business document: keep its original formatting.
+docs/EDITSTATION_MASTER_KNOWLEDGE_BASE.md

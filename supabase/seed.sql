@@ -1,0 +1,3 @@
+-- Local development seed data. Runs after migrations on `supabase db reset`.
+-- Never put real editor, client or payment data here.
+-- Intentionally empty in Phase 0; test identities are added in Phase 1.
