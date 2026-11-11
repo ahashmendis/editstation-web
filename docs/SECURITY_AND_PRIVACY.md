@@ -69,6 +69,17 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 - Account deletion anonymises audit entries (actor cleared) rather than failing; the log stays
   append-only otherwise. Sessions whose account no longer exists are treated as signed out.
 
+## Public inquiry controls (implemented in Phase 3)
+
+- Anonymous visitors: `select` on **active** `service_types` and `budget_ranges` only (needed by
+  the public form); execute on `public.submit_client_inquiry`, which returns nothing. No access to
+  inquiries, links, notes or the throttle table.
+- Abuse limits in the database (3/hour per email, 5/hour per hashed source, 100/hour overall) plus
+  an app honeypot. Turnstile is required before public launch (decision O).
+- The client IP is never stored: only a SHA-256 hash, kept one hour, for rate limiting.
+- Inquiry audit entries contain no personal data; an actor is recorded only if that profile exists.
+- Inquiry data is admin-only (MFA); `converted` is reserved for the Phase 4 conversion.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                 | Admin                                |

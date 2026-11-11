@@ -22,6 +22,13 @@ Question IDs: **A–K** from the architecture review, **L–V** raised by the 20
 | 2026-11-11 | **R** Email verification       | Required: applicants must verify their email before using their account. Production needs custom SMTP on a verified domain (depends on KB2).                                                                                                                                                                                                                                                                                                                                                                                                     |
 | 2026-11-11 | **M** Re-application           | A rejected applicant cannot re-apply on their own. Only an admin can reopen an application; each attempt is kept as a separate `editor_applications` record (history preserved).                                                                                                                                                                                                                                                                                                                                                                 |
 | 2026-11-11 | **E** Bank details             | Never collected in the application. Collected in the app only after approval, before the first payment, entered by the editor. Fields: account holder name, bank, branch, account number. Readable only by the owning editor and admins; account number masked by default. Every change is audited, flagged to the admin and held as unverified until the admin confirms it out of band (e.g. by phone); no payment to unverified details. Never banking passwords, PINs or codes. PDPA handling to be confirmed with counsel. Built in Phase 9. |
+| 2026-11-11 | **N** Inquiry statuses         | Full set: `new`, `reviewing`, `contacted`, `in_discussion`, `converted`, `declined`, `closed`, `spam`.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 2026-11-11 | **U** Inquiry uploads          | Links only; no file uploads on the public form in the MVP.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 2026-11-11 | **V** Budget field             | Preset ranges plus "Prefer to discuss", currency stored. Ranges are admin-managed; none are seeded until the owner supplies them (no invented pricing).                                                                                                                                                                                                                                                                                                                                                                                          |
+| 2026-11-11 | **H** Currency                 | LKR by default; currency stored on every amount.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-11-11 | **S** Website content          | English only; placeholder copy until brand (KB2) and services (KB3) are settled.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-11-11 | **O** Spam protection          | Honeypot and rate limits now; Cloudflare Turnstile added before public launch (launch gate).                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2026-11-11 | **KB3** Service list           | Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ---
 
@@ -85,7 +92,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
   harsh for people who improve.
 - **Blocks:** Phase 2.
 
-### N. Client inquiry statuses
+### N. Client inquiry statuses: RESOLVED 2026-11-11 (full set)
 
 - **Question:** Approve the proposed set: `new`, `reviewing`, `contacted`, `in_discussion`,
   `converted`, `declined`, `closed`, `spam`. Or the shorter alternative: `new`, `in_progress`,
@@ -97,7 +104,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternatives:** The short set is easier to operate but gives weaker funnel data.
 - **Blocks:** Phase 3.
 
-### O. Spam and abuse protection for public forms
+### O. Spam and abuse protection for public forms: RESOLVED 2026-11-11 (honeypot + limits now; Turnstile before launch)
 
 - **Question:** Which captcha (Cloudflare Turnstile, hCaptcha, or none), and what rate limits on
   the inquiry form and sign-up?
@@ -121,7 +128,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternatives:** Keeping everything indefinitely increases risk and may not be compliant.
 - **Blocks:** Public launch, not development.
 
-### S. Public website content
+### S. Public website content: RESOLVED 2026-11-11 (English, placeholder copy)
 
 - **Question:** Who writes the copy? Which pages (home, services, about, contact, privacy)?
   English only, or also Sinhala/Tamil?
@@ -143,7 +150,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
   history is lost.
 - **Blocks:** Phase 4 (conversion).
 
-### U. File uploads on the inquiry form
+### U. File uploads on the inquiry form: RESOLVED 2026-11-11 (links only)
 
 - **Question:** May clients upload files (briefs, sample footage), or only paste links?
 - **Why it matters:** Anonymous uploads mean storage costs, malware risk and abuse.
@@ -160,7 +167,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternative:** let applicants re-submit after withdrawing. Friendlier, but a withdraw/resubmit loop could be used to reset a review.
 - **Blocks:** nothing; confirm or change at any time.
 
-### V. Inquiry budget field format
+### V. Inquiry budget field format: RESOLVED 2026-11-11 (admin-managed ranges + discuss)
 
 - **Question:** Free text, preset ranges, or amount plus currency?
 - **Why it matters:** It decides whether budgets can be compared or reported. It is linked to H.
@@ -265,7 +272,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternatives:** Editing the agreed amount directly loses the audit trail.
 - **Blocks:** Phase 8.
 
-### H. Currency
+### H. Currency: RESOLVED 2026-11-11 (LKR default, currency stored)
 
 - **Why it matters:** Editor pay is LKR (manual Sri Lankan transfers), but international clients
   may pay in other currencies.
@@ -355,4 +362,4 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 
 ## Resolved
 
-- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**: resolved 2026-11-11 (see decisions log).
+- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**, **N**, **O**, **S**, **U**, **V**, **H**: resolved 2026-11-11 (KB3 partly: placeholder list, final list open) (see decisions log).

@@ -1,9 +1,9 @@
 # Current Status
 
-**Phase:** 2 (editor applications and vetting) implemented and verified locally, **not yet
-committed** (branch `phase-2/editor-applications`, based on `phase-1/auth-access`).
-Committed: Phase 0 `cf76cc7` (`main`), Phase 1 `9f73dad` (`phase-1/auth-access`, not merged).
-Decisions applied: A, D, E, L, M, R (OPEN_QUESTIONS decisions log).
+**Phase:** 3 (public website and client inquiries) in progress on branch
+`phase-3/public-site-inquiries`. `main` = Phases 0–2 (`ad6118d`, fast-forward merged, all checks
+passing). Nothing pushed.
+Decisions applied: A, D, E, H, L, M, N, O, R, S, U, V; KB3 placeholder list (OPEN_QUESTIONS).
 **Last updated:** 2026-11-11
 
 ## Implemented
@@ -60,9 +60,42 @@ Vitest, local Supabase config, pgTAP, CI workflow, split docs, `CLAUDE.md`.
 **Tests:** pgTAP 111 (Phase 2 adds 67: full workflow, every escalation path, state machine, decision
 M, snapshot immutability, link limits, account deletion). Vitest 45.
 
+### Phase 3: public website and client inquiries (2026-11-11, uncommitted)
+
+**Database** (`20261111140306_phase3_public_inquiries.sql`):
+
+- `service_types` (admin-managed; seeded with placeholder categories from KB §7.1 + "Not sure"),
+  `budget_ranges` (admin-managed; **none seeded**: no invented pricing), `client_inquiries`
+  (status per decision N; service and budget labels copied at submission; privacy-notice version),
+  `client_inquiry_links` (https only, max 10), `inquiry_notes` (admin-only),
+  `private.inquiry_throttle` (SHA-256 of client IP, kept one hour).
+- `public.submit_client_inquiry` (anon-callable, returns nothing; validation; limits: 3/hour per
+  email, 5/hour per source, 100/hour overall). `public.admin_set_inquiry_status` (MFA admin;
+  `converted` cannot be set by hand: reserved for Phase 4 conversion).
+- Anonymous visitors can read only **active** service types and budget ranges; they cannot read
+  any inquiry data. Audit entries for inquiries contain no personal data.
+
+**App:** public home page with two separate entry points (inquiry vs editor sign-up), shared site
+header/footer, `/inquire` form (honeypot, privacy acknowledgement, input kept on errors),
+`/admin/inquiries` list + detail (status changes with notes, internal notes, history),
+`/admin/settings` (service types and budget ranges), "new inquiries" count on the admin overview.
+
+**Tests:** pgTAP 151 (Phase 3 adds 40), Vitest 58.
+
+**Fixed during Phase 3:** a stale session cookie (token for a deleted account) made public inquiry
+submissions fail on the audit foreign key; the inquiry audit now records an actor only if that
+profile exists.
+
 ## Verified (2026-11-11)
 
-- `npm run check`, `npm run build`, `npm run db:test` (111), `npm run db:advisors` (no issues).
+- Phase 3: all DB tests (151), advisors (no issues), unit tests (58), lint, typecheck, build.
+  Browser: home page and `/inquire` (desktop and 375px mobile, no horizontal overflow); empty
+  submit lists required fields; privacy acknowledgement required with input kept; successful
+  submission stored with link, "Prefer to discuss" budget and deadline; honeypot submission shows
+  the thank-you but stores nothing; admin overview count; inquiry list and detail; status change
+  to Contacted with note and audit history; adding a budget range in Settings shows it on the
+  public form.
+- Phase 2: `npm run check`, `npm run build`, `npm run db:test` (111), `npm run db:advisors` (no issues).
 - Browser, end to end on local Supabase: incomplete submission lists missing fields; terms required;
   insecure link rejected without losing input; submit → status + snapshot; applicant blocked from
   `/editor`; admin (MFA) list → detail → start review → vetting note → info request (approval
@@ -92,6 +125,13 @@ M, snapshot immutability, link limits, account deletion). Vitest 45.
 - Component tests deferred (`@vitejs/plugin-react` peer conflict with shadcn CLI).
 - Keep ≥ 10 GB free disk for Docker; `npm run db:start` skips heavy services.
 - `supabase db reset` wipes local accounts (including any you registered); re-register after.
+- **Don't run `npm run build` while `npm run dev` is running**: it corrupted the dev server's route
+  cache (all `(auth)` pages returned 404). Restart the dev server if it happens.
+- **After editing `supabase/templates/*.html`, restart local Supabase** (`npm run db:stop` then
+  `npm run db:start`). Kong bind-mounts each template file; editors and formatters replace the file,
+  so Kong keeps serving the deleted original (404) and auth falls back to the default email. Local
+  development only.
+- Inquiry rate limits are a first line of defence only; Turnstile (decision O) is a launch gate.
 
 ## Decisions made (implementation)
 
@@ -102,9 +142,13 @@ M, snapshot immutability, link limits, account deletion). Vitest 45.
 - Rejection reasons: internal reasoning goes in vetting notes; only `decision_message` is shown to
   the applicant.
 - Phone is required in the application (KB §7.3 lists email and telephone).
+- Inquiry form required fields: name, email, service type, project description. Phone, company,
+  deliverables, budget, deadline, links and notes are optional.
+- Inquiries can be reopened by an admin from declined/closed/spam back to an open status.
 
 ## Next task
 
-Commit Phase 2. Then either Phase 3 (public website and client inquiries: needs N, O, S, U, V, H and
-the KB3 service list) or smaller follow-ups (editor profile page, notifications). Decide when to
-create the GitHub remote so CI starts running, and whether to merge the phase branches into `main`.
+Commit Phase 3 on `phase-3/public-site-inquiries`, then decide whether to fast-forward `main`.
+Before public launch (not development): KB1, KB2, KB8, P, Turnstile (O), production SMTP, and
+your real service list and budget ranges (Settings screen). Phase 4 (projects, briefs, inquiry →
+project conversion) needs J and T.

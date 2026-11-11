@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { countNewInquiries } from "@/features/inquiries/queries";
 import { requireAdmin, type EditorAccessStatus } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,7 +34,8 @@ async function AdminContent() {
 
   // Both queries go through RLS: they return everything only because this
   // session is an admin with MFA (private.is_admin()).
-  const [editors, logs] = await Promise.all([
+  const [newInquiries, editors, logs] = await Promise.all([
+    countNewInquiries(),
     supabase.from("editor_profiles").select("access_status"),
     supabase
       .from("activity_logs")
@@ -55,6 +58,17 @@ async function AdminContent() {
       subtitle={access.email ?? undefined}
       actions={<SignOutButton />}
     >
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-3xl tabular-nums">{newInquiries}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm">
+          <Link href="/admin/inquiries" className="underline">
+            New client inquiries
+          </Link>
+        </CardContent>
+      </Card>
+
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {STATUSES.map((status) => (
           <Card key={status}>

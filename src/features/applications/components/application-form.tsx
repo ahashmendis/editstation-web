@@ -5,9 +5,8 @@ import { useActionState, useState, startTransition, type FormEvent } from "react
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Field, FormMessage } from "@/features/authentication/components/form-parts";
-import { initialFormState, type FormState } from "@/features/authentication/schemas";
+import { Field, FormMessage, TextareaField } from "@/features/authentication/components/form-parts";
+import { initialFormState } from "@/features/authentication/schemas";
 
 import { saveApplicationAction } from "../actions";
 import { MAX_PORTFOLIO_LINKS } from "../constants";
@@ -28,44 +27,6 @@ export type ApplicationFormValues = {
   software: string[];
   links: { url: string; label: string }[];
 };
-
-function TextareaField({
-  name,
-  label,
-  hint,
-  defaultValue,
-  state,
-}: {
-  name: string;
-  label: string;
-  hint?: string;
-  defaultValue: string;
-  state: FormState;
-}) {
-  const errors = state.fieldErrors?.[name];
-  return (
-    <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
-      <Textarea
-        id={name}
-        name={name}
-        defaultValue={defaultValue}
-        aria-invalid={errors?.length ? true : undefined}
-        aria-describedby={errors?.length ? `${name}-error` : hint ? `${name}-hint` : undefined}
-        rows={4}
-      />
-      {errors?.length ? (
-        <p id={`${name}-error`} className="text-destructive text-sm">
-          {errors[0]}
-        </p>
-      ) : hint ? (
-        <p id={`${name}-hint`} className="text-muted-foreground text-sm">
-          {hint}
-        </p>
-      ) : null}
-    </div>
-  );
-}
 
 function OptionGroup({
   legend,

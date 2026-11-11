@@ -13,7 +13,7 @@ enums, not free-form strings. Anything marked **PROPOSED** needs owner approval 
 6. If confirmed, an admin **manually** converts it into a project. The project's internal record
    links back to the inquiry; the inquiry is marked converted.
 
-**PROPOSED inquiry statuses** (OPEN_QUESTIONS N):
+**Inquiry statuses (decision N, 2026-11-11; implemented in Phase 3):**
 
 | Status          | Meaning                                             |
 | --------------- | --------------------------------------------------- |
@@ -26,7 +26,7 @@ enums, not free-form strings. Anything marked **PROPOSED** needs owner approval 
 | `closed`        | No response / client withdrew (terminal)            |
 | `spam`          | Junk submission; excluded from metrics (terminal)   |
 
-Alternative: a shorter set (`new`, `in_progress`, `converted`, `closed`) with a closure reason.
+`converted` is set only by the Phase 4 conversion; admins can reopen declined/closed/spam inquiries.
 
 ## 2. Editor registration and verification _(2026-11-11; question D resolved)_
 

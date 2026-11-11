@@ -185,6 +185,162 @@ export type Database = {
           },
         ];
       };
+      budget_ranges: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          currency: string;
+          id: string;
+          label: string;
+          max_amount: number | null;
+          min_amount: number | null;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          label: string;
+          max_amount?: number | null;
+          min_amount?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          label?: string;
+          max_amount?: number | null;
+          min_amount?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      client_inquiries: {
+        Row: {
+          budget_currency: string;
+          budget_label: string;
+          budget_range_id: string | null;
+          client_notes: string | null;
+          company: string | null;
+          contact_name: string;
+          description: string;
+          email: string;
+          expected_deadline: string | null;
+          expected_deliverables: string | null;
+          id: string;
+          phone: string | null;
+          privacy_notice_version: string;
+          service_type_code: string;
+          service_type_label: string;
+          status: Database["public"]["Enums"]["inquiry_status"];
+          status_changed_at: string | null;
+          status_changed_by: string | null;
+          submitted_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          budget_currency?: string;
+          budget_label: string;
+          budget_range_id?: string | null;
+          client_notes?: string | null;
+          company?: string | null;
+          contact_name: string;
+          description: string;
+          email: string;
+          expected_deadline?: string | null;
+          expected_deliverables?: string | null;
+          id?: string;
+          phone?: string | null;
+          privacy_notice_version: string;
+          service_type_code: string;
+          service_type_label: string;
+          status?: Database["public"]["Enums"]["inquiry_status"];
+          status_changed_at?: string | null;
+          status_changed_by?: string | null;
+          submitted_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          budget_currency?: string;
+          budget_label?: string;
+          budget_range_id?: string | null;
+          client_notes?: string | null;
+          company?: string | null;
+          contact_name?: string;
+          description?: string;
+          email?: string;
+          expected_deadline?: string | null;
+          expected_deliverables?: string | null;
+          id?: string;
+          phone?: string | null;
+          privacy_notice_version?: string;
+          service_type_code?: string;
+          service_type_label?: string;
+          status?: Database["public"]["Enums"]["inquiry_status"];
+          status_changed_at?: string | null;
+          status_changed_by?: string | null;
+          submitted_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_inquiries_budget_range_id_fkey";
+            columns: ["budget_range_id"];
+            isOneToOne: false;
+            referencedRelation: "budget_ranges";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_inquiries_service_type_code_fkey";
+            columns: ["service_type_code"];
+            isOneToOne: false;
+            referencedRelation: "service_types";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "client_inquiries_status_changed_by_fkey";
+            columns: ["status_changed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_inquiry_links: {
+        Row: {
+          id: string;
+          inquiry_id: string;
+          label: string | null;
+          url: string;
+        };
+        Insert: {
+          id?: string;
+          inquiry_id: string;
+          label?: string | null;
+          url: string;
+        };
+        Update: {
+          id?: string;
+          inquiry_id?: string;
+          label?: string | null;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_inquiry_links_inquiry_id_fkey";
+            columns: ["inquiry_id"];
+            isOneToOne: false;
+            referencedRelation: "client_inquiries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       editor_applications: {
         Row: {
           attempt: number;
@@ -457,6 +613,45 @@ export type Database = {
           },
         ];
       };
+      inquiry_notes: {
+        Row: {
+          author_id: string | null;
+          created_at: string;
+          id: string;
+          inquiry_id: string;
+          note: string;
+        };
+        Insert: {
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          inquiry_id: string;
+          note: string;
+        };
+        Update: {
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          inquiry_id?: string;
+          note?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inquiry_notes_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inquiry_notes_inquiry_id_fkey";
+            columns: ["inquiry_id"];
+            isOneToOne: false;
+            referencedRelation: "client_inquiries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profile_options: {
         Row: {
           active: boolean;
@@ -508,6 +703,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      service_types: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          label: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          label: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          label?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -553,6 +775,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_set_inquiry_status: {
+        Args: {
+          p_inquiry_id: string;
+          p_note?: string;
+          p_status: Database["public"]["Enums"]["inquiry_status"];
+        };
+        Returns: undefined;
+      };
       admin_start_application_review: {
         Args: { p_application_id: string };
         Returns: undefined;
@@ -582,6 +812,24 @@ export type Database = {
         };
         Returns: undefined;
       };
+      submit_client_inquiry: {
+        Args: {
+          p_budget_range_id: string;
+          p_client_key?: string;
+          p_client_notes: string;
+          p_company: string;
+          p_contact_name: string;
+          p_description: string;
+          p_email: string;
+          p_expected_deadline: string;
+          p_expected_deliverables: string;
+          p_links: Json;
+          p_phone: string;
+          p_privacy_notice_version: string;
+          p_service_type: string;
+        };
+        Returns: undefined;
+      };
       submit_editor_application: {
         Args: { p_privacy_version: string; p_terms_version: string };
         Returns: string;
@@ -602,6 +850,15 @@ export type Database = {
       assessment_result: "passed" | "failed" | "inconclusive";
       editor_access_status: "none" | "active" | "suspended" | "revoked";
       editor_level: "junior" | "professional" | "specialist";
+      inquiry_status:
+        | "new"
+        | "reviewing"
+        | "contacted"
+        | "in_discussion"
+        | "converted"
+        | "declined"
+        | "closed"
+        | "spam";
       profile_option_kind: "specialisation" | "software";
     };
     CompositeTypes: {
@@ -741,6 +998,16 @@ export const Constants = {
       assessment_result: ["passed", "failed", "inconclusive"],
       editor_access_status: ["none", "active", "suspended", "revoked"],
       editor_level: ["junior", "professional", "specialist"],
+      inquiry_status: [
+        "new",
+        "reviewing",
+        "contacted",
+        "in_discussion",
+        "converted",
+        "declined",
+        "closed",
+        "spam",
+      ],
       profile_option_kind: ["specialisation", "software"],
     },
   },

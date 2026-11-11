@@ -20,6 +20,7 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
 - `npm run db:advisors`: Supabase security/performance lints; `npm run db:types` after schema changes
 - New migration: `supabase migration new <name>`; never edit an applied migration
 - Local email (confirmations, resets): Mailpit at http://127.0.0.1:54324
+- After editing `supabase/templates/*`, restart local Supabase; don't run `build` while `dev` runs
 
 ## Non-negotiable rules
 

@@ -2,13 +2,15 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/inquiries", label: "Inquiries" },
   { href: "/admin/applications", label: "Applications" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export function AdminNav() {
   return (
     <nav aria-label="Admin" className="border-b">
-      <ul className="mx-auto flex w-full max-w-4xl gap-4 px-4 text-sm">
+      <ul className="mx-auto flex w-full max-w-4xl flex-wrap gap-x-4 px-4 text-sm">
         {LINKS.map((link) => (
           <li key={link.href}>
             <Link

@@ -3,6 +3,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import type { FormState } from "../schemas";
 
@@ -32,6 +33,47 @@ export function Field({ name, label, hint, state, defaultValue, ...inputProps }:
         aria-describedby={describedBy}
         defaultValue={value}
         {...inputProps}
+      />
+      {errors?.length ? (
+        <p id={`${name}-error`} className="text-destructive text-sm">
+          {errors[0]}
+        </p>
+      ) : hint ? (
+        <p id={`${name}-hint`} className="text-muted-foreground text-sm">
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function TextareaField({
+  name,
+  label,
+  hint,
+  defaultValue,
+  state,
+  required,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  defaultValue?: string;
+  state: FormState;
+  required?: boolean;
+}) {
+  const errors = state.fieldErrors?.[name];
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={name}>{label}</Label>
+      <Textarea
+        id={name}
+        name={name}
+        defaultValue={defaultValue ?? state.values?.[name]}
+        aria-invalid={errors?.length ? true : undefined}
+        aria-describedby={errors?.length ? `${name}-error` : hint ? `${name}-hint` : undefined}
+        required={required}
+        rows={4}
       />
       {errors?.length ? (
         <p id={`${name}-error`} className="text-destructive text-sm">
