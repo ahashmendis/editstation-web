@@ -9,3 +9,6 @@ supabase/.temp/
 supabase/.branches/
 # Source-of-truth business document: keep its original formatting.
 docs/EDITSTATION_MASTER_KNOWLEDGE_BASE.md
+
+# Local tool configuration
+.claude/

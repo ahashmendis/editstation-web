@@ -1,19 +1,27 @@
 # Development Roadmap
 
 Vertical slices (KB §15.5). Validate database permissions before building lots of screens. The KB's
-four-week plan is a target, not a guarantee; a pilot after Phase 8 is realistic, with Phase 9 run
-manually at first.
+four-week plan is a target, not a guarantee. Re-sequenced on 2026-11-11 to add the public website,
+client inquiries and editor self-registration; phases from 3 onwards moved down by one.
 
-| #   | Phase                                                        | Done when                                                    | Blocking questions |
-| --- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------ |
-| 0   | Repo foundation, tooling, CI, docs                           | `npm run check` + build pass; local DB + guardrail test pass | none               |
-| 1   | Auth, `profiles`, roles, RLS helpers, pgTAP identity harness | Role tests pass for all 5 identities                         | A, D               |
-| 2   | Editor application & admin vetting                           | Apply → review → approve/level/decline                       | D, E               |
-| 3   | Projects, 3 brief types, brief versions, deliverables        | All 3 types creatable; versions retained                     | J                  |
-| 4   | Assets & references with stage visibility                    | References visible only to the right editor                  | B, K               |
-| 5   | Project access, invitations, negotiation, rate approval      | Offer history; one active assignment                         | C                  |
-| 6   | Interpretation & brief confirmation; in-progress gate        | Gate enforced in the DB                                      | none               |
-| 7   | Submissions, review, revision classification                 | 3-round allowance correct; corrections/scope excluded        | F                  |
-| 8   | Payments                                                     | Only admin marks paid; editors see own; audited              | G, I, KB §17.9     |
-| 9   | Notifications, dashboards, pilot metrics, audit view         | KB §14 metrics computable                                    | KB §17.6, §17.10   |
-| 10  | Hardening: e2e, security review, restore test, runbooks      | KB §16 acceptance criteria met                               | —                  |
+| #   | Phase                                                                                                                                                                                                                                                 | Done when                                                                                    | Blocking questions                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 0   | ✅ Repo foundation, tooling, CI, docs                                                                                                                                                                                                                 | ✅ done (`cf76cc7`)                                                                          | —                                      |
+| 1   | ✅ (uncommitted) Auth & access gating: sign-up/in, email verification, password reset, `profiles` trigger, `admin_users` + bootstrap, `editor_profiles.access_status`, helper functions, route gates, `activity_logs`, pgTAP harness for 5 identities | Escalation attempts fail; applicant sees only own data; role tests pass for all 5 identities | A, L, R                                |
+| 2   | Editor applications & vetting: application form, submit/withdraw, admin review, info requests, practical tests, vetting notes, approve-and-activate, reject, suspend/revoke                                                                           | Full applicant → active editor path works; status changes only via admin functions; audited  | L, M, G (record only), KB8 placeholder |
+| 3   | Public website & client inquiries: public pages, inquiry form, admin inquiry management, `service_types`                                                                                                                                              | Anonymous can submit but read nothing; no project created; admin can manage status           | N, O, S, U, V, H, KB3 seed             |
+| 4   | Projects, 3 brief types, brief versions, deliverables, **inquiry → project conversion**, `project_internal`                                                                                                                                           | All 3 types creatable; conversion is manual and admin-only; client data never editor-visible | J, T, H                                |
+| 5   | Assets & references with stage visibility; asset access grants                                                                                                                                                                                        | References visible only to the right editor                                                  | B, K, KB7                              |
+| 6   | Project access, invitations, negotiation, rate approval                                                                                                                                                                                               | Offer history; one active assignment                                                         | C, KB6                                 |
+| 7   | Interpretation & brief confirmation; in-progress gate                                                                                                                                                                                                 | Gate enforced in the DB                                                                      | —                                      |
+| 8   | Submissions, review, revision classification                                                                                                                                                                                                          | 3-round allowance correct; corrections/scope excluded                                        | F, KB5                                 |
+| 9   | Payments (and payout details if E = in-app)                                                                                                                                                                                                           | Only admin marks paid; editors see own; audited                                              | E, G, I, KB9                           |
+| 10  | Notifications, dashboards, pilot metrics, audit view                                                                                                                                                                                                  | KB §14 metrics computable                                                                    | KB10                                   |
+| 11  | Hardening: e2e, security review, restore test, runbooks                                                                                                                                                                                               | KB §16 acceptance criteria met                                                               | —                                      |
+
+**Public launch gates** (independent of phase numbers): P (retention and privacy notice), KB1
+(entity), KB2 (brand and domain for site and email), KB8 (editor terms), O (captcha before the
+forms go live), production SMTP.
+
+Phases 2 and 3 are independent of each other once Phase 1 exists. A pilot after Phase 9 is
+realistic, with Phase 10 run manually at first.

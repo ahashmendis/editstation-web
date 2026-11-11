@@ -1,41 +1,346 @@
 # Open Questions
 
-Do not invent answers. Ask the owner when a question blocks the current phase. When answered,
-record the decision and date here and update the affected doc.
+Do not invent answers. Recommendations below are **not decisions** until recorded in the decisions
+log. When a question is answered, log it with the date and update the affected docs.
 
-## From the knowledge base (KB §17)
+Contents: [Decisions log](#decisions-log) · [Tier 1: blocks Phase 1](#tier-1-blocks-phase-1) ·
+[Tier 2: blocks Phases 2–3 or public launch](#tier-2-blocks-phases-23-or-public-launch) ·
+[Tier 3: later phases](#tier-3-later-phases) · [Resolved](#resolved)
 
-1. Lenscape Studios' legal registration status and entity.
-2. Is EDITSTATION the final brand after trademark/domain checks?
-3. Exact services and deliverables at launch.
-4. Starting client prices and editor pay ranges by service category.
-5. Turnaround times and late-delivery rules.
-6. Project communication in MVP: in-app, email, or an existing channel?
-7. Storage provider for the pilot.
-8. Editor contract and portfolio-permission policy after legal review.
-9. Payment schedule (after approval, or periodic).
-10. Essential notification events for release 1.
-
-## Raised in the architecture review (2026-11-11)
-
-- **A.** One admin at launch, or several? Should "mark paid" be a narrower permission?
-- **B.** Before assignment, does an editor see the full brief and assets, or only a summary?
-- **C.** If a project is made available to several editors and more than one accepts/counters,
-  how is one chosen (admin picks, first to accept, other)?
-- **D.** Applicant flow: create an account then apply, or public form converted to an account by admin?
-- **E.** Store bank details in the app for the MVP? If so, which fields?
-- **F.** Does editor pay change for client rounds beyond 3, scope changes, or cancellation (kill fee)?
-- **G.** Are practical tests paid, and should those payments be tracked here?
-- **H.** LKR only, or multiple currencies?
-- **I.** Which payment status set is canonical: KB §8.2 (6 incl. "Not due", "Approved for payment")
-  or §10.4 (5)?
-- **J.** Adopt the proposed coarse project status with negotiation tracked on the assignment
-  (WORKFLOWS.md)?
-- **K.** Will editors receive per-account Drive/Dropbox sharing (requiring their account email), or
-  link-based access?
+Question IDs: **A–K** from the architecture review, **L–V** raised by the 2026-11-11 clarification,
+**KB1–KB10** = KB §17 items 1–10.
 
 ## Decisions log
 
-| Date       | Question      | Decision          |
-| ---------- | ------------- | ----------------- |
-| 2026-11-11 | Phase 0 scope | Approved by owner |
+| Date       | Question                       | Decision                                                                                                                                                                                                                                                                                                                                        |
+| ---------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-11 | Phase 0 scope                  | Approved by owner.                                                                                                                                                                                                                                                                                                                              |
+| 2026-11-11 | Public entry points            | Public website with two separate entry points: client/agency inquiry form (no accounts, never auto-creates a project, admin converts manually) and editor registration. No client portal.                                                                                                                                                       |
+| 2026-11-11 | **D** Editor registration flow | Editors create an account first (email + password), complete an application, and wait for admin verification. Registering grants no editor access; only an explicit admin approval activates it. The public-form-only application approach is not used.                                                                                         |
+| 2026-11-11 | **A** Admin structure          | One admin at launch. Architecture supports multiple admins later via `admin_users` (no schema change). Admin accounts require TOTP MFA from launch. A narrower "mark paid" permission is **deferred** to Phase 9 (still open as A2).                                                                                                            |
+| 2026-11-11 | **L** Status model             | Adopt the split. Editor access status: `none`, `active`, `suspended`, `revoked` (only `active` grants editor access; only admin functions change it). Application status: `draft`, `submitted`, `under_review`, `info_requested`, `test_requested`, `approved`, `rejected`, `withdrawn`, which may still be adjusted before Phase 2 migrations. |
+| 2026-11-11 | **R** Email verification       | Required: applicants must verify their email before using their account. Production needs custom SMTP on a verified domain (depends on KB2).                                                                                                                                                                                                    |
+
+---
+
+## Tier 1: Phase 1 blockers (all resolved 2026-11-11)
+
+Kept for the reasoning behind each decision. The decisions log above is authoritative.
+
+### A. Admin structure (and admin MFA): RESOLVED
+
+- **Question:** One admin at launch or several? Should "mark paid" be a narrower permission? Should
+  admin accounts require MFA?
+- **Why it matters:** Phase 1 creates the admin model and the bootstrap step, and admin is the
+  account whose takeover would expose everything.
+- **Recommendation:** Confirm your preference (one admin now). The proposed `admin_users` table
+  supports more admins later with no schema change. Defer the narrower "mark paid" permission to
+  Phase 9. Require TOTP MFA for admin accounts from day one; Supabase Auth supports it.
+- **Alternatives:** Several admins now needs grant/revoke screens and per-admin audit in Phase 1.
+  No MFA is simpler but leaves the most powerful account protected only by a password.
+- **Blocks:** Phase 1 (bootstrap and admin gate). The MFA part could slip to Phase 2 if needed.
+
+### L. Applicant and editor status model: RESOLVED
+
+- **Question:** Approve the proposed split between application status (`draft`, `submitted`,
+  `under_review`, `info_requested`, `test_requested`, `approved`, `rejected`, `withdrawn`) and
+  editor access status (`none`, `active`, `suspended`, `revoked`)? See WORKFLOWS §2 for the
+  mapping to your six states.
+- **Why it matters:** Phase 1 builds `is_active_editor()`, which every editor policy depends on.
+  Changing the access states later means rewriting policies and tests.
+- **Recommendation:** Adopt the split. Phase 1 needs only the access status; the application
+  statuses can still be adjusted before Phase 2.
+- **Alternatives:** A single combined status is simpler, but "suspended" then overwrites
+  "approved", which loses history and makes reactivation ambiguous. Dropping `revoked` (suspension
+  only) is fine if you never need a permanent ban.
+- **Blocks:** Phase 1 (access status); Phase 2 (application status).
+
+### R. Email verification at sign-up: RESOLVED
+
+- **Question:** Must applicants verify their email before they can use their account?
+- **Why it matters:** It's a Phase 1 auth setting. Without it, anyone can register with someone
+  else's email, and admin messages may go to addresses nobody controls.
+- **Recommendation:** Require verification. Locally the confirmation emails are caught by the
+  built-in mail catcher. Production needs custom SMTP (e.g. Resend) on a verified domain, which
+  depends on KB2.
+- **Alternatives:** No verification removes friction, but you would be vetting unverified
+  identities and receiving more junk applications.
+- **Blocks:** Phase 1.
+
+---
+
+## Tier 2: blocks Phases 2–3 or public launch
+
+### M. Re-application after rejection
+
+- **Question:** Can a rejected applicant apply again? Immediately, after a waiting period, or only
+  if an admin reopens it?
+- **Why it matters:** It decides whether `editor_applications` allows several rows per person and
+  what a rejected applicant's screen shows.
+- **Recommendation:** Allow re-application only after an admin reopens it. Keep each attempt as a
+  separate record.
+- **Alternatives:** Free re-application invites repeated low-quality attempts. Never allowing it is
+  harsh for people who improve.
+- **Blocks:** Phase 2.
+
+### N. Client inquiry statuses
+
+- **Question:** Approve the proposed set: `new`, `reviewing`, `contacted`, `in_discussion`,
+  `converted`, `declined`, `closed`, `spam`. Or the shorter alternative: `new`, `in_progress`,
+  `converted`, `closed` plus a reason. See WORKFLOWS §1.
+- **Why it matters:** Status sets become database enums, and inquiry-to-conversion metrics
+  depend on them.
+- **Recommendation:** The full set. It separates "we declined" from "client went quiet" and keeps
+  spam out of the metrics.
+- **Alternatives:** The short set is easier to operate but gives weaker funnel data.
+- **Blocks:** Phase 3.
+
+### O. Spam and abuse protection for public forms
+
+- **Question:** Which captcha (Cloudflare Turnstile, hCaptcha, or none), and what rate limits on
+  the inquiry form and sign-up?
+- **Why it matters:** Public, unauthenticated write paths are the main abuse surface.
+- **Recommendation:** Cloudflare Turnstile on both forms (Supabase Auth supports it for sign-up),
+  plus a honeypot field and per-IP rate limits. Verify current Turnstile terms before adopting it.
+- **Alternatives:** A honeypot only is free and invisible but weaker against targeted bots.
+  hCaptcha is equivalent but adds more friction for users.
+- **Blocks:** Public launch of the forms. Development can start with a honeypot only.
+
+### P. Data retention and privacy notice for public forms
+
+- **Question:** How long are unconverted inquiries, rejected applications and withdrawn accounts
+  kept? Who drafts the privacy notice?
+- **Why it matters:** Public forms collect personal data from people with no relationship to
+  Lenscape yet. PDPA obligations (KB §12.3) need confirming with counsel.
+- **Recommendation:** Owner and legal decision; no recommended period. Technically, store the
+  privacy-notice version accepted on each record and plan a scheduled deletion/anonymisation job.
+- **Alternatives:** Keeping everything indefinitely increases risk and may not be compliant.
+- **Blocks:** Public launch, not development.
+
+### S. Public website content
+
+- **Question:** Who writes the copy? Which pages (home, services, about, contact, privacy)?
+  English only, or also Sinhala/Tamil?
+- **Why it matters:** It drives page structure and translation setup.
+- **Recommendation:** English only for the pilot. Minimal pages: home, inquiry, join, privacy.
+  Placeholder copy until KB2 and KB3 are settled.
+- **Alternatives:** Multilingual from day one adds translation infrastructure and maintenance.
+- **Blocks:** Phase 3 content. Structure can be built with placeholders.
+
+### T. Client records
+
+- **Question:** Track clients/agencies as their own records (so repeat clients link across
+  inquiries and projects), or keep client details only on each inquiry/project?
+- **Why it matters:** It affects conversion, metrics per client, and how much client personal
+  data is stored.
+- **Recommendation:** A minimal admin-only `clients` table, created when the first inquiry is
+  converted.
+- **Alternatives:** No client table is simpler, but repeat clients are duplicated and per-client
+  history is lost.
+- **Blocks:** Phase 4 (conversion).
+
+### U. File uploads on the inquiry form
+
+- **Question:** May clients upload files (briefs, sample footage), or only paste links?
+- **Why it matters:** Anonymous uploads mean storage costs, malware risk and abuse.
+- **Recommendation:** Links only in the MVP. Request files by email or a shared folder after first
+  contact.
+- **Alternatives:** Uploads need a storage bucket, size limits, file-type checks and scanning.
+- **Blocks:** Phase 3.
+
+### V. Inquiry budget field format
+
+- **Question:** Free text, preset ranges, or amount plus currency?
+- **Why it matters:** It decides whether budgets can be compared or reported. It is linked to H.
+- **Recommendation:** Preset ranges in LKR plus an "other/discuss" option, with currency stored.
+  The ranges themselves are your decision (KB4).
+- **Alternatives:** Free text is flexible but can't be analysed. An exact amount deters clients.
+- **Blocks:** Phase 3.
+
+### E. Bank details
+
+- **Question:** Store editor bank details in the app? When, and which fields?
+- **Why it matters:** It's the most sensitive data the app would hold.
+- **Recommendation:** Never in the application. Collect only after approval, when the first
+  payment is approaching: account holder name, bank, branch, account number, all admin + owner
+  only. For a 5–10 editor pilot, keeping them outside the app entirely is also reasonable.
+- **Alternatives:** Collecting at application time stores bank data for people you may reject.
+  Keeping it outside the app means manual reconciliation but the smallest breach impact.
+- **Blocks:** Phase 9 only. Phase 2 just needs to confirm that applications contain no bank fields.
+
+### G. Practical tests
+
+- **Question:** Are practical tests paid? If so, are those payments tracked in EDITSTATION?
+- **Why it matters:** It shapes `editor_assessments`, and whether `payments` can exist without a
+  project.
+- **Recommendation:** Track tests in-app (instructions, submission link, result). If they're paid,
+  record payments with type `assessment` and no project.
+- **Alternatives:** Tracking tests outside the app loses vetting history. Paid tests tracked
+  elsewhere split payment records across two places.
+- **Blocks:** Phase 2 (assessment record); Phase 9 (payment).
+
+### KB1. Legal registration and entity
+
+- **Why it matters:** It names the data controller in the privacy notice and the counterparty in
+  editor terms.
+- **Recommendation:** Owner and legal decision; no recommendation.
+- **Blocks:** Public launch, not development.
+
+### KB2. Final brand (trademark/domain)
+
+- **Why it matters:** The public website, domain, email sender domain (needed for auth emails and
+  Resend) and Turnstile setup all depend on it. Rebranding after launch is costly.
+- **Recommendation:** Run the KB §2.2 checks before the public launch; build with the working
+  name meanwhile.
+- **Blocks:** Public launch and production email, not development.
+
+### KB3. Services and deliverables at launch
+
+- **Why it matters:** It sets the inquiry form's service options and project service types.
+- **Recommendation:** Keep them as an admin-managed `service_types` list so the decision doesn't
+  block code. You still need to supply the initial list.
+- **Blocks:** Phase 3 content (seed values), not structure.
+
+### KB8. Editor contract and portfolio permission
+
+- **Why it matters:** Applicants accept terms at application time, and that acceptance (version
+  plus timestamp) is stored.
+- **Recommendation:** Owner and legal decision. Development uses a versioned placeholder.
+- **Blocks:** Public launch of registration, not development.
+
+---
+
+## Tier 3: later phases
+
+### A2. Narrower "mark paid" permission
+
+- **Question:** When there is more than one admin, should only some of them be able to mark
+  payments as paid?
+- **Why it matters:** It separates who approves a payment from who records it, which is a basic
+  financial control.
+- **Recommendation:** Revisit in Phase 9. With one admin it changes nothing. Record
+  `approved_by` and `marked_paid_by` from the start so the history is there either way.
+- **Blocks:** Phase 9, and only if a second admin exists.
+
+### B. Editor visibility before assignment
+
+- **Why it matters:** It decides what an invited (unconfirmed) editor sees, and whether
+  confidential footage leaves Lenscape's control before anyone has committed.
+- **Recommendation:** Tiered access. Before confirmation: an opportunity summary (title, brief
+  type, deliverables summary, deadline, proposed pay, admin-chosen non-confidential references).
+  After admin confirmation: the full brief and assets. A per-asset flag lets admins expose samples
+  early.
+- **Alternatives:** Full access up front lets editors judge the work better, but exposes client
+  footage to editors who may decline. Summary-only with no exceptions sometimes gives too little to
+  quote on.
+- **Blocks:** Phase 5–6.
+
+### C. Several editors accepting the same project
+
+- **Why it matters:** It decides the selection logic and assignment statuses.
+- **Recommendation:** The admin chooses manually. Others are marked "not selected" (a new
+  assignment status, to be approved). No first-come-first-served.
+- **Alternatives:** First-come-first-served is faster but rewards speed over fit and acts like
+  bidding. Offering to one editor at a time is slower but simplest.
+- **Blocks:** Phase 6.
+
+### F. Pay for extra rounds, scope changes, cancellation, kill fees
+
+- **Why it matters:** It decides whether agreed pay can change after confirmation.
+- **Recommendation:** No rule recommended; this is a commercial decision. Mechanically: a
+  `compensation_adjustments` record, proposed by the admin and accepted by the editor, mirroring
+  negotiation, so the original agreed amount is never edited.
+- **Alternatives:** Editing the agreed amount directly loses the audit trail.
+- **Blocks:** Phase 8.
+
+### H. Currency
+
+- **Why it matters:** Editor pay is LKR (manual Sri Lankan transfers), but international clients
+  may pay in other currencies.
+- **Recommendation:** Store currency on every money column. Editor pay stays LKR-only in the pilot.
+  Client price and inquiry budget may differ. No conversion logic in the MVP.
+- **Alternatives:** LKR everywhere is simplest but misstates international deals. Full
+  multi-currency adds exchange-rate handling.
+- **Blocks:** Phase 3 (budget field) and Phase 4 (client price).
+
+### I. Canonical payment statuses
+
+- **The difference:** §8.2 lists _Not due · Pending approval · Approved for payment · Processing ·
+  Paid · On hold / disputed_. §10.4 lists _Pending approval · Approved · Processing · Paid · On
+  hold_. §10.4 drops "Not due" (a record that exists before the work is approved), shortens
+  "Approved for payment", and drops "disputed".
+- **Recommendation:** `not_due` → `pending_approval` → `approved` → `processing` → `paid`, plus
+  `on_hold` (reachable from any state before paid, with a required reason; a dispute is a
+  reason). Create the record at assignment confirmation so committed-but-unpaid costs show up.
+  `paid` is final; corrections happen through an audited reversal entry. Whether `cancelled` is
+  needed depends on F.
+- **Alternatives:** The §10.4 set creates the record only after approval, so outstanding
+  liabilities aren't visible.
+- **Blocks:** Phase 9.
+
+### J. Coarse project status, negotiation on the assignment
+
+- **Why it matters:** With several editors (C) and reassignments, a project can have more than one
+  negotiation at once. A single project-level "Negotiation" status can't represent that.
+  KB §10.2 already says to keep assignment status distinct where useful.
+- **Recommendation:** Adopt it (WORKFLOWS §5). Invited, Negotiation and Awaiting confirmation
+  become assignment states, shown on the project as derived labels.
+- **Alternatives:** The full §10.1 list on the project duplicates assignment state, and the two
+  can contradict each other.
+- **Blocks:** Phase 4.
+
+### K. Asset sharing: per-account vs link-based
+
+- **Per-account sharing** (the editor's Google/Dropbox email): access is tied to a person, can be
+  revoked individually, and shows in the provider's audit. Downsides: it collects one more email
+  per editor, and sharing and revoking are manual or need API work. Revoking does not undo
+  downloads already made.
+- **Link-based:** anyone holding the link can open it, and a forwarded link leaks. Revoking means
+  disabling the link for everyone, and there's no record of who opened it. RLS hiding the link in
+  the app does not protect a link that has been copied.
+- **Recommendation:** Per-account sharing, one folder per project, logged in
+  `asset_access_grants`, with a revoke checklist on unassignment, suspension and project close.
+- **Blocks:** Phase 5.
+
+### KB4. Client prices and editor pay ranges
+
+- **Recommendation:** Owner decision; nothing in code depends on it beyond optional V ranges.
+- **Blocks:** The pilot, not development.
+
+### KB5. Turnaround and late-delivery rules
+
+- **Recommendation:** Owner decision. The app will store deadlines and flag late submissions.
+  Penalties aren't automated.
+- **Blocks:** Phase 8 (late flag); policy before the pilot.
+
+### KB6. Project communication
+
+- **Recommendation:** Email or your existing channel for the pilot, plus an admin-only notes log
+  per project. In-app Q&A only if the pilot shows a need (KB §9.4 excludes complex chat).
+- **Blocks:** Phase 6.
+
+### KB7. Storage provider
+
+- **Recommendation:** Whichever one Lenscape already uses with business-grade sharing controls.
+  Decide together with K.
+- **Blocks:** Phase 5.
+
+### KB9. Payment schedule
+
+- **Recommendation:** Owner decision. The data model supports both (due date per payment).
+- **Blocks:** Phase 9.
+
+### KB10. Notification events for release 1
+
+- **Recommendation:** A minimal set:
+  - **To admin:** new inquiry, new application, applicant response, counteroffer, submission.
+  - **To applicant:** application decision, information or test request.
+  - **To editor:** invitation, rate confirmed, revision requested, payment marked paid.
+  - **Auth emails:** sign-up confirmation and password reset, from Phase 1.
+- **Blocks:** Phase 10 (auth emails in Phase 1).
+
+---
+
+## Resolved
+
+- **D**, **A** (A2 deferred), **L**, **R**: resolved 2026-11-11 (see decisions log).

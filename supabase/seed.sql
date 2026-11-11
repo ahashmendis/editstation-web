@@ -1,3 +1,14 @@
 -- Local development seed data. Runs after migrations on `supabase db reset`.
 -- Never put real editor, client or payment data here.
--- Intentionally empty in Phase 0; test identities are added in Phase 1.
+--
+-- No accounts are seeded: create them through the app so the real sign-up,
+-- email confirmation (Mailpit: http://127.0.0.1:54324) and MFA flows are used.
+--
+-- Local-only manual test accounts (exist only until the next `db reset`):
+--   applicant@editstation.test   password: LocalTest2026pass (LocalTest2026reset after the reset-flow test)
+--   admin@editstation.test       password: LocalTest2026pass
+-- After confirming admin@editstation.test, make it the admin (as postgres):
+--   select private.grant_admin_by_email('admin@editstation.test', 'local dev admin');
+-- Activate / suspend an editor locally (Phase 2 adds the admin UI for this):
+--   update public.editor_profiles set access_status = 'active'
+--   where user_id = (select id from public.profiles where email = 'applicant@editstation.test');
