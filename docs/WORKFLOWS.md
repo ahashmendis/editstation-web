@@ -38,7 +38,7 @@ Alternative: a shorter set (`new`, `in_progress`, `converted`, `closed`) with a 
 5. Admin approves and activates (sets level and specialisations), or rejects.
 6. An active editor can later be suspended (temporary) or revoked (permanent) by an admin.
 
-**DECIDED (L, 2026-11-11): two separate status fields.** The application's review progress
+**DECIDED (L, 2026-11-11) and implemented in Phase 2: two separate status fields.** The application's review progress
 and the person's editor access are different things: an approved editor can later be suspended
 without their application becoming "un-approved".
 
@@ -78,7 +78,7 @@ How the owner's six states map onto this:
 | Suspended editor         | `approved`                                           | `suspended`   |
 
 Approval sets both fields in one admin-only database function, so they cannot drift apart.
-Re-application after rejection: OPEN_QUESTIONS M.
+Re-application after rejection (decision M): only an admin can reopen a rejected application; the applicant cannot re-apply on their own, and each attempt is a separate record.
 
 ## 3. Project workflow (KB §5)
 

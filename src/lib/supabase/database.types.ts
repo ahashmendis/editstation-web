@@ -115,13 +115,255 @@ export type Database = {
           },
         ];
       };
+      application_requests: {
+        Row: {
+          application_id: string;
+          assessed_at: string | null;
+          assessed_by: string | null;
+          assessment_notes: string | null;
+          assessment_result: Database["public"]["Enums"]["assessment_result"] | null;
+          id: string;
+          kind: Database["public"]["Enums"]["application_request_kind"];
+          message: string;
+          requested_at: string;
+          requested_by: string | null;
+          responded_at: string | null;
+          response: string | null;
+          response_link: string | null;
+        };
+        Insert: {
+          application_id: string;
+          assessed_at?: string | null;
+          assessed_by?: string | null;
+          assessment_notes?: string | null;
+          assessment_result?: Database["public"]["Enums"]["assessment_result"] | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["application_request_kind"];
+          message: string;
+          requested_at?: string;
+          requested_by?: string | null;
+          responded_at?: string | null;
+          response?: string | null;
+          response_link?: string | null;
+        };
+        Update: {
+          application_id?: string;
+          assessed_at?: string | null;
+          assessed_by?: string | null;
+          assessment_notes?: string | null;
+          assessment_result?: Database["public"]["Enums"]["assessment_result"] | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["application_request_kind"];
+          message?: string;
+          requested_at?: string;
+          requested_by?: string | null;
+          responded_at?: string | null;
+          response?: string | null;
+          response_link?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "application_requests_application_id_fkey";
+            columns: ["application_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_applications";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "application_requests_assessed_by_fkey";
+            columns: ["assessed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "application_requests_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      editor_applications: {
+        Row: {
+          attempt: number;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_message: string | null;
+          editor_id: string;
+          id: string;
+          privacy_version: string | null;
+          reopened_by: string | null;
+          reopened_from: string | null;
+          review_started_at: string | null;
+          review_started_by: string | null;
+          status: Database["public"]["Enums"]["application_status"];
+          submitted_at: string | null;
+          submitted_snapshot: Json | null;
+          terms_version: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          attempt?: number;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_message?: string | null;
+          editor_id: string;
+          id?: string;
+          privacy_version?: string | null;
+          reopened_by?: string | null;
+          reopened_from?: string | null;
+          review_started_at?: string | null;
+          review_started_by?: string | null;
+          status?: Database["public"]["Enums"]["application_status"];
+          submitted_at?: string | null;
+          submitted_snapshot?: Json | null;
+          terms_version?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          attempt?: number;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_message?: string | null;
+          editor_id?: string;
+          id?: string;
+          privacy_version?: string | null;
+          reopened_by?: string | null;
+          reopened_from?: string | null;
+          review_started_at?: string | null;
+          review_started_by?: string | null;
+          status?: Database["public"]["Enums"]["application_status"];
+          submitted_at?: string | null;
+          submitted_snapshot?: Json | null;
+          terms_version?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_applications_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_applications_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "editor_applications_reopened_by_fkey";
+            columns: ["reopened_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_applications_reopened_from_fkey";
+            columns: ["reopened_from"];
+            isOneToOne: false;
+            referencedRelation: "editor_applications";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_applications_review_started_by_fkey";
+            columns: ["review_started_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      editor_portfolio_links: {
+        Row: {
+          created_at: string;
+          editor_id: string;
+          id: string;
+          label: string | null;
+          url: string;
+        };
+        Insert: {
+          created_at?: string;
+          editor_id: string;
+          id?: string;
+          label?: string | null;
+          url: string;
+        };
+        Update: {
+          created_at?: string;
+          editor_id?: string;
+          id?: string;
+          label?: string | null;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_portfolio_links_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      editor_profile_options: {
+        Row: {
+          code: string;
+          created_at: string;
+          editor_id: string;
+          kind: Database["public"]["Enums"]["profile_option_kind"];
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          editor_id: string;
+          kind: Database["public"]["Enums"]["profile_option_kind"];
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          editor_id?: string;
+          kind?: Database["public"]["Enums"]["profile_option_kind"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_profile_options_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "editor_profile_options_kind_code_fkey";
+            columns: ["kind", "code"];
+            isOneToOne: false;
+            referencedRelation: "profile_options";
+            referencedColumns: ["kind", "code"];
+          },
+        ];
+      };
       editor_profiles: {
         Row: {
           access_change_reason: string | null;
           access_changed_at: string | null;
           access_changed_by: string | null;
           access_status: Database["public"]["Enums"]["editor_access_status"];
+          availability: string | null;
           created_at: string;
+          experience_summary: string | null;
+          experience_years: number | null;
+          hardware: string | null;
+          level: Database["public"]["Enums"]["editor_level"] | null;
+          region: string | null;
+          software_other: string | null;
+          typical_turnaround: string | null;
           updated_at: string;
           user_id: string;
         };
@@ -130,7 +372,15 @@ export type Database = {
           access_changed_at?: string | null;
           access_changed_by?: string | null;
           access_status?: Database["public"]["Enums"]["editor_access_status"];
+          availability?: string | null;
           created_at?: string;
+          experience_summary?: string | null;
+          experience_years?: number | null;
+          hardware?: string | null;
+          level?: Database["public"]["Enums"]["editor_level"] | null;
+          region?: string | null;
+          software_other?: string | null;
+          typical_turnaround?: string | null;
           updated_at?: string;
           user_id: string;
         };
@@ -139,7 +389,15 @@ export type Database = {
           access_changed_at?: string | null;
           access_changed_by?: string | null;
           access_status?: Database["public"]["Enums"]["editor_access_status"];
+          availability?: string | null;
           created_at?: string;
+          experience_summary?: string | null;
+          experience_years?: number | null;
+          hardware?: string | null;
+          level?: Database["public"]["Enums"]["editor_level"] | null;
+          region?: string | null;
+          software_other?: string | null;
+          typical_turnaround?: string | null;
           updated_at?: string;
           user_id?: string;
         };
@@ -159,6 +417,69 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      editor_vetting_notes: {
+        Row: {
+          application_id: string;
+          author_id: string | null;
+          created_at: string;
+          id: string;
+          note: string;
+        };
+        Insert: {
+          application_id: string;
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note: string;
+        };
+        Update: {
+          application_id?: string;
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_vetting_notes_application_id_fkey";
+            columns: ["application_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_applications";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_vetting_notes_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profile_options: {
+        Row: {
+          active: boolean;
+          code: string;
+          kind: Database["public"]["Enums"]["profile_option_kind"];
+          label: string;
+          sort_order: number;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          kind: Database["public"]["Enums"]["profile_option_kind"];
+          label: string;
+          sort_order?: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          kind?: Database["public"]["Enums"]["profile_option_kind"];
+          label?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -192,10 +513,96 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      admin_approve_application: {
+        Args: {
+          p_application_id: string;
+          p_level: Database["public"]["Enums"]["editor_level"];
+          p_message?: string;
+        };
+        Returns: undefined;
+      };
+      admin_create_application_request: {
+        Args: {
+          p_application_id: string;
+          p_kind: Database["public"]["Enums"]["application_request_kind"];
+          p_message: string;
+        };
+        Returns: string;
+      };
+      admin_record_assessment_result: {
+        Args: {
+          p_notes?: string;
+          p_request_id: string;
+          p_result: Database["public"]["Enums"]["assessment_result"];
+        };
+        Returns: undefined;
+      };
+      admin_reject_application: {
+        Args: { p_application_id: string; p_message?: string };
+        Returns: undefined;
+      };
+      admin_reopen_application: {
+        Args: { p_editor_id: string };
+        Returns: string;
+      };
+      admin_set_editor_access: {
+        Args: {
+          p_editor_id: string;
+          p_reason: string;
+          p_status: Database["public"]["Enums"]["editor_access_status"];
+        };
+        Returns: undefined;
+      };
+      admin_start_application_review: {
+        Args: { p_application_id: string };
+        Returns: undefined;
+      };
+      respond_to_application_request: {
+        Args: {
+          p_request_id: string;
+          p_response: string;
+          p_response_link?: string;
+        };
+        Returns: undefined;
+      };
+      save_editor_profile: {
+        Args: {
+          p_availability: string;
+          p_experience_summary: string;
+          p_experience_years: number;
+          p_full_name: string;
+          p_hardware: string;
+          p_links: Json;
+          p_phone: string;
+          p_region: string;
+          p_software: string[];
+          p_software_other: string;
+          p_specialisations: string[];
+          p_typical_turnaround: string;
+        };
+        Returns: undefined;
+      };
+      submit_editor_application: {
+        Args: { p_privacy_version: string; p_terms_version: string };
+        Returns: string;
+      };
+      withdraw_editor_application: { Args: never; Returns: string };
     };
     Enums: {
+      application_request_kind: "info" | "test";
+      application_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "info_requested"
+        | "test_requested"
+        | "approved"
+        | "rejected"
+        | "withdrawn";
+      assessment_result: "passed" | "failed" | "inconclusive";
       editor_access_status: "none" | "active" | "suspended" | "revoked";
+      editor_level: "junior" | "professional" | "specialist";
+      profile_option_kind: "specialisation" | "software";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -320,7 +727,21 @@ export const Constants = {
   },
   public: {
     Enums: {
+      application_request_kind: ["info", "test"],
+      application_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "info_requested",
+        "test_requested",
+        "approved",
+        "rejected",
+        "withdrawn",
+      ],
+      assessment_result: ["passed", "failed", "inconclusive"],
       editor_access_status: ["none", "active", "suspended", "revoked"],
+      editor_level: ["junior", "professional", "specialist"],
+      profile_option_kind: ["specialisation", "software"],
     },
   },
 } as const;

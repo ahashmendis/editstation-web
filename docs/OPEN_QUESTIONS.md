@@ -12,14 +12,16 @@ Question IDs: **A–K** from the architecture review, **L–V** raised by the 20
 
 ## Decisions log
 
-| Date       | Question                       | Decision                                                                                                                                                                                                                                                                                                                                        |
-| ---------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-11 | Phase 0 scope                  | Approved by owner.                                                                                                                                                                                                                                                                                                                              |
-| 2026-11-11 | Public entry points            | Public website with two separate entry points: client/agency inquiry form (no accounts, never auto-creates a project, admin converts manually) and editor registration. No client portal.                                                                                                                                                       |
-| 2026-11-11 | **D** Editor registration flow | Editors create an account first (email + password), complete an application, and wait for admin verification. Registering grants no editor access; only an explicit admin approval activates it. The public-form-only application approach is not used.                                                                                         |
-| 2026-11-11 | **A** Admin structure          | One admin at launch. Architecture supports multiple admins later via `admin_users` (no schema change). Admin accounts require TOTP MFA from launch. A narrower "mark paid" permission is **deferred** to Phase 9 (still open as A2).                                                                                                            |
-| 2026-11-11 | **L** Status model             | Adopt the split. Editor access status: `none`, `active`, `suspended`, `revoked` (only `active` grants editor access; only admin functions change it). Application status: `draft`, `submitted`, `under_review`, `info_requested`, `test_requested`, `approved`, `rejected`, `withdrawn`, which may still be adjusted before Phase 2 migrations. |
-| 2026-11-11 | **R** Email verification       | Required: applicants must verify their email before using their account. Production needs custom SMTP on a verified domain (depends on KB2).                                                                                                                                                                                                    |
+| Date       | Question                       | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-11-11 | Phase 0 scope                  | Approved by owner.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 2026-11-11 | Public entry points            | Public website with two separate entry points: client/agency inquiry form (no accounts, never auto-creates a project, admin converts manually) and editor registration. No client portal.                                                                                                                                                                                                                                                                                                                                                        |
+| 2026-11-11 | **D** Editor registration flow | Editors create an account first (email + password), complete an application, and wait for admin verification. Registering grants no editor access; only an explicit admin approval activates it. The public-form-only application approach is not used.                                                                                                                                                                                                                                                                                          |
+| 2026-11-11 | **A** Admin structure          | One admin at launch. Architecture supports multiple admins later via `admin_users` (no schema change). Admin accounts require TOTP MFA from launch. A narrower "mark paid" permission is **deferred** to Phase 9 (still open as A2).                                                                                                                                                                                                                                                                                                             |
+| 2026-11-11 | **L** Status model             | Adopt the split. Editor access status: `none`, `active`, `suspended`, `revoked` (only `active` grants editor access; only admin functions change it). Application status: `draft`, `submitted`, `under_review`, `info_requested`, `test_requested`, `approved`, `rejected`, `withdrawn`, which may still be adjusted before Phase 2 migrations.                                                                                                                                                                                                  |
+| 2026-11-11 | **R** Email verification       | Required: applicants must verify their email before using their account. Production needs custom SMTP on a verified domain (depends on KB2).                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2026-11-11 | **M** Re-application           | A rejected applicant cannot re-apply on their own. Only an admin can reopen an application; each attempt is kept as a separate `editor_applications` record (history preserved).                                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-11-11 | **E** Bank details             | Never collected in the application. Collected in the app only after approval, before the first payment, entered by the editor. Fields: account holder name, bank, branch, account number. Readable only by the owning editor and admins; account number masked by default. Every change is audited, flagged to the admin and held as unverified until the admin confirms it out of band (e.g. by phone); no payment to unverified details. Never banking passwords, PINs or codes. PDPA handling to be confirmed with counsel. Built in Phase 9. |
 
 ---
 
@@ -71,7 +73,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 
 ## Tier 2: blocks Phases 2–3 or public launch
 
-### M. Re-application after rejection
+### M. Re-application after rejection: RESOLVED 2026-11-11 (admin reopens only)
 
 - **Question:** Can a rejected applicant apply again? Immediately, after a waiting period, or only
   if an admin reopens it?
@@ -107,6 +109,8 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Blocks:** Public launch of the forms. Development can start with a honeypot only.
 
 ### P. Data retention and privacy notice for public forms
+
+- **Phase 2 note:** deleting an account now works and anonymises its audit-log entries (actor removed), but the entries keep their content, which can include the user id in `entity_id`/`details`. Whether that is acceptable, or entries must be scrubbed further, is part of this decision.
 
 - **Question:** How long are unconverted inquiries, rejected applications and withdrawn accounts
   kept? Who drafts the privacy notice?
@@ -148,6 +152,14 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternatives:** Uploads need a storage bucket, size limits, file-type checks and scanning.
 - **Blocks:** Phase 3.
 
+### W. Re-application after withdrawal
+
+- **Question:** If an applicant withdraws their own application, can they submit again on their own, or (like a rejection, decision M) only after an admin reopens it?
+- **Why it matters:** Decision M covers rejection only. Phase 2 had to pick a behaviour for withdrawal.
+- **Current implementation (not a decision):** treated like rejection: only an admin can reopen. This is the conservative choice and is easy to relax.
+- **Alternative:** let applicants re-submit after withdrawing. Friendlier, but a withdraw/resubmit loop could be used to reset a review.
+- **Blocks:** nothing; confirm or change at any time.
+
 ### V. Inquiry budget field format
 
 - **Question:** Free text, preset ranges, or amount plus currency?
@@ -157,7 +169,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternatives:** Free text is flexible but can't be analysed. An exact amount deters clients.
 - **Blocks:** Phase 3.
 
-### E. Bank details
+### E. Bank details: RESOLVED 2026-11-11 (option 2: in-app after approval)
 
 - **Question:** Store editor bank details in the app? When, and which fields?
 - **Why it matters:** It's the most sensitive data the app would hold.
@@ -343,4 +355,4 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 
 ## Resolved
 
-- **D**, **A** (A2 deferred), **L**, **R**: resolved 2026-11-11 (see decisions log).
+- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**: resolved 2026-11-11 (see decisions log).

@@ -40,12 +40,16 @@ export const getAccess = cache(async (): Promise<Access | null> => {
   if (admin.error) throw admin.error;
   if (editor.error) throw editor.error;
 
+  // Every real account has an editor_profiles row (sign-up trigger). No row means the token
+  // outlived its account (deleted user, or a reset local DB): treat as signed out.
+  if (!editor.data) return null;
+
   return {
     userId: claims.sub,
     email: typeof claims.email === "string" ? claims.email : null,
     isAdminAccount: Boolean(admin.data && admin.data.revoked_at === null),
     aal: claims.aal === "aal2" ? "aal2" : "aal1",
-    editorAccessStatus: editor.data?.access_status ?? "none",
+    editorAccessStatus: editor.data.access_status,
   };
 });
 

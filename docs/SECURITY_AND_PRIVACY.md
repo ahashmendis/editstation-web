@@ -51,6 +51,24 @@ In the local Supabase Postgres image (17.6.1.106), a "permission denied for func
 `private.grant_admin_by_email(email, note)`: executable only by `postgres` (SQL editor or psql).
 Audited. The first admin must then enrol TOTP before any admin data becomes visible.
 
+## Application workflow controls (implemented in Phase 2)
+
+- Applicants write only their own profile, options and links (RLS + column grants, or the atomic
+  `public.save_editor_profile`). Applications, requests and decisions change only through
+  `public.*` functions that check the caller and the current status; no direct writes.
+- Admin functions call `private.require_admin()` (admin row **and** MFA). Approval is the only path
+  that sets `access_status = 'active'`; revoked is final; activation from `none` is impossible
+  except by approval.
+- Submissions store a frozen `submitted_snapshot`, so later profile edits cannot change what was
+  reviewed.
+- Vetting notes are admin-only (RLS); `decision_message` is the only decision text the applicant sees.
+- Links: https only (DB check + zod); rendered with `rel="noopener noreferrer nofollow"`; never
+  fetched server-side.
+- Errors: functions raise `ES401`/`ES403`/`ES409`/`ES422` with user-safe messages; any other
+  database error is shown as a generic message.
+- Account deletion anonymises audit entries (actor cleared) rather than failing; the log stays
+  append-only otherwise. Sessions whose account no longer exists are treated as signed out.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                 | Admin                                |
@@ -86,8 +104,11 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 - Collect only operationally necessary data. Inquiries come from people without accounts, so the
   form must show a privacy notice and record which version they saw.
 - No ID documents without a documented reason (KB §7.3).
-- Bank details: not collected in the application; timing and fields per question E. Never store
-  banking passwords, PINs or auth codes.
+- Bank details (decision E): never in the application. Collected after approval, before the
+  first payment: account holder name, bank, branch, account number. Owner editor + admins only;
+  account number masked by default. Changes are audited, flagged to the admin and held as
+  unverified until confirmed out of band (anti payment-redirection fraud); no payment to
+  unverified details. Never store banking passwords, PINs or auth codes.
 - Retention: unconverted inquiries and rejected applications need a retention period (question P).
 - Secrets in environment variables. Public keys are not authorisation; RLS is.
 - Asset links: no permanent public links to confidential footage; review access on assign,

@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 
+import { AdminNav } from "@/components/admin-nav";
 import { Loading } from "@/components/auth-shell";
 import { requireAdmin } from "@/lib/auth/access";
 
@@ -15,5 +16,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
 async function AdminGate({ children }: { children: ReactNode }) {
   await requireAdmin();
-  return children;
+  return (
+    <>
+      <AdminNav />
+      {children}
+    </>
+  );
 }

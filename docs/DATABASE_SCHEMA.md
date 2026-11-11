@@ -1,6 +1,6 @@
 # Database Schema (proposed)
 
-Status: **Phase 1 tables migrated** (`profiles`, `admin_users`, `editor_profiles` access columns, `activity_logs`; migration `20261111122133_phase1_auth_access.sql`). **Everything else is proposed, not yet migrated.** Helper functions live in the `private` schema. Derived from KB §11.4, the Phase 0 architecture review and
+Status: **Phase 1 and 2 tables migrated.** Phase 1 (`20261111122133_phase1_auth_access.sql`): `profiles`, `admin_users`, `editor_profiles` access columns, `activity_logs`. Phase 2 (`20261111133128_phase2_editor_applications.sql`): editor profile fields + `level`, `profile_options` (admin-managed list, seeded from KB §7.1/§7.3), `editor_profile_options`, `editor_portfolio_links`, `editor_applications` (with frozen `submitted_snapshot`), `application_requests` (info requests and practical tests, incl. assessment result), `editor_vetting_notes`. All workflow writes go through `public.*` functions (see SECURITY_AND_PRIVACY). **Everything else is proposed, not yet migrated.** Helper functions live in the `private` schema. Derived from KB §11.4, the Phase 0 architecture review and
 the owner clarification of 2026-11-11. Each table is created in the phase that needs it (see
 DEVELOPMENT_ROADMAP). Update this file in the same change as the migration.
 
@@ -33,7 +33,7 @@ Conventions: `uuid` PKs, `created_at`/`updated_at` timestamptz, FKs indexed, enu
 | `application_requests`   | application, requested_by, message, response, responded_at, status                                                                                                                  | Phase 2                               |
 | `editor_assessments`     | application, brief/instructions link, submission link, result, notes, paid? (question G)                                                                                            | Phase 2                               |
 | `editor_vetting_notes`   | admin-only notes per application                                                                                                                                                    | Phase 2                               |
-| `editor_payout_details`  | admin + owning **active** editor only; fields and timing per question E                                                                                                             | Phase 9                               |
+| `editor_payout_details`  | decision E: account holder name, bank, branch, account number, `verification_status` (unverified/verified), verified_by/at; owner editor + admins only; change history audited      | Phase 9                               |
 
 ## Client inquiries and clients _(2026-11-11)_
 

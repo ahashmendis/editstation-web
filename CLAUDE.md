@@ -35,6 +35,8 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
 - Server code uses `src/lib/supabase/server.ts` + `src/lib/auth/access.ts`; per-request auth reads
   sit inside `<Suspense>` (Next `cacheComponents`). Never cache access decisions across requests.
 - Editors never write money/status columns directly: state changes go through Postgres functions.
+- Workflow functions raise user-safe errors with custom SQLSTATEs `ES401`/`ES403`/`ES409`/`ES422`
+  (never `42501`); the app shows only those messages (`userMessageFromDbError`).
 - Editor-visible tables must not hold client data or client pricing (RLS is row-level, not column-level).
 - No editing starts until compensation is agreed and admin-approved.
 - 3 free client revision rounds; editor-caused corrections and scope changes do not consume them.

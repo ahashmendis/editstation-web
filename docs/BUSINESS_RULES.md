@@ -54,6 +54,9 @@ paid and tracked here: OPEN_QUESTIONS G.
 - Manual bank transfers in Sri Lanka; no gateway.
 - Only authorised admin users may mark a payment paid.
 - Never store online-banking passwords, PINs or auth codes. Store only necessary payment details.
+- Bank details (decision E, 2026-11-11): never collected in the application; entered by the editor
+  after approval. A changed bank account must be verified by an admin out of band before any
+  payment is made to it.
 
 ## Copyright (KB §5.2)
 
