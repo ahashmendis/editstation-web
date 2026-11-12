@@ -1,14 +1,16 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Wordmark } from "@/components/wordmark";
+
 // Public site chrome. Copy is placeholder until brand (KB2) and services (KB3) are settled
 // (decision S: English only).
 export function SiteHeader() {
   return (
     <header className="border-b">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          EDITSTATION
+        <Link href="/" aria-label="EDITSTATION home">
+          <Wordmark />
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-4 text-sm">
           <Link href="/inquire" className="hover:underline">

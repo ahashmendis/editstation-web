@@ -13,6 +13,8 @@ you are unsure of.
 - shadcn/ui (base-ui, `base-nova` style) is the component foundation; `src/components/ui/` holds
   the installed components. Add components with `npx shadcn add <name>` and read the generated
   code. Do not add a UI dependency without checking compatibility and saying why.
+- Design system: `docs/DESIGN_SYSTEM.md` (tokens, wordmark, component patterns). Dark is the
+  default theme; light follows the system setting.
 - Tailwind v4: tokens and theme live in `src/app/globals.css`. Use existing tokens; do not
   hardcode colours or one-off spacing.
 - Server code uses `src/lib/supabase/server.ts` and `src/lib/auth/access.ts`. Per-request auth

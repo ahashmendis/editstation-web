@@ -20,7 +20,9 @@ needed).
 - **Phase 3, public site and inquiries:** home page with separate inquiry and editor entry points;
   `/inquire` (anon, rate-limited, honeypot); `/admin/inquiries`; `/admin/settings` (service types,
   budget ranges; no budget ranges seeded).
-- **Tests:** pgTAP 151, Vitest 58, Playwright smoke 8 (`npm run test:e2e`). Last verified 2026-11-12 on Windows (check, db:test,
+- **Design system:** `docs/DESIGN_SYSTEM.md`; tokens, Geist and wordmark applied; admin/editor
+  shell and status badges pending.
+- **Tests:** pgTAP 151, Vitest 92, Playwright smoke 8 (`npm run test:e2e`). Last verified 2026-11-12 on Windows (check, db:test,
   db:advisors).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
   migration protection, approval for push/commit and hosted operations, Prettier on edit). Hook

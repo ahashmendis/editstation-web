@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Wordmark } from "@/components/wordmark";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function AuthShell({
@@ -17,8 +18,8 @@ export function AuthShell({
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="grid w-full max-w-sm gap-6">
-        <Link href="/" className="text-center text-lg font-semibold tracking-tight">
-          EDITSTATION
+        <Link href="/" aria-label="EDITSTATION home" className="text-center">
+          <Wordmark />
         </Link>
         <Card>
           <CardHeader>

@@ -11,6 +11,14 @@ specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point
   `.claude/hooks/format.mjs`: Prettier on edited files). Duplicate plugins and skills disabled for
   this project. `CURRENT_STATUS.md` split into status + this changelog; decision index added to
   `OPEN_QUESTIONS.md`; workflow and method routing added to `CLAUDE.md`.
+- **Design system, part 1:** `docs/DESIGN_SYSTEM.md` (owner-approved recommended answers).
+  `globals.css` now has brand tokens: dark default (near-black, brand purple `#9643E5`), light
+  theme via `prefers-color-scheme`, `--brand-text`, success/warning tokens; `dark:` utilities
+  follow the same rule. `Wordmark` component in the public header and auth pages.
+  `src/lib/design-tokens.test.ts` checks WCAG contrast for the token pairs (34 tests).
+  **Bug fixed:** `--font-sans` referenced itself, so Geist was never applied and the app rendered
+  in Times New Roman. Pending: shared admin/editor shell, status badges, empty/loading/error
+  states, transparent logo from the owner.
 - **Playwright smoke tests (Recommended tier, part 2):** `@playwright/test` 1.65.0 (dev
   dependency, Chromium only), `playwright.config.ts`, `tests/e2e/smoke.spec.ts` (8 tests: home
   entry points, inquiry form loads service types and lists missing fields, 375px no horizontal
