@@ -56,13 +56,31 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
 | Tables, RLS, migrations              | `docs/DATABASE_SCHEMA.md`, `docs/SECURITY_AND_PRIVACY.md` |
 | Stack, boundaries, code organisation | `docs/SYSTEM_ARCHITECTURE.md`                             |
 | Phase plan                           | `docs/DEVELOPMENT_ROADMAP.md`                             |
-| Unresolved decisions                 | `docs/OPEN_QUESTIONS.md`                                  |
+| Unresolved decisions                 | `docs/OPEN_QUESTIONS.md` (Index first; one section only)  |
+| Details of earlier phases            | `docs/CHANGELOG.md`                                       |
 | Business context (rarely needed)     | `docs/BUSINESS_PLAN.md`                                   |
 
 `docs/EDITSTATION_MASTER_KNOWLEDGE_BASE.md` is the owner's original source of truth; never edit it.
 Precedence: owner decisions in the `OPEN_QUESTIONS.md` decisions log > the knowledge base > derived
 docs. Consult the knowledge base only to resolve ambiguity; if a derived doc conflicts, fix the
 derived doc.
+
+## Workflow and tool routing
+
+- **Major feature** (new phase, schema change, new area): understand → plan → owner approval →
+  implement (TDD) → test → review the diff → update docs → finish the branch. Product/spec work
+  uses BMAD (`prd`, `architecture`, `ux`, `create-epics-and-stories`,
+  `check-implementation-readiness`) with `docs/` as input; engineering uses Superpowers
+  (`writing-plans`, TDD, debugging, verification, finishing). BMAD's dev, sprint and review skills
+  are not used. Never start while a blocking `OPEN_QUESTIONS.md` item is unresolved.
+- **Small change** (bug fix, copy, one component): no brainstorm or plan ceremony; inspect, fix
+  with a targeted test, verify. This overrides Superpowers' "invoke a skill on any 1% chance" rule.
+- Models: Sonnet for routine work; Opus for architecture, security/RLS review, hard debugging.
+- Context: targeted search and partial reads; targeted tests while iterating, full checks before
+  done; subagents only for isolation or parallelism, returning short findings.
+- Guardrails (`.claude/settings.json`, `.claude/hooks/`): env files and committed migrations are
+  blocked; push, commit and hosted Supabase/Vercel operations need owner approval. Never work
+  around them.
 
 ## Working conventions
 

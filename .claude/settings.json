@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.*.local)",
+      "Read(**/.env.development)",
+      "Read(**/.env.production)",
+      "Read(**/.env.test)",
+      "Edit(**/.env)",
+      "Edit(**/.env.local)",
+      "Edit(**/.env.*.local)",
+      "Edit(**/.env.development)",
+      "Edit(**/.env.production)",
+      "Edit(**/.env.test)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(rtk git push:*)",
+      "Bash(git commit:*)",
+      "Bash(rtk git commit:*)",
+      "Bash(supabase link:*)",
+      "Bash(npx supabase link:*)",
+      "Bash(supabase db push:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(vercel:*)",
+      "Bash(npx vercel:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Read|Edit|Write|MultiEdit|NotebookEdit|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "taste-skill@taste-skill": false,
+    "scroll-world@scroll-world": false,
+    "find-skills@easier-life-skills": false,
+    "github@claude-plugins-official": false
+  },
+  "skillOverrides": {
+    "graphify": "off",
+    "paul:add-phase": "off",
+    "paul:apply": "off",
+    "paul:assumptions": "off",
+    "paul:audit": "off",
+    "paul:complete-milestone": "off",
+    "paul:config": "off",
+    "paul:consider-issues": "off",
+    "paul:discover": "off",
+    "paul:discuss": "off",
+    "paul:discuss-milestone": "off",
+    "paul:flows": "off",
+    "paul:handoff": "off",
+    "paul:help": "off",
+    "paul:init": "off",
+    "paul:map-codebase": "off",
+    "paul:milestone": "off",
+    "paul:pause": "off",
+    "paul:plan": "off",
+    "paul:plan-fix": "off",
+    "paul:progress": "off",
+    "paul:register": "off",
+    "paul:remove-phase": "off",
+    "paul:research": "off",
+    "paul:research-phase": "off",
+    "paul:resume": "off",
+    "paul:status": "off",
+    "paul:unify": "off",
+    "paul:verify": "off"
+  }
+}
