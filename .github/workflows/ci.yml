@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.122.1
       # Starts only Postgres, applies supabase/migrations, then runs supabase/tests.
       - run: supabase db start
       - run: supabase test db

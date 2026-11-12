@@ -1,10 +1,15 @@
 # Current Status
 
-**Phase:** 3 (public website and client inquiries) in progress on branch
-`phase-3/public-site-inquiries`. `main` = Phases 0–2 (`ad6118d`, fast-forward merged, all checks
-passing). Nothing pushed.
+**Phase:** 3 (public website and client inquiries) complete and committed. `main` = Phases 0–3
+(`f17813d`). Nothing pushed.
 Decisions applied: A, D, E, H, L, M, N, O, R, S, U, V; KB3 placeholder list (OPEN_QUESTIONS).
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-12
+
+**Development moved from macOS to Windows (2026-11-12).** Removed macOS metadata files (`._*`,
+`.DS_Store`), reinstalled `node_modules` for Windows, added `.gitattributes` (LF everywhere),
+and made the Supabase CLI a pinned dev dependency (`supabase@2.122.1`; CI pinned to the same
+version). Re-verified on Windows: `npm run check` (58), `npm run db:test` (151),
+`npm run db:advisors` (no issues), `/inquire` renders with data from local Supabase.
 
 ## Implemented
 
@@ -60,7 +65,7 @@ Vitest, local Supabase config, pgTAP, CI workflow, split docs, `CLAUDE.md`.
 **Tests:** pgTAP 111 (Phase 2 adds 67: full workflow, every escalation path, state machine, decision
 M, snapshot immutability, link limits, account deletion). Vitest 45.
 
-### Phase 3: public website and client inquiries (2026-11-11, uncommitted)
+### Phase 3: public website and client inquiries (2026-11-11)
 
 **Database** (`20261111140306_phase3_public_inquiries.sql`):
 
@@ -132,6 +137,9 @@ profile exists.
   so Kong keeps serving the deleted original (404) and auth falls back to the default email. Local
   development only.
 - Inquiry rate limits are a first line of defence only; Turnstile (decision O) is a launch gate.
+- **Supabase CLI 3.x rejects `supabase/config.toml`** (`[inbucket]` must become `[local_smtp]`,
+  possibly more). The CLI is pinned to 2.122.1 locally and in CI until the config is migrated.
+- Local accounts from the Mac did not carry over (fresh Docker volume); register again.
 
 ## Decisions made (implementation)
 
@@ -148,7 +156,7 @@ profile exists.
 
 ## Next task
 
-Commit Phase 3 on `phase-3/public-site-inquiries`, then decide whether to fast-forward `main`.
+Phase 4 (projects, briefs, inquiry → project conversion), which needs owner decisions J and T.
 Before public launch (not development): KB1, KB2, KB8, P, Turnstile (O), production SMTP, and
 your real service list and budget ranges (Settings screen). Phase 4 (projects, briefs, inquiry →
 project conversion) needs J and T.

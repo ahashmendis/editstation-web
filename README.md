@@ -7,7 +7,8 @@ admin-controlled; not a public marketplace.
 
 - Node.js 24+ and npm
 - Docker Desktop (for local Supabase), with at least 10 GB of free disk
-- Supabase CLI
+- Supabase CLI: installed by `npm install` (pinned dev dependency, 2.x; config is not yet
+  migrated to CLI 3.x). Works on macOS, Windows and Linux; use `npx supabase ...` for ad-hoc commands.
 
 ## Getting started
 

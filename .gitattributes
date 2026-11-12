@@ -1,0 +1,6 @@
+# Keep LF line endings on every OS (Prettier and the SQL/pgTAP files expect LF).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
