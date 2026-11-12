@@ -20,7 +20,7 @@ needed).
 - **Phase 3, public site and inquiries:** home page with separate inquiry and editor entry points;
   `/inquire` (anon, rate-limited, honeypot); `/admin/inquiries`; `/admin/settings` (service types,
   budget ranges; no budget ranges seeded).
-- **Tests:** pgTAP 151, Vitest 58. Last verified 2026-11-12 on Windows (check, db:test,
+- **Tests:** pgTAP 151, Vitest 58, Playwright smoke 8 (`npm run test:e2e`). Last verified 2026-11-12 on Windows (check, db:test,
   db:advisors).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
   migration protection, approval for push/commit and hosted operations, Prettier on edit). Hook
@@ -29,7 +29,8 @@ needed).
 ## Not yet done / not verified
 
 - Nothing pushed. No GitHub remote, Vercel or hosted Supabase project; CI has never run.
-- Not tested: hosted Supabase (MFA plan, SMTP), Playwright e2e, mobile layouts in depth.
+- Not tested: hosted Supabase (MFA plan, SMTP), signed-in e2e flows (Playwright smoke tests cover
+  only public pages and signed-out gates; not in CI), mobile layouts in depth.
 - Not exercised in the browser (pgTAP only): application reject, reopen, withdraw, practical-test
   result recording.
 - Suspended users keep their session (they lose access on the next request).

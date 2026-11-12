@@ -11,6 +11,12 @@ specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point
   `.claude/hooks/format.mjs`: Prettier on edited files). Duplicate plugins and skills disabled for
   this project. `CURRENT_STATUS.md` split into status + this changelog; decision index added to
   `OPEN_QUESTIONS.md`; workflow and method routing added to `CLAUDE.md`.
+- **Playwright smoke tests (Recommended tier, part 2):** `@playwright/test` 1.65.0 (dev
+  dependency, Chromium only), `playwright.config.ts`, `tests/e2e/smoke.spec.ts` (8 tests: home
+  entry points, inquiry form loads service types and lists missing fields, 375px no horizontal
+  scroll, signed-out redirects for `/apply`, `/editor`, `/admin`, `/admin/applications`, `/mfa`
+  keeping `next`). They create no data. Run `npm run test:e2e`. Not in CI yet. Not covered:
+  signed-in flows (sign-up confirmation via Mailpit and admin TOTP are the hard parts).
 - **Specialist agents and path rules (Recommended tier, part 1):** `.claude/agents/` with
   `db-security` (Opus), `code-reviewer` and `qa-browser` (Sonnet), all read-only with concise
   output formats; `.claude/rules/db.md` (`supabase/**`) and `ui.md` (app, components, feature UI).

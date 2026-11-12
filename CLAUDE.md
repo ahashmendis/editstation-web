@@ -15,6 +15,8 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
 
 - `npm run dev` / `npm run build`
 - `npm run check`: format check, lint, typecheck and unit tests (run before saying work is done)
+- `npm run test:e2e`: Playwright smoke tests (public site, signed-out gates); needs local Supabase
+  running; reuses a dev server on :3000
 - `npm run db:start` / `db:stop` / `db:reset`: local Supabase (needs Docker; `db:start:full` adds Studio)
 - `npm run db:test`: pgTAP tests in `supabase/tests/database/`
 - `npm run db:advisors`: Supabase security/performance lints; `npm run db:types` after schema changes

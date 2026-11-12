@@ -12,3 +12,8 @@ docs/EDITSTATION_MASTER_KNOWLEDGE_BASE.md
 
 # Local tool configuration
 .claude/
+
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
