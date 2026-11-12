@@ -11,6 +11,12 @@ specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point
   `.claude/hooks/format.mjs`: Prettier on edited files). Duplicate plugins and skills disabled for
   this project. `CURRENT_STATUS.md` split into status + this changelog; decision index added to
   `OPEN_QUESTIONS.md`; workflow and method routing added to `CLAUDE.md`.
+- **Specialist agents and path rules (Recommended tier, part 1):** `.claude/agents/` with
+  `db-security` (Opus), `code-reviewer` and `qa-browser` (Sonnet), all read-only with concise
+  output formats; `.claude/rules/db.md` (`supabase/**`) and `ui.md` (app, components, feature UI).
+  Not yet exercised: agents load from the next session. Still pending from the Recommended tier:
+  Playwright e2e tests, design system. TokenEconomizer is blocked (needs Claude Code
+  2.1.300-2.1.310; installed 2.1.212).
 - **Moved from macOS to Windows.** Removed macOS metadata files (`._*`, `.DS_Store`), reinstalled
   `node_modules` for Windows, added `.gitattributes` (LF everywhere), and made the Supabase CLI a
   pinned dev dependency (`supabase@2.122.1`; CI pinned to the same version). Re-verified on

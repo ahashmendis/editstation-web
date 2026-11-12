@@ -78,6 +78,9 @@ derived doc.
 - Models: Sonnet for routine work; Opus for architecture, security/RLS review, hard debugging.
 - Context: targeted search and partial reads; targeted tests while iterating, full checks before
   done; subagents only for isolation or parallelism, returning short findings.
+- Agents (`.claude/agents/`): `db-security` (Opus; schema/RLS/auth review, runs db tests),
+  `code-reviewer` (diff review), `qa-browser` (Playwright checks). Read-only; each returns a short
+  verdict with findings. Path rules in `.claude/rules/` (`db.md`, `ui.md`) load on demand.
 - Guardrails (`.claude/settings.json`, `.claude/hooks/`): env files and committed migrations are
   blocked; push, commit and hosted Supabase/Vercel operations need owner approval. Never work
   around them.
