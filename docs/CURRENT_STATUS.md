@@ -24,7 +24,8 @@ needed).
   propose-only tool pruning, `envfacts` micro-skills, loop guard nudges. Review its proposals with
   `/tokeneconomizer:status` before applying anything.
 - **Design system:** `docs/DESIGN_SYSTEM.md`; tokens, Geist, wordmark and the admin/editor
-  shell (`src/components/app-shell/`) applied; status badges and empty/loading/error states pending.
+  shell (`src/components/app-shell/`) and status pills (`src/components/status-pill.tsx`) applied;
+  empty/loading/error states pending.
   The shell has only been checked visually on a temporary page, not behind real admin/editor sign-in.
 - **Tests:** pgTAP 151, Vitest 102, Playwright smoke 8 (`npm run test:e2e`). Last verified 2026-11-12 on Windows (check, db:test,
   db:advisors).

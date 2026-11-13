@@ -11,6 +11,10 @@ specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point
   `.claude/hooks/format.mjs`: Prettier on edited files). Duplicate plugins and skills disabled for
   this project. `CURRENT_STATUS.md` split into status + this changelog; decision index added to
   `OPEN_QUESTIONS.md`; workflow and method routing added to `CLAUDE.md`.
+- **Design system, part 3 (status pills):** `StatusPill` (text label in the normal text colour,
+  tone shown by a dot: success, warning = needs admin attention, info = in progress/waiting,
+  danger, neutral) replaces the shadcn badge variants for application and inquiry statuses so
+  every status looks the same. Checked visually in dark and light on a temporary page (deleted).
 - **TokenEconomizer (Microsoft) installed, trial, 2026-11-13:** cloned to
   `C:\Users\ahash\tools\TokenEconomizer` at commit `7042ea8` (reviewed: no network code, hooks
   fail open, paid side-calls are `claude -p --tools "" --max-turns 1`), installed with

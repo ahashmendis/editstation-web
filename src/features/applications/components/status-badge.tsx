@@ -1,20 +1,20 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusPill, type StatusTone } from "@/components/status-pill";
 
 import { STATUS_LABEL, type ApplicationStatus } from "../constants";
 
-const VARIANT: Record<ApplicationStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  draft: "outline",
-  submitted: "secondary",
-  under_review: "secondary",
-  info_requested: "outline",
-  test_requested: "outline",
-  approved: "default",
-  rejected: "destructive",
-  withdrawn: "outline",
+const TONE: Record<ApplicationStatus, StatusTone> = {
+  draft: "neutral",
+  submitted: "warning", // waiting for an admin to start the review
+  under_review: "info",
+  info_requested: "info", // waiting on the applicant
+  test_requested: "info",
+  approved: "success",
+  rejected: "danger",
+  withdrawn: "neutral",
 };
 
 export function StatusBadge({ status }: { status: ApplicationStatus }) {
-  return <Badge variant={VARIANT[status]}>{STATUS_LABEL[status]}</Badge>;
+  return <StatusPill tone={TONE[status]}>{STATUS_LABEL[status]}</StatusPill>;
 }
 
 export function formatDateTime(value: string | null | undefined): string {

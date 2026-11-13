@@ -1,18 +1,18 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusPill, type StatusTone } from "@/components/status-pill";
 
 import { INQUIRY_STATUS_LABEL, type InquiryStatus } from "../constants";
 
-const VARIANT: Record<InquiryStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  new: "default",
-  reviewing: "secondary",
-  contacted: "secondary",
-  in_discussion: "secondary",
-  converted: "default",
-  declined: "outline",
-  closed: "outline",
-  spam: "destructive",
+const TONE: Record<InquiryStatus, StatusTone> = {
+  new: "warning", // nobody has looked at it yet
+  reviewing: "info",
+  contacted: "info",
+  in_discussion: "info",
+  converted: "success",
+  declined: "neutral",
+  closed: "neutral",
+  spam: "danger",
 };
 
 export function InquiryStatusBadge({ status }: { status: InquiryStatus }) {
-  return <Badge variant={VARIANT[status]}>{INQUIRY_STATUS_LABEL[status]}</Badge>;
+  return <StatusPill tone={TONE[status]}>{INQUIRY_STATUS_LABEL[status]}</StatusPill>;
 }
