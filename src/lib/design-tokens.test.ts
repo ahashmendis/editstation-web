@@ -6,12 +6,17 @@ import { describe, expect, it } from "vitest";
 // Keeps the colour tokens in src/app/globals.css (documented in docs/DESIGN_SYSTEM.md) from
 // drifting below WCAG contrast. Reads the real stylesheet; no browser needed.
 
-const css = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
+const css = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8").replaceAll(
+  "\r\n",
+  "\n",
+);
+const MIN_TOKENS = 20; // guards against the parser silently matching almost nothing
 
 function block(startMarker: string, endMarker: string) {
   const start = css.indexOf(startMarker);
   expect(start, `${startMarker} not found`).toBeGreaterThan(-1);
   const end = css.indexOf(endMarker, start);
+  expect(end, `${endMarker} not found after ${startMarker}`).toBeGreaterThan(start);
   return css.slice(start, end);
 }
 
@@ -36,7 +41,7 @@ function luminance([L, C, h]: [number, number, number]) {
     4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
     -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
     -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  ].map((v) => Math.min(1, Math.max(0, v))); // already linear sRGB
+  ].map((v) => Math.min(1, Math.max(0, v))); // linear sRGB (no gamma), clamped to the gamut
   return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
 }
 
@@ -62,8 +67,11 @@ const PAIRS: [string, string, number][] = [
   ["brand-text", "card", 4.5],
   ["destructive", "background", 4.5],
   ["destructive", "card", 4.5],
+  ["destructive", "muted", 4.5],
   ["success", "card", 4.5],
+  ["success", "background", 4.5],
   ["warning", "card", 4.5],
+  ["warning", "background", 4.5],
   ["ring", "background", 3],
   ["ring", "card", 3],
   ["primary", "background", 3], // brand purple as a graphic or large text on the page
@@ -74,6 +82,7 @@ describe.each([
   ["light", light],
 ])("%s theme contrast", (_name, theme) => {
   it("defines every token the other theme defines", () => {
+    expect(theme.size).toBeGreaterThan(MIN_TOKENS);
     const other = theme === dark ? light : dark;
     expect([...theme.keys()].sort()).toEqual([...other.keys()].sort());
   });

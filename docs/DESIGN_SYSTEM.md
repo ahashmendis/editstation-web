@@ -54,8 +54,9 @@ shadcn variable names so every installed component picks them up.
 | `--ring`               | `#b27ef0`                        | `#7a2fcc`                        | Focus outline (always visible)          |
 
 Status palette (to be tuned and contrast-checked when applied; each also needs a text label):
-success (green), warning (amber), danger (red, replaces current `--destructive`), info (uses
-`--brand-text`), neutral (muted). Sidebar tokens inherit the card/background values with the purple
+success (green) and warning (amber) are implemented as `--success` and `--warning`; danger reuses
+`--destructive` (retuned); info is not implemented yet (it would use `--brand-text`); neutral is
+`--muted`. Sidebar tokens inherit the card/background values with the purple
 used only for the active item.
 
 ## 4. Typography
@@ -108,16 +109,16 @@ effect). Not used in admin or editor areas. Each one is copied in through the sh
 before committing, licence checked (reported as MIT with Commons Clause, to be confirmed), and any
 animation dependency it needs is justified first. Must be disabled under reduced motion.
 
-## 8. What changes in code (when approved)
+## 8. What changes in code (status)
 
-1. `src/app/globals.css`: replace neutral shadcn tokens with the table above; add `--brand-text`,
+1. **Done.** `src/app/globals.css`: replace neutral shadcn tokens with the table above; add `--brand-text`,
    status tokens; dark as default (`color-scheme` follows system for light).
-2. `src/components/site-chrome.tsx`: wordmark and header restyle.
-3. New shared `AppShell` (sidebar + top bar) used by `/admin` and `/editor` layouts; admin nav moves
+2. **Done.** `src/components/site-chrome.tsx` and the auth pages: wordmark and header restyle.
+3. **Pending.** New shared `AppShell` (sidebar + top bar) used by `/admin` and `/editor` layouts; admin nav moves
    into it. Status badges unified.
-4. Empty/loading/error states added screen by screen as each is touched (not one big rewrite).
-5. Playwright smoke tests and the 375px check keep passing; add a contrast check for the token
-   pairs in a unit test so the table above cannot drift.
+4. **Pending.** Empty/loading/error states added screen by screen as each is touched (not one big rewrite).
+5. **Done.** Playwright smoke tests and the 375px check keep passing; a contrast check for the
+   token pairs (`src/lib/design-tokens.test.ts`) keeps the table above from drifting.
 
 ## 9. Owner decisions (2026-11-12)
 
