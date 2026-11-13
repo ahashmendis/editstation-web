@@ -3,6 +3,15 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-13: decisions J and T
+
+- Owner chose the recommendations. **T:** minimal admin-only `clients` table, created when the
+  first inquiry is converted (`client_contacts` not decided). **J:** coarse project status;
+  Invited, Negotiation and Awaiting confirmation are assignment states shown as derived labels on
+  the project (WORKFLOWS §5, no longer PROPOSED). Recorded in OPEN_QUESTIONS (log, index, section
+  headings); DATABASE_SCHEMA, WORKFLOWS, DEVELOPMENT_ROADMAP (also: Phases 1-3 marked with their
+  commits) and CURRENT_STATUS updated. Phase 4 has no remaining blocking questions.
+
 ## 2026-11-12: development environment
 
 - **Claude Code guardrails (Essential tier):** project `.claude/settings.json` with permission

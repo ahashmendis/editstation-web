@@ -16,8 +16,6 @@ Open items first. Read a question's full section only when it becomes relevant.
 
 | ID   | Topic                                         | Status                      | Blocks                    |
 | ---- | --------------------------------------------- | --------------------------- | ------------------------- |
-| T    | Client records                                | Open                        | Phase 4                   |
-| J    | Project status; negotiation on assignment     | Open                        | Phase 4                   |
 | W    | Re-application after withdrawal               | Open (conservative default) | Nothing; confirm any time |
 | G    | Practical tests: paid? tracked?               | Open                        | Phase 9 (payment)         |
 | P    | Data retention and privacy notice             | Open                        | Public launch             |
@@ -38,7 +36,7 @@ Open items first. Read a question's full section only when it becomes relevant.
 | KB9  | Payment schedule                              | Open                        | Phase 9                   |
 | KB10 | Notification events for release 1             | Open                        | Phase 10                  |
 
-Resolved (see decisions log): A, D, E, H, L, M, N, O, R, S, U, V.
+Resolved (see decisions log): A, D, E, H, J, L, M, N, O, R, S, T, U, V.
 
 ## Decisions log
 
@@ -58,6 +56,8 @@ Format: date, question: decision.
 - 2026-11-11, **H** Currency: LKR by default; currency stored on every amount.
 - 2026-11-11, **S** Website content: English only; placeholder copy until brand (KB2) and services (KB3) are settled.
 - 2026-11-11, **O** Spam protection: Honeypot and rate limits now; Cloudflare Turnstile added before public launch (launch gate).
+- 2026-11-13, **T** Client records: Adopt the recommendation. A minimal admin-only `clients` table, created when the first inquiry is converted, so repeat clients link across inquiries and projects. No client-facing access. `client_contacts` is not part of this decision.
+- 2026-11-13, **J** Project status: Adopt the recommendation (WORKFLOWS §5). The project has a coarse status (`draft`, `open`, `assigned`, `in_progress`, `in_review`, `revision_requested`, `approved`, `completed`, plus `on_hold` and `cancelled`). Invited, Negotiation and Awaiting confirmation are **assignment** states; the project screen shows labels derived from its assignments.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 ---
@@ -168,7 +168,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Alternatives:** Multilingual from day one adds translation infrastructure and maintenance.
 - **Blocks:** Phase 3 content. Structure can be built with placeholders.
 
-### T. Client records
+### T. Client records: RESOLVED 2026-11-13 (minimal admin-only clients table)
 
 - **Question:** Track clients/agencies as their own records (so repeat clients link across
   inquiries and projects), or keep client details only on each inquiry/project?
@@ -327,7 +327,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
   liabilities aren't visible.
 - **Blocks:** Phase 9.
 
-### J. Coarse project status, negotiation on the assignment
+### J. Coarse project status, negotiation on the assignment: RESOLVED 2026-11-13 (adopted)
 
 - **Why it matters:** With several editors (C) and reassignments, a project can have more than one
   negotiation at once. A single project-level "Negotiation" status can't represent that.
@@ -392,4 +392,4 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 
 ## Resolved
 
-- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**, **N**, **O**, **S**, **U**, **V**, **H**: resolved 2026-11-11 (KB3 partly: placeholder list, final list open) (see decisions log).
+- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**, **N**, **O**, **S**, **U**, **V**, **H**: resolved 2026-11-11 (KB3 partly: placeholder list, final list open); **J**, **T**: resolved 2026-11-13 (see decisions log).

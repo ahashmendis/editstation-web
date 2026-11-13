@@ -2,7 +2,7 @@
 
 **Phase:** 3 (public website and client inquiries) complete. `main` = Phases 0–3 plus Windows
 setup (`e70dfec`). Nothing pushed. Development machine: Windows (moved from macOS 2026-11-12).
-Decisions applied: A, D, E, H, L, M, N, O, R, S, U, V; KB3 placeholder list (OPEN_QUESTIONS).
+Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V; KB3 placeholder list (OPEN_QUESTIONS).
 **Last updated:** 2026-11-12
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
@@ -86,6 +86,8 @@ needed).
 
 ## Next task
 
-Phase 4 (projects, briefs, inquiry → project conversion), which needs owner decisions **J** and
-**T**. Before public launch (not development): KB1, KB2, KB8, P, Turnstile (O), production SMTP,
+Phase 4 (projects, 3 brief types, brief versions, deliverables, inquiry → project conversion).
+Its blocking decisions J and T were resolved 2026-11-13 (OPEN_QUESTIONS). It is a major feature:
+plan it (BMAD for the spec, Superpowers for the implementation plan) and get owner approval before
+any migration. Before public launch (not development): KB1, KB2, KB8, P, Turnstile (O), production SMTP,
 and your real service list and budget ranges (Settings screen).

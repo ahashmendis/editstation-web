@@ -116,7 +116,7 @@ Scope change required.
 
 **Payment:** §8.2 and §10.4 differ; see OPEN_QUESTIONS I for the comparison and recommendation.
 
-## 5. PROPOSED: coarse project status, negotiation on the assignment (OPEN_QUESTIONS J)
+## 5. Coarse project status, negotiation on the assignment (decision J, adopted 2026-11-13)
 
 Project: `draft` → `open` → `assigned` → `in_progress` → `in_review` ⇄ `revision_requested` →
 `approved` → `completed`, plus `on_hold` and `cancelled`. The KB's Invited / Negotiation /
