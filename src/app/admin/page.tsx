@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
+import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { countNewInquiries } from "@/features/inquiries/queries";
 import { requireAdmin, type EditorAccessStatus } from "@/lib/auth/access";
@@ -88,7 +89,9 @@ async function AdminContent() {
         </CardHeader>
         <CardContent>
           {logs.data.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No activity yet.</p>
+            <EmptyState title="No activity yet">
+              Changes to applications, inquiries and editor access are logged here.
+            </EmptyState>
           ) : (
             <ul className="grid gap-2 text-sm">
               {logs.data.map((log) => (

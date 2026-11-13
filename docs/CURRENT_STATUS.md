@@ -25,9 +25,10 @@ needed).
   `/tokeneconomizer:status` before applying anything.
 - **Design system:** `docs/DESIGN_SYSTEM.md`; tokens, Geist, wordmark and the admin/editor
   shell (`src/components/app-shell/`) and status pills (`src/components/status-pill.tsx`) applied;
-  empty/loading/error states pending.
+  empty/loading/error states (`empty-state.tsx`, `Loading` skeleton, `app/error.tsx`,
+  `app/not-found.tsx`) applied to admin lists; other screens adopt them as touched.
   The shell has only been checked visually on a temporary page, not behind real admin/editor sign-in.
-- **Tests:** pgTAP 151, Vitest 102, Playwright smoke 8 (`npm run test:e2e`). Last verified 2026-11-12 on Windows (check, db:test,
+- **Tests:** pgTAP 151, Vitest 102, Playwright smoke 9 (`npm run test:e2e`). Last verified 2026-11-12 on Windows (check, db:test,
   db:advisors).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
   migration protection, approval for push/commit and hosted operations, Prettier on edit). Hook

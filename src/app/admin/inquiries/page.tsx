@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
+import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/features/applications/components/status-badge";
 import { InquiryStatusBadge } from "@/features/inquiries/components/inquiry-status-badge";
@@ -62,7 +63,9 @@ async function InquiriesContent({
       <Card>
         <CardContent className="overflow-x-auto pt-6">
           {rows.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No inquiries here.</p>
+            <EmptyState title="No inquiries in this view">
+              Try another filter above. Inquiries sent through the public form appear here.
+            </EmptyState>
           ) : (
             <table className="w-full text-left text-sm">
               <thead className="text-muted-foreground">

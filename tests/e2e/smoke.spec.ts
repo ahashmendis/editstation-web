@@ -36,6 +36,12 @@ test.describe("public site", () => {
   });
 });
 
+test("unknown pages show the not-found page with a 404 status", async ({ page }) => {
+  const response = await page.goto("/definitely-not-a-page");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+});
+
 test.describe("signed-out access gates", () => {
   for (const path of ["/apply", "/editor", "/admin", "/admin/applications", "/mfa"]) {
     test(`${path} redirects to sign-in and keeps the destination`, async ({ page }) => {

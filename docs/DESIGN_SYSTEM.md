@@ -115,7 +115,7 @@ animation dependency it needs is justified first. Must be disabled under reduced
    status tokens; dark as default (`color-scheme` follows system for light).
 2. **Done.** `src/components/site-chrome.tsx` and the auth pages: wordmark and header restyle.
 3. **Done (shell and status pills).** Shared `AppShell` (sidebar on `lg+`, top bar with a menu sheet below) used by `/admin` and `/editor` layouts; the old horizontal admin nav was removed. Status pills are unified in `src/components/status-pill.tsx`.
-4. **Pending.** Empty/loading/error states added screen by screen as each is touched (not one big rewrite).
+4. **Done (first pass).** `EmptyState` (title, what to do next) on the admin lists and activity feed, a skeleton `Loading` (respects reduced motion), `app/error.tsx` (shows only a reference, never the error message) and `app/not-found.tsx`. Remaining screens adopt `EmptyState` as they are touched.
 5. **Done.** Playwright smoke tests and the 375px check keep passing; a contrast check for the
    token pairs (`src/lib/design-tokens.test.ts`) keeps the table above from drifting.
 

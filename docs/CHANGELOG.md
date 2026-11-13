@@ -11,6 +11,11 @@ specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point
   `.claude/hooks/format.mjs`: Prettier on edited files). Duplicate plugins and skills disabled for
   this project. `CURRENT_STATUS.md` split into status + this changelog; decision index added to
   `OPEN_QUESTIONS.md`; workflow and method routing added to `CLAUDE.md`.
+- **Design system, part 4 (states):** `EmptyState`, skeleton `Loading`, root `error.tsx` (shows
+  only the digest reference; verified that a thrown error message never reaches the page) and
+  `not-found.tsx`; admin applications, inquiries and activity use `EmptyState`. New smoke test for
+  the 404 page (9 total). Gotcha found: `export const dynamic` in any route is a build error under
+  `cacheComponents` and breaks the whole dev server, not only that route.
 - **Design system, part 3 (status pills):** `StatusPill` (text label in the normal text colour,
   tone shown by a dot: success, warning = needs admin attention, info = in progress/waiting,
   danger, neutral) replaces the shadcn badge variants for application and inquiry statuses so

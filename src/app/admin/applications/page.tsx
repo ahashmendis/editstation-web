@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
+import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime, StatusBadge } from "@/features/applications/components/status-badge";
 import { listApplications, type ApplicationFilter } from "@/features/applications/queries";
@@ -60,7 +61,9 @@ async function ApplicationsContent({
       <Card>
         <CardContent className="overflow-x-auto pt-6">
           {rows.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No applications here.</p>
+            <EmptyState title="No applications in this view">
+              Try another filter above. New submissions appear under Needs attention.
+            </EmptyState>
           ) : (
             <table className="w-full text-left text-sm">
               <thead className="text-muted-foreground">

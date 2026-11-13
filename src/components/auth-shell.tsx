@@ -62,6 +62,19 @@ export function AreaShell({
   );
 }
 
+// Shown while a signed-in page's per-request data loads. Skeleton bars roughly match a page
+// header and one card so the layout does not jump; the pulse stops under reduced motion.
 export function Loading() {
-  return <p className="text-muted-foreground p-8 text-center text-sm">Loading…</p>;
+  return (
+    <div role="status" aria-live="polite" className="mx-auto w-full max-w-4xl px-4 py-10">
+      <span className="sr-only">Loading…</span>
+      <div aria-hidden className="grid gap-6 motion-safe:animate-pulse">
+        <div className="grid gap-2">
+          <div className="bg-muted h-7 w-48 rounded-md" />
+          <div className="bg-muted h-4 w-64 max-w-full rounded-md" />
+        </div>
+        <div className="bg-muted h-40 rounded-xl" />
+      </div>
+    </div>
+  );
 }
