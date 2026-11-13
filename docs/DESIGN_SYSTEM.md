@@ -114,8 +114,7 @@ animation dependency it needs is justified first. Must be disabled under reduced
 1. **Done.** `src/app/globals.css`: replace neutral shadcn tokens with the table above; add `--brand-text`,
    status tokens; dark as default (`color-scheme` follows system for light).
 2. **Done.** `src/components/site-chrome.tsx` and the auth pages: wordmark and header restyle.
-3. **Pending.** New shared `AppShell` (sidebar + top bar) used by `/admin` and `/editor` layouts; admin nav moves
-   into it. Status badges unified.
+3. **Done (shell); status badges pending.** Shared `AppShell` (sidebar on `lg+`, top bar with a menu sheet below) used by `/admin` and `/editor` layouts; the old horizontal admin nav was removed. Unified status badges are still to do.
 4. **Pending.** Empty/loading/error states added screen by screen as each is touched (not one big rewrite).
 5. **Done.** Playwright smoke tests and the 375px check keep passing; a contrast check for the
    token pairs (`src/lib/design-tokens.test.ts`) keeps the table above from drifting.

@@ -49,7 +49,7 @@ export function AreaShell({
     <main className="mx-auto grid w-full max-w-4xl gap-6 px-4 py-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
+          <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase in-data-[app-shell]:hidden">
             EDITSTATION
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>

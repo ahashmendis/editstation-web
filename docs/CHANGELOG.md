@@ -11,6 +11,25 @@ specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point
   `.claude/hooks/format.mjs`: Prettier on edited files). Duplicate plugins and skills disabled for
   this project. `CURRENT_STATUS.md` split into status + this changelog; decision index added to
   `OPEN_QUESTIONS.md`; workflow and method routing added to `CLAUDE.md`.
+- **TokenEconomizer (Microsoft) installed, trial, 2026-11-13:** cloned to
+  `C:\Users\ahash\tools\TokenEconomizer` at commit `7042ea8` (reviewed: no network code, hooks
+  fail open, paid side-calls are `claude -p --tools "" --max-turns 1`), installed with
+  `--scope local` (this project, git-ignored `.claude/settings.local.json`). **Claude Code 2.1.212
+  is below its supported range 2.1.300-2.1.310, so behaviour is unverified.** Per-repository config
+  (outside the repo, `~/.tokeneconomizer/repos/editstation-*/config.json`): `microskills=envfacts`
+  (no model calls), `toolprune=propose` (its default is `auto`, changed before first use; nothing
+  is applied until `toolprune apply`), `loopguard=nudge` (redirects, never stops a turn),
+  `history_import=on` for this repository only. Take effect from the next session. Disable one
+  session: `TE_DISABLE=1`; remove: `claude plugin uninstall tokeneconomizer@tokeneconomizer
+--scope local`. Baseline before trial (RTK, all projects): 524 commands, 39% of command output
+  saved. To judge it, compare `/context`, `/cost` and `/tokeneconomizer:status` over several real
+  tasks, plus repeated failures and test results, not token counts alone.
+- **Design system, part 2 (app shell):** `src/components/app-shell/` (`AppShell`, `NavLinks`,
+  `MobileNav`) wired into `/admin` and `/editor` layouts: sidebar on large screens, top bar with a
+  menu sheet (new shadcn `sheet` component) below `lg`; current page marked with a purple bar and
+  `aria-current`. Replaced `admin-nav.tsx`. `AreaShell` hides its "EDITSTATION" eyebrow inside the
+  shell. Checked visually (dark, light, 375px, menu open) on a temporary route that was deleted;
+  active-link logic unit-tested (`is-current.test.ts`); not exercised behind real admin MFA / editor sign-in. Applicants (`/apply`) are unchanged.
 - **Design system, part 1:** `docs/DESIGN_SYSTEM.md` (owner-approved recommended answers).
   `globals.css` now has brand tokens: dark default (near-black, brand purple `#9643E5`), light
   theme via `prefers-color-scheme`, `--brand-text`, success/warning tokens; `dark:` utilities

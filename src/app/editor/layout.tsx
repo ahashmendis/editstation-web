@@ -1,7 +1,13 @@
 import { Suspense, type ReactNode } from "react";
 
+import { AppShell } from "@/components/app-shell/app-shell";
+import type { NavItem } from "@/components/app-shell/nav-links";
 import { Loading } from "@/components/auth-shell";
 import { requireActiveEditor } from "@/lib/auth/access";
+
+const EDITOR_NAV: NavItem[] = [
+  { href: "/editor", label: "Dashboard", icon: "dashboard", exact: true },
+];
 
 // Editor area: only accounts with access_status = 'active' (decision L).
 // UI gate only; RLS (private.is_active_editor) is the real boundary.
@@ -15,5 +21,9 @@ export default function EditorLayout({ children }: { children: ReactNode }) {
 
 async function EditorGate({ children }: { children: ReactNode }) {
   await requireActiveEditor();
-  return children;
+  return (
+    <AppShell area="Editor" items={EDITOR_NAV}>
+      {children}
+    </AppShell>
+  );
 }
