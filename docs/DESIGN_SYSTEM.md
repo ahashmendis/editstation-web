@@ -82,9 +82,12 @@ used only for the active item.
 
 ## 6. Components and patterns
 
-- **Logo/header:** text wordmark in HTML (EDIT in foreground colour, STATION in purple) for now. The
-  supplied PNGs have a baked-in black background, so the icon needs a transparent SVG/PNG before it
-  can be used on other surfaces; the wordmark alone works on both themes.
+- **Logo/header:** full lockup everywhere (`Wordmark`): the mark (`src/components/logo-mark.tsx`,
+  an inline SVG hand-redrawn from the brand board; figure in `currentColor`, sparks in
+  `--primary`, screen drawn as an outline so it reads on both themes), a thin purple divider, then
+  EDIT (foreground) + STATION (purple). `iconOnly` only for very tight spots. Browser/app icon =
+  mark only: `src/app/icon.svg` (white mark on a #9643E5 → #5A1DA6 tile) and
+  `src/app/apple-icon.tsx` (180px PNG); keep their geometry in step with `logo-mark.tsx`.
 - **Public header/footer:** as today (`site-chrome.tsx`), restyled; two clear entry points (send a
   project, join as an editor), "Sign in" quieter.
 - **Admin and editor shell:** fixed left sidebar on `lg+`, collapses to a top bar with a menu sheet
@@ -127,6 +130,7 @@ animation dependency it needs is justified first. Must be disabled under reduced
 1. Dark-first everywhere: **yes**.
 2. Keep Geist, no display font: **yes**. (Geist was loaded but never applied: `--font-sans`
    pointed at itself, so the app rendered in Times New Roman. Fixed.)
-3. Transparent logo files: **still needed** from the owner; text wordmark until then.
+3. Transparent logo files: **resolved** by redrawing the mark as SVG (2026-11-14); icon + text
+   lockup everywhere, icon only for the browser/app icon.
 4. React Bits: **skipped for now** (revisit with the public hero).
 5. Light theme: **defined now** (follows the system setting; no toggle).
