@@ -54,3 +54,11 @@ graphify-out/
 .playwright-mcp/
 marketing/ffmpeg-tool/
 marketing/**/frames/
+marketing/launch-teaser/fonts/
+marketing/launch-teaser/teaser-silent.webm
+marketing/launch-teaser/teaser-audio.wav
+marketing/reel/reels/
+marketing/reel/brand/voice-sample-*.wav
+marketing/reel/.agents/
+marketing/reel/.claude/
+marketing/reel/skills-lock.json

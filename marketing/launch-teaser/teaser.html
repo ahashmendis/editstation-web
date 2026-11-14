@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>EditStation Teaser</title>
+    <meta name="viewport" content="width=1080" />
+    <style>
+      @font-face {
+        font-family: "Geist";
+        src: url("fonts/geist-latin.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Geist Mono";
+        src: url("fonts/geist-mono-latin.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0c0b11;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 1080px;
+        height: 1920px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="stage" width="1080" height="1920"></canvas>
+    <script src="teaser.js"></script>
+  </body>
+</html>
