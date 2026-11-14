@@ -420,19 +420,21 @@ export function EditDetailsForm({
     >
       <input type="hidden" name="projectId" value={projectId} />
       <Messages state={state} />
-      <DetailsFields
-        state={state}
-        d={details}
-        services={services}
-        clients={clients}
-        briefType={briefType}
-        onBriefType={setBriefType}
-      />
-      {briefTypeLocked ? (
-        <p className="text-muted-foreground text-sm">
-          The brief type cannot change once a project has been opened.
-        </p>
-      ) : null}
+      <fieldset disabled={locked} className="m-0 grid min-w-0 gap-6 border-0 p-0">
+        <DetailsFields
+          state={state}
+          d={details}
+          services={services}
+          clients={clients}
+          briefType={briefType}
+          onBriefType={setBriefType}
+        />
+        {briefTypeLocked ? (
+          <p className="text-muted-foreground text-sm">
+            The brief type cannot change once a project has been opened.
+          </p>
+        ) : null}
+      </fieldset>
       {locked ? (
         <p className="text-muted-foreground text-sm">This project can no longer be edited.</p>
       ) : (
@@ -480,36 +482,38 @@ export function BriefEditorForm({
             : "This project has not been opened yet, so changes update version 1 in place."}
         </span>
       </p>
-      <BriefTextFields state={state} b={brief} briefType={briefType} />
-      <DeliverablesEditor initial={deliverables} />
-      <ReferencesEditor initial={references} />
-      {opened ? (
-        <fieldset className="grid gap-3 rounded-lg border p-3">
-          <legend className="px-1 text-sm font-medium">About this change</legend>
-          <div className="grid gap-2">
-            <Label htmlFor="changeSummary">What changed and why</Label>
-            <Textarea
-              id="changeSummary"
-              name="changeSummary"
-              rows={2}
-              maxLength={1000}
-              defaultValue={state.values?.changeSummary}
-            />
-            <p className="text-muted-foreground text-sm">Required when the content changes.</p>
-          </div>
-          <label className="flex items-start gap-2 text-sm">
-            <Input
-              type="checkbox"
-              name="requiresReacknowledgement"
-              defaultChecked
-              className="mt-0.5 size-4 shrink-0"
-            />
-            <span>
-              Editors must confirm the new version again. Changed deliverables always require it.
-            </span>
-          </label>
-        </fieldset>
-      ) : null}
+      <fieldset disabled={locked} className="m-0 grid min-w-0 gap-6 border-0 p-0">
+        <BriefTextFields state={state} b={brief} briefType={briefType} />
+        <DeliverablesEditor initial={deliverables} />
+        <ReferencesEditor initial={references} />
+        {opened ? (
+          <fieldset className="grid gap-3 rounded-lg border p-3">
+            <legend className="px-1 text-sm font-medium">About this change</legend>
+            <div className="grid gap-2">
+              <Label htmlFor="changeSummary">What changed and why</Label>
+              <Textarea
+                id="changeSummary"
+                name="changeSummary"
+                rows={2}
+                maxLength={1000}
+                defaultValue={state.values?.changeSummary}
+              />
+              <p className="text-muted-foreground text-sm">Required when the content changes.</p>
+            </div>
+            <label className="flex items-start gap-2 text-sm">
+              <Input
+                type="checkbox"
+                name="requiresReacknowledgement"
+                defaultChecked
+                className="mt-0.5 size-4 shrink-0"
+              />
+              <span>
+                Editors must confirm the new version again. Changed deliverables always require it.
+              </span>
+            </label>
+          </fieldset>
+        ) : null}
+      </fieldset>
       {locked ? (
         <p className="text-muted-foreground text-sm">This project can no longer be edited.</p>
       ) : (

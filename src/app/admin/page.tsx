@@ -7,6 +7,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { countNewInquiries } from "@/features/inquiries/queries";
+import { activityLabel } from "@/lib/activity-labels";
 import { requireAdmin, type EditorAccessStatus } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
@@ -96,7 +97,7 @@ async function AdminContent() {
             <ul className="grid gap-2 text-sm">
               {logs.data.map((log) => (
                 <li key={log.id} className="flex flex-wrap justify-between gap-2">
-                  <span className="font-medium">{log.action}</span>
+                  <span className="font-medium">{activityLabel(log.action)}</span>
                   <span className="text-muted-foreground tabular-nums">
                     {new Date(log.created_at).toISOString().replace("T", " ").slice(0, 16)} UTC
                   </span>

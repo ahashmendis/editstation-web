@@ -24,19 +24,19 @@ Open items first. Read a question's full section only when it becomes relevant.
 | KB3  | Services and deliverables at launch           | Partly (placeholder list)   | Launch content            |
 | KB8  | Editor contract and portfolio permission      | Open                        | Launch of registration    |
 | A2   | Narrower "mark paid" permission               | Deferred                    | Phase 9 (if second admin) |
-| B    | Editor visibility before assignment           | Open                        | Phases 5–6                |
-| C    | Several editors accepting the same project    | Open                        | Phase 6                   |
+| B    | Editor visibility before assignment           | Resolved 2026-11-14         | —                         |
+| C    | Several editors accepting the same project    | Resolved 2026-11-14         | —                         |
 | F    | Pay for extra rounds, scope changes, kill fee | Open                        | Phase 8                   |
 | I    | Canonical payment statuses                    | Open                        | Phase 9                   |
-| K    | Asset sharing: per-account vs link            | Open                        | Phase 5                   |
+| K    | Asset sharing: per-account vs link            | Resolved 2026-11-14         | —                         |
 | KB4  | Client prices and editor pay ranges           | Open                        | Pilot                     |
 | KB5  | Turnaround and late-delivery rules            | Open                        | Phase 8; policy for pilot |
-| KB6  | Project communication                         | Open                        | Phase 6                   |
-| KB7  | Storage provider                              | Open                        | Phase 5                   |
+| KB6  | Project communication                         | Resolved 2026-11-14 (pilot) | —                         |
+| KB7  | Storage provider                              | Open (not blocking schema)  | Phase 5 go-live           |
 | KB9  | Payment schedule                              | Open                        | Phase 9                   |
 | KB10 | Notification events for release 1             | Open                        | Phase 10                  |
 
-Resolved (see decisions log): A, D, E, H, J, L, M, N, O, R, S, T, U, V.
+Resolved (see decisions log): A, B, C, D, E, H, J, K, KB6, L, M, N, O, R, S, T, U, V.
 
 ## Decisions log
 
@@ -58,6 +58,11 @@ Format: date, question: decision.
 - 2026-11-11, **O** Spam protection: Honeypot and rate limits now; Cloudflare Turnstile added before public launch (launch gate).
 - 2026-11-13, **T** Client records: Adopt the recommendation. A minimal admin-only `clients` table, created when the first inquiry is converted, so repeat clients link across inquiries and projects. No client-facing access. `client_contacts` is not part of this decision.
 - 2026-11-13, **J** Project status: Adopt the recommendation (WORKFLOWS §5). The project has a coarse status (`draft`, `open`, `assigned`, `in_progress`, `in_review`, `revision_requested`, `approved`, `completed`, plus `on_hold` and `cancelled`). Invited, Negotiation and Awaiting confirmation are **assignment** states; the project screen shows labels derived from its assignments.
+- 2026-11-14, **B** Editor visibility before assignment: Adopt the recommendation (owner instruction "accept all recommended options"). Tiered access: before admin confirmation an invited/eligible editor sees an opportunity summary (title, brief type, deliverables summary, deadline, proposed pay, references the admin marks non-confidential); the full brief and assets only after admin confirmation. A per-asset/per-reference flag lets admins expose samples early.
+- 2026-11-14, **K** Asset sharing: Adopt the recommendation. Per-account sharing, one folder per project, each share logged in `asset_access_grants`, with a revoke checklist on unassignment, suspension and project close. The app stores links and metadata only.
+- 2026-11-14, **C** Several editors accepting: Adopt the recommendation. The admin chooses manually; the others are marked "not selected". No first-come-first-served.
+- 2026-11-14, **KB6** Project communication: Adopt the recommendation for the pilot. Email or the existing channel, plus an admin-only notes log per project; no in-app chat.
+- 2026-11-14, **KB7** Storage provider: still open (needs the owner's actual provider). Phase 5 stores a provider value per asset (Google Drive, Dropbox, other), so the schema does not wait on it.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 ---
@@ -392,4 +397,4 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 
 ## Resolved
 
-- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**, **N**, **O**, **S**, **U**, **V**, **H**: resolved 2026-11-11 (KB3 partly: placeholder list, final list open); **J**, **T**: resolved 2026-11-13 (see decisions log).
+- **D**, **A** (A2 deferred), **L**, **R**, **M**, **E**, **N**, **O**, **S**, **U**, **V**, **H**: resolved 2026-11-11 (KB3 partly: placeholder list, final list open); **J**, **T**: resolved 2026-11-13; **B**, **C**, **K**, **KB6**: resolved 2026-11-14 (see decisions log).

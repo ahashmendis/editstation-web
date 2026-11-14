@@ -19,6 +19,7 @@ import {
   setEditorAccessAction,
   startReviewAction,
 } from "@/features/applications/admin-actions";
+import { activityLabel } from "@/lib/activity-labels";
 import { AdminActionForm } from "@/features/applications/components/admin-action-form";
 import { SafeLink, SnapshotView } from "@/features/applications/components/snapshot-view";
 import { formatDateTime, StatusBadge } from "@/features/applications/components/status-badge";
@@ -380,7 +381,7 @@ async function ApplicationContent({
           <ul className="grid gap-1">
             {activity.map((entry) => (
               <li key={entry.id} className="flex flex-wrap justify-between gap-2">
-                <span>{entry.action}</span>
+                <span>{activityLabel(entry.action)}</span>
                 <span className="text-muted-foreground tabular-nums">
                   {formatDateTime(entry.created_at)}
                 </span>

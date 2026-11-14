@@ -108,17 +108,4 @@ export function allowedStatusActions(
   }
 }
 
-const ACTIVITY_LABEL: Record<string, string> = {
-  "project.created": "Project created",
-  "project.brief_version": "New brief version",
-  "project.open": "Opened",
-  "project.draft": "Moved back to draft",
-  "project.on_hold": "Put on hold",
-  "project.cancelled": "Cancelled",
-  "inquiry.converted": "Created from inquiry",
-  "client.merged": "Client merged",
-};
-
-export function activityLabel(action: string): string {
-  return ACTIVITY_LABEL[action] ?? "Updated";
-}
+export { activityLabel } from "@/lib/activity-labels";

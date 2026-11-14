@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(17);
+select plan(20);
 
 create function pg_temp.as_user(p_uid uuid, p_aal text default 'aal1')
 returns void language plpgsql as $$
@@ -33,22 +33,6 @@ insert into exc_invoker values
   ('private.limit_portfolio_links'), ('private.prevent_activity_log_changes'),
   ('private.require_user'), ('private.set_updated_at');
 
--- Pre-Phase-4 functions whose ACL includes PUBLIC (Phases 1-3). The Phase 1 access helpers are
--- needed by RLS policies; the Phase 2-3 public functions are executable by anon and
--- authenticated anyway; the two trigger functions have the default ACL and cannot be called
--- outside a trigger. A follow-up migration may revoke PUBLIC from them (owner decision).
-create temp table exc_public_acl (name text primary key);
-insert into exc_public_acl values
-  ('private.is_admin'), ('private.is_admin_account'), ('private.is_active_editor'),
-  ('private.prevent_activity_log_changes'), ('private.set_updated_at'),
-  ('public.admin_approve_application'), ('public.admin_create_application_request'),
-  ('public.admin_record_assessment_result'), ('public.admin_reject_application'),
-  ('public.admin_reopen_application'), ('public.admin_set_editor_access'),
-  ('public.admin_set_inquiry_status'), ('public.admin_start_application_review'),
-  ('public.respond_to_application_request'), ('public.save_editor_profile'),
-  ('public.submit_client_inquiry'), ('public.submit_editor_application'),
-  ('public.withdraw_editor_application');
-
 -- private helpers RLS policies call as the API role.
 create temp table allow_private_exec (name text primary key);
 insert into allow_private_exec values
@@ -69,8 +53,8 @@ select is_empty($$ select sig from fns where not ('search_path=""' = any (coales
 
 select is_empty($$ select sig from fns
   where exists (select 1 from aclexplode(acl) a where a.grantee = 0)
-    and schema || '.' || name not in (select name from exc_public_acl) $$,
-  'no function grants EXECUTE to PUBLIC (except the listed pre-Phase-4 functions)');
+  $$,
+  'no function grants EXECUTE to PUBLIC (trigger functions included)');
 
 select is_empty($$ select sig from fns where schema = 'public'
   and not (has_function_privilege('anon', oid, 'execute') and has_function_privilege('authenticated', oid, 'execute')) $$,
@@ -83,13 +67,29 @@ select is_empty($$ select sig || ' -> ' || pg_get_userbyid(a.grantee) from fns, 
 
 select is_empty($$ select sig from fns where schema = 'private'
   and (has_function_privilege('anon', oid, 'execute') or has_function_privilege('authenticated', oid, 'execute'))
-  and schema || '.' || name not in (select name from allow_private_exec)
-  and schema || '.' || name not in (select name from exc_public_acl) $$,
+  and schema || '.' || name not in (select name from allow_private_exec) $$,
   'private functions are executable by no API role (except the RLS helpers)');
 
 select is_empty($$ select sig from fns where schema = 'private' and name not in ('is_admin', 'is_admin_account', 'is_active_editor')
   and exists (select 1 from aclexplode(acl) a where pg_get_userbyid(a.grantee) in ('anon', 'authenticated', 'service_role')) $$,
   'no private function has an explicit grant to an API role (except the RLS helpers)');
+
+-- RLS helpers: exactly the roles whose policies call them. anon evaluates is_admin() in the
+-- service_types and budget_ranges select policies; the other two are used only by
+-- authenticated (or inside security definer functions, which run as postgres).
+select ok(has_function_privilege('anon', 'private.is_admin()', 'execute')
+      and has_function_privilege('authenticated', 'private.is_admin()', 'execute'),
+  'anon and authenticated can execute private.is_admin (used by anon-visible RLS policies)');
+select ok(not has_function_privilege('anon', 'private.is_admin_account()', 'execute')
+      and not has_function_privilege('anon', 'private.is_active_editor()', 'execute')
+      and has_function_privilege('authenticated', 'private.is_admin_account()', 'execute')
+      and has_function_privilege('authenticated', 'private.is_active_editor()', 'execute'),
+  'is_admin_account and is_active_editor are executable by authenticated only');
+select is_empty($$ select sig from fns f join pg_catalog.pg_type t on t.oid = (select prorettype from pg_proc where oid = f.oid)
+  where t.typname = 'trigger'
+    and (has_function_privilege('anon', f.oid, 'execute') or has_function_privilege('authenticated', f.oid, 'execute')
+         or has_function_privilege('service_role', f.oid, 'execute')) $$,
+  'trigger functions are executable by no API role');
 
 select ok((select bool_and(has_function_privilege('anon', f::regprocedure, 'execute')
                            and has_function_privilege('authenticated', f::regprocedure, 'execute'))

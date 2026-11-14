@@ -18,6 +18,9 @@ export const INQUIRY_STATUS_LABEL: Record<InquiryStatus, string> = {
   spam: "Spam",
 };
 
+/** Plain label for an inquiry activity code such as `inquiry.reviewing`. */
+export { activityLabel as inquiryActivityLabel } from "@/lib/activity-labels";
+
 export const OPEN_INQUIRY_STATUSES: InquiryStatus[] = [
   "new",
   "reviewing",

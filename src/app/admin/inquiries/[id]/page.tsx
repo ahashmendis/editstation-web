@@ -17,6 +17,7 @@ import { addInquiryNoteAction, setInquiryStatusAction } from "@/features/inquiri
 import { InquiryStatusBadge } from "@/features/inquiries/components/inquiry-status-badge";
 import {
   INQUIRY_STATUS_LABEL,
+  inquiryActivityLabel,
   OPEN_INQUIRY_STATUSES,
   SETTABLE_INQUIRY_STATUSES,
 } from "@/features/inquiries/constants";
@@ -272,7 +273,7 @@ async function InquiryContent({
           <ul className="grid gap-1 text-sm">
             {activity.map((entry) => (
               <li key={entry.id} className="flex flex-wrap justify-between gap-2">
-                <span>{entry.action}</span>
+                <span>{inquiryActivityLabel(entry.action)}</span>
                 <span className="text-muted-foreground tabular-nums">
                   {formatDateTime(entry.created_at)}
                 </span>

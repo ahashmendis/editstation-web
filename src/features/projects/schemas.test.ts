@@ -79,7 +79,7 @@ describe("projectDetailsSchema", () => {
 
   it("maps activity actions to plain labels", () => {
     expect(activityLabel("project.brief_version")).toBe("New brief version");
-    expect(activityLabel("inquiry.converted")).toBe("Created from inquiry");
+    expect(activityLabel("inquiry.converted")).toBe("Converted to project");
     expect(activityLabel("something.else")).toBe("Updated");
   });
 
