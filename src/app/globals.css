@@ -145,3 +145,97 @@
     @apply font-sans;
   }
 }
+
+/* Public home page (src/app/page.tsx, src/features/landing/). One orchestrated moment (the hero
+   timeline playback) and one scroll-driven rail on the step lists. All motion is opt-in under
+   prefers-reduced-motion: no-preference; otherwise the page renders in its final state. Only
+   transform and opacity animate, so nothing shifts layout. Plain global classes: the Turbopack
+   CSS rule in next.config.ts treats every .css file as global, so CSS modules are not used. */
+@layer components {
+  .landing-glow {
+    mask-image: linear-gradient(to bottom, black 55%, transparent);
+    background:
+      radial-gradient(
+        60% 55% at 70% 40%,
+        color-mix(in oklch, var(--primary) 22%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        40% 40% at 15% 85%,
+        color-mix(in oklch, var(--primary) 10%, transparent),
+        transparent 70%
+      );
+  }
+
+  /* Full-width layer whose left edge is the line, so translateX(%) maps to the lane width.
+     It rests at the end of the timeline. */
+  .landing-playhead {
+    transform: translateX(99.6%);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .landing-playhead {
+      animation: landing-playback 4.2s linear 0.6s both;
+    }
+
+    /* Each clip lights up as the playhead reaches it; --at is the clip start (0..1). */
+    .landing-clip {
+      animation: landing-clip-on 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: calc(0.6s + var(--at) * 4.2s);
+    }
+
+    .landing-rise {
+      animation: landing-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: calc(var(--i, 0) * 90ms);
+    }
+
+    @supports (animation-timeline: view()) {
+      .landing-rail {
+        transform-origin: top;
+        animation: landing-fill linear both;
+        animation-timeline: view();
+        animation-range: entry 40% cover 60%;
+      }
+    }
+  }
+}
+
+@keyframes landing-playback {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(99.6%);
+  }
+}
+
+@keyframes landing-clip-on {
+  from {
+    opacity: 0.25;
+    transform: scaleY(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}

@@ -72,8 +72,11 @@ used only for the active item.
 
 ## 5. Spacing, radius, layout
 
-- 4px base grid. Page gutter 16px on phones, 24px from `md`. Public content max width 64rem
-  (`max-w-5xl`, as now); admin/editor content up to 80rem with a fixed sidebar.
+- 4px base grid. Page gutter 16px on phones, 24px from `md`. Public content max width 72rem
+  (`max-w-6xl`, landing page 2026-11-14); admin/editor content up to 80rem with a fixed sidebar.
+- Landing page styles are global `landing-*` classes at the end of `globals.css` (CSS modules are
+  global under this project's Turbopack CSS rule); hero = editing-timeline motif, CSS/SVG only,
+  reduced motion renders the final state.
 - Radius: keep `--radius: 0.625rem` for cards and inputs; buttons the same; pills for status badges.
 - Elevation: borders and surface steps, not shadows (shadows disappear on black).
 
