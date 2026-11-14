@@ -231,7 +231,7 @@ function EditorsCard({
           <p className="text-muted-foreground text-sm">
             {locked
               ? "This project is closed, so offers and invitations are unavailable."
-              : data.assignments.some((a) => a.status === "confirmed")
+              : data.assignments.some((a) => a.status === "confirmed" || a.status === "in_progress")
                 ? "An editor is confirmed for this project. Reassign them to reopen it for offers."
                 : "Editors can be invited and offered work once the project is open."}
           </p>
@@ -281,7 +281,9 @@ function EditorsCard({
                     <p className="text-sm">
                       {current.status === "offered" ? "Offer: " : null}
                       {current.status === "counteroffer_pending" ? "Their counteroffer: " : null}
-                      {current.status === "accepted" || current.status === "confirmed"
+                      {current.status === "accepted" ||
+                      current.status === "confirmed" ||
+                      current.status === "in_progress"
                         ? "Agreed pay: "
                         : null}
                       <strong className="tabular-nums">
@@ -341,7 +343,7 @@ function EditorActions({
   current: Data["assignments"][number] | null;
   currency: string;
 }) {
-  if (current?.status === "confirmed") {
+  if (current?.status === "confirmed" || current?.status === "in_progress") {
     return <ReassignForm projectId={projectId} assignmentId={current.id} />;
   }
   return (

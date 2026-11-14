@@ -78,7 +78,7 @@ Spec `docs/superpowers/specs/2026-11-14-phase5-6-editor-access-design.md`; plan 
 `public.admin_*` (`require_admin()`), editor writes via `public.editor_respond_offer`
 (`private.require_active_editor()`). Enums: `asset_provider`, `project_access_reason`
 (`invited`/`available`), `assignment_status` (`offered`, `counteroffer_pending`, `accepted`,
-`confirmed`, `declined`, `withdrawn`, `not_selected`, `reassigned`), `negotiation_role`,
+`confirmed`, `in_progress` (Phase 7), `declined`, `withdrawn`, `not_selected`, `reassigned`), `negotiation_role`,
 `negotiation_action` (`offer`/`counter`/`accept`/`decline`/`withdraw`).
 
 | Table                 | Key columns / rules                                                                                                                                                                                                                           | Editor reads                         |
@@ -91,17 +91,34 @@ Spec `docs/superpowers/specs/2026-11-14-phase5-6-editor-access-design.md`; plan 
 | `project_notes`       | admin notes log (KB6), append-only: project, author, note ≤4000                                                                                                                                                                               | never                                |
 
 Editor stage: `private.editor_project_stage(project)` = `none` unless active editor and the project
-is not cancelled/archived; `assigned` with a `confirmed` assignment; `opportunity` with live access
+is not cancelled/archived; `assigned` with a `confirmed` (or, from Phase 7, `in_progress`) assignment; `opportunity` with live access
 or a live (`offered`/`counteroffer_pending`/`accepted`) assignment. `projects` and
 `project_deliverables` visible at both stages; `brief_versions` (all versions) at `assigned`.
 Assignment status changes are audited by trigger (`assignment.<status>`, ids and statuses only).
 
-## Later assignment tables
+## Interpretation, brief confirmation and the in-progress gate _(Phase 7, implemented on branch, pending owner review)_
 
-| Table                    | Purpose / key columns                                                                 | Created |
-| ------------------------ | ------------------------------------------------------------------------------------- | ------- |
-| `editor_interpretations` | assignment, brief version, content, status, admin feedback                            | Phase 7 |
-| `brief_confirmations`    | KB §5.1 fields, storing a copy of deadline, deliverables, amount at confirmation time | Phase 7 |
+Spec `docs/superpowers/specs/2026-11-14-phase7-confirmation-gate-design.md`; plan calls in
+`docs/superpowers/plans/2026-11-14-phase7-database.md` (awaiting owner review). Migrations
+`20261114115858` to `20261114121138`. `assignment_status` gains `in_progress` (after `confirmed`);
+new enums `interpretation_status` (`submitted`/`accepted`/`changes_requested`) and
+`brief_confirmation_kind` (`confirmed`/`carried_forward`). Writes only via functions.
+
+| Table / change           | Key columns / rules                                                                                                                                                                                                                                                                                                                                              | Editor reads              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `assignments` (changed)  | `started_at`, `started_by`; `in_progress` needs agreed pay, `confirmed_at` and `started_at`; one live row per (project, editor) incl. `in_progress`; `assignments_one_active_key`: one `confirmed`/`in_progress` per project; new transitions `confirmed → in_progress`, `in_progress → reassigned/withdrawn`                                                    | own rows (active editors) |
+| `editor_interpretations` | append-only history, one row per submission: assignment, brief version (current at submission), `will_reproduce`/`will_adapt`/`questions_limitations` (≤4000, one of the first two required), `status`, `admin_feedback` (required for `changes_requested`), submitted/reviewed by/at. One `submitted` per assignment; content immutable, one review update only | rows of own assignments   |
+| `brief_confirmations`    | immutable: assignment, project, editor, `brief_version_id` (restrict) + `brief_version`, `kind`, `carried_from_id` (iff carried), copies of deadline, deliverables, agreed amount + currency, created_by, `confirmed_at`. One carried row per (assignment, version); insert trigger checks project/editor/version                                                | own rows (active editors) |
+
+Gate: `private.assignment_gate(assignment)` (compensation approved, interpretation required/accepted,
+current vs confirmed version, deadline/amount/deliverables drift, `brief_confirmed`, `ready`) is the
+only encoding of the rule. `BEFORE UPDATE` triggers refuse `assignments → in_progress` unless
+`ready`, and `projects → in_progress` without an `in_progress` assignment. An `AFTER INSERT` trigger
+on `brief_versions` writes `carried_forward` rows when `requires_reacknowledgement = false` and the
+latest confirmation is for the previous version. Interpretations stay valid until a version with
+`requires_reacknowledgement = true` (`private.material_brief_version`). Editor stage `assigned`
+covers `confirmed` and `in_progress`. Read-only `public.get_assignment_gate` for admin or the owning
+editor.
 
 ## Delivery, money, audit
 
@@ -127,9 +144,10 @@ client_inquiries.converted_project_id ─> projects         (set by admin_conver
 clients 1─* project_internal; clients.merged_into_id ─> clients  (merge repoints, never deletes)
 projects 1─* brief_versions, project_deliverables, project_references (Phase 4); project_assets (Phase 5)
 projects 1─* project_access *─1 editor_profiles
-projects 1─* assignments *─1 editor_profiles   (≤1 confirmed per project)
+projects 1─* assignments *─1 editor_profiles   (≤1 confirmed/in_progress per project)
 projects 1─* asset_access_grants *─1 editor_profiles; projects 1─* project_notes
-assignments 1─* negotiation_offers (Phase 6), brief_confirmations, submissions, payments
+assignments 1─* negotiation_offers (Phase 6), editor_interpretations, brief_confirmations (Phase 7), submissions, payments
+brief_versions 1─* editor_interpretations, brief_confirmations (restrict); brief_confirmations.carried_from_id ─> brief_confirmations
 ```
 
 ## RLS summary

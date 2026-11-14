@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Separate projects with their own tooling (Remotion reel, launch teaser scripts).
+    "marketing/**",
   ]),
 ]);
 

@@ -12,6 +12,8 @@ import { AdminActionForm } from "@/features/applications/components/admin-action
 import { formatDateTime } from "@/features/applications/components/status-badge";
 import { AdminAccessPanels } from "@/features/access/components/admin-panels";
 import { getProjectAccessData } from "@/features/access/queries";
+import { AdminConfirmationPanel } from "@/features/confirmation/components/admin-panel";
+import { getConfirmationData } from "@/features/confirmation/queries";
 import { archiveProjectAction, setProjectStatusAction } from "@/features/projects/admin-actions";
 import {
   BriefEditorForm,
@@ -56,6 +58,10 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
     getProjectAccessData(id),
   ]);
   if (!detail) notFound();
+  const working = access.assignments.filter(
+    (a) => a.status === "confirmed" || a.status === "in_progress",
+  );
+  const confirmationData = await getConfirmationData(working.map((a) => a.id));
   const {
     project: p,
     internal,
@@ -245,6 +251,24 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
           early_access: r.early_access,
         }))}
         data={access}
+      />
+
+      <AdminConfirmationPanel
+        projectId={p.id}
+        startable={!locked && status === "assigned"}
+        entries={working.flatMap((a) => {
+          const data = confirmationData.get(a.id);
+          return data
+            ? [
+                {
+                  assignmentId: a.id,
+                  editorName: access.nameOf(a.editorId),
+                  assignmentStatus: a.status as "confirmed" | "in_progress",
+                  data,
+                },
+              ]
+            : [];
+        })}
       />
 
       <Card>

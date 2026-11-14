@@ -3,6 +3,26 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-14: Phase 7 database layer (interpretation, brief confirmation, in-progress gate)
+
+- Branch `phase4-followups`, **uncommitted, pending owner review**. Migrations
+  `20261114115858_phase7_in_progress_enum`, `..115902_phase7_schema`, `..120257_phase7_gate`,
+  `..120611_phase7_interpretations`, `..120727_phase7_confirm_and_start`,
+  `..121138_phase7_phase6_changes`.
+- `assignment_status.in_progress`; `assignments.started_at/started_by`; one active
+  (`confirmed`/`in_progress`) assignment per project. Tables `editor_interpretations`
+  (append-only, one review) and `brief_confirmations` (immutable, carried-forward rows recorded).
+- `private.assignment_gate` + `BEFORE UPDATE` triggers on `assignments` and `projects`; carry-forward
+  trigger on `brief_versions`; editor stage `assigned` for `in_progress`. Functions:
+  `editor_submit_interpretation`, `admin_review_interpretation`, `editor_confirm_brief`,
+  `editor_start_work`, `admin_start_work`, `get_assignment_gate`; Phase 6 replacements for
+  reassign/withdraw/revoke/offer/checklist/cancel.
+- Confirmation rows set `confirmed_at = clock_timestamp()` so several confirmations in one
+  transaction stay ordered (the column default stays `now()`).
+- pgTAP 060-066 added; 044 and 052 matrices updated (052's amount-hygiene check scoped to its seeded
+  row: random matrix uuids could contain the digits). 1133/1133. Advisors: no issues. Types
+  regenerated (additions only).
+
 ## 2026-11-14: Phases 5-6 database layer (assets, editor access, offers, assignments)
 
 - Branch `phase4-followups`, **uncommitted, pending owner review**. Migrations

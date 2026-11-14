@@ -274,6 +274,8 @@ export type Database = {
           id: string;
           project_id: string;
           proposed_amount: number;
+          started_at: string | null;
+          started_by: string | null;
           status: Database["public"]["Enums"]["assignment_status"];
           updated_at: string;
         };
@@ -290,6 +292,8 @@ export type Database = {
           id?: string;
           project_id: string;
           proposed_amount: number;
+          started_at?: string | null;
+          started_by?: string | null;
           status?: Database["public"]["Enums"]["assignment_status"];
           updated_at?: string;
         };
@@ -305,6 +309,8 @@ export type Database = {
           id?: string;
           project_id?: string;
           proposed_amount?: number;
+          started_at?: string | null;
+          started_by?: string | null;
           status?: Database["public"]["Enums"]["assignment_status"];
           updated_at?: string;
         };
@@ -325,6 +331,108 @@ export type Database = {
           },
           {
             foreignKeyName: "assignments_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assignments_started_by_fkey";
+            columns: ["started_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brief_confirmations: {
+        Row: {
+          assignment_id: string;
+          brief_version: number;
+          brief_version_id: string;
+          carried_from_id: string | null;
+          confirmed_amount: number;
+          confirmed_at: string;
+          confirmed_currency: string;
+          confirmed_deadline: string;
+          confirmed_deliverables: NonNullable<Json>;
+          created_by: string | null;
+          editor_id: string;
+          id: string;
+          kind: Database["public"]["Enums"]["brief_confirmation_kind"];
+          project_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assignment_id: string;
+          brief_version: number;
+          brief_version_id: string;
+          carried_from_id?: string | null;
+          confirmed_amount: number;
+          confirmed_at?: string;
+          confirmed_currency: string;
+          confirmed_deadline: string;
+          confirmed_deliverables: NonNullable<Json>;
+          created_by?: string | null;
+          editor_id: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["brief_confirmation_kind"];
+          project_id: string;
+        };
+        Update: {
+          assignment_id?: string;
+          brief_version?: number;
+          brief_version_id?: string;
+          carried_from_id?: string | null;
+          confirmed_amount?: number;
+          confirmed_at?: string;
+          confirmed_currency?: string;
+          confirmed_deadline?: string;
+          confirmed_deliverables?: NonNullable<Json>;
+          created_by?: string | null;
+          editor_id?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["brief_confirmation_kind"];
+          project_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brief_confirmations_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brief_confirmations_brief_version_id_fkey";
+            columns: ["brief_version_id"];
+            isOneToOne: false;
+            referencedRelation: "brief_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brief_confirmations_carried_from_id_fkey";
+            columns: ["carried_from_id"];
+            isOneToOne: false;
+            referencedRelation: "brief_confirmations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brief_confirmations_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brief_confirmations_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "brief_confirmations_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
@@ -726,6 +834,84 @@ export type Database = {
           {
             foreignKeyName: "editor_applications_review_started_by_fkey";
             columns: ["review_started_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      editor_interpretations: {
+        Row: {
+          admin_feedback: string | null;
+          assignment_id: string;
+          brief_version_id: string;
+          created_at: string;
+          id: string;
+          questions_limitations: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database["public"]["Enums"]["interpretation_status"];
+          submitted_at: string;
+          submitted_by: string | null;
+          will_adapt: string | null;
+          will_reproduce: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          admin_feedback?: string | null;
+          assignment_id: string;
+          brief_version_id: string;
+          created_at?: string;
+          id?: string;
+          questions_limitations?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: Database["public"]["Enums"]["interpretation_status"];
+          submitted_at?: string;
+          submitted_by?: string | null;
+          will_adapt?: string | null;
+          will_reproduce?: string | null;
+        };
+        Update: {
+          admin_feedback?: string | null;
+          assignment_id?: string;
+          brief_version_id?: string;
+          created_at?: string;
+          id?: string;
+          questions_limitations?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: Database["public"]["Enums"]["interpretation_status"];
+          submitted_at?: string;
+          submitted_by?: string | null;
+          will_adapt?: string | null;
+          will_reproduce?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_interpretations_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_interpretations_brief_version_id_fkey";
+            columns: ["brief_version_id"];
+            isOneToOne: false;
+            referencedRelation: "brief_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_interpretations_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_interpretations_submitted_by_fkey";
+            columns: ["submitted_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -1587,6 +1773,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_review_interpretation: {
+        Args: { p_decision: string; p_feedback?: string; p_interpretation_id: string };
+        Returns: undefined;
+      };
       admin_revoke_asset_grant: {
         Args: { p_grant_id: string; p_reason?: string };
         Returns: undefined;
@@ -1630,11 +1820,22 @@ export type Database = {
         Returns: undefined;
       };
       admin_start_application_review: { Args: { p_application_id: string }; Returns: undefined };
+      admin_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
       admin_withdraw_offer: {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
+      };
+      editor_confirm_brief: {
+        Args: {
+          p_amount: number;
+          p_assignment_id: string;
+          p_brief_version: number;
+          p_currency: string;
+          p_deadline: string;
+        };
+        Returns: string;
       };
       editor_respond_offer: {
         Args: {
@@ -1645,6 +1846,35 @@ export type Database = {
           p_message?: string;
         };
         Returns: undefined;
+      };
+      editor_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
+      editor_submit_interpretation: {
+        Args: {
+          p_assignment_id: string;
+          p_brief_version: number;
+          p_questions?: string;
+          p_will_adapt: string;
+          p_will_reproduce: string;
+        };
+        Returns: string;
+      };
+      get_assignment_gate: {
+        Args: { p_assignment_id: string };
+        Returns: {
+          amount_changed: boolean;
+          brief_confirmed: boolean;
+          compensation_approved: boolean;
+          confirmed_brief_version: number;
+          current_brief_version: number;
+          deadline_changed: boolean;
+          deliverables_changed: boolean;
+          editor_active: boolean;
+          interpretation_accepted: boolean;
+          interpretation_required: boolean;
+          project_active: boolean;
+          reacknowledgement_required: boolean;
+          ready: boolean;
+        }[];
       };
       respond_to_application_request: {
         Args: { p_request_id: string; p_response: string; p_response_link?: string };
@@ -1709,10 +1939,12 @@ export type Database = {
         | "counteroffer_pending"
         | "accepted"
         | "confirmed"
+        | "in_progress"
         | "declined"
         | "withdrawn"
         | "not_selected"
         | "reassigned";
+      brief_confirmation_kind: "confirmed" | "carried_forward";
       brief_type: "fully_instructed" | "reference_based" | "creative_led";
       editor_access_status: "none" | "active" | "suspended" | "revoked";
       editor_level: "junior" | "professional" | "specialist";
@@ -1725,6 +1957,7 @@ export type Database = {
         | "declined"
         | "closed"
         | "spam";
+      interpretation_status: "submitted" | "accepted" | "changes_requested";
       negotiation_action: "offer" | "counter" | "accept" | "decline" | "withdraw";
       negotiation_role: "admin" | "editor";
       profile_option_kind: "specialisation" | "software";
@@ -1873,11 +2106,13 @@ export const Constants = {
         "counteroffer_pending",
         "accepted",
         "confirmed",
+        "in_progress",
         "declined",
         "withdrawn",
         "not_selected",
         "reassigned",
       ],
+      brief_confirmation_kind: ["confirmed", "carried_forward"],
       brief_type: ["fully_instructed", "reference_based", "creative_led"],
       editor_access_status: ["none", "active", "suspended", "revoked"],
       editor_level: ["junior", "professional", "specialist"],
@@ -1891,6 +2126,7 @@ export const Constants = {
         "closed",
         "spam",
       ],
+      interpretation_status: ["submitted", "accepted", "changes_requested"],
       negotiation_action: ["offer", "counter", "accept", "decline", "withdraw"],
       negotiation_role: ["admin", "editor"],
       profile_option_kind: ["specialisation", "software"],

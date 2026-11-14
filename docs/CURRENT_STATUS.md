@@ -1,8 +1,10 @@
 # Current Status
 
-**Phase:** Phases 5-6 **database layer done** on branch `phase4-followups` (uncommitted, pending
-owner review); admin and editor screens next. Phase 4 committed (`8428036`, `af7e233`). Nothing
-pushed.
+**Phase:** Phase 7 **database layer done** on branch `phase4-followups` (uncommitted, pending
+owner review), on top of the uncommitted-review Phases 5-6 database. **Flagged for the owner:**
+(1) order: admin confirmation stays first (decision B), then interpretation, brief confirmation and
+a gated start (spec call 1); (2) drift: any deadline or agreed-pay change after confirmation
+requires re-confirmation (spec call 6). Phase 4 committed. Nothing pushed.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V; KB3
 placeholder list (OPEN_QUESTIONS).
 **Last updated:** 2026-11-14
@@ -29,11 +31,18 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   early access, folder shares and revoke checklist, access, offers, counters, confirm, reassign,
   notes, `editor_respond_offer`, cancellation from `assigned`). Plan calls in
   `docs/superpowers/plans/2026-11-14-phase5-6-database.md` await owner review.
+- **Phase 7 database (uncommitted, pending owner review):** six migrations `20261114115858` to
+  `20261114121138`: `assignment_status.in_progress`, `editor_interpretations`,
+  `brief_confirmations`, gate `private.assignment_gate` enforced by triggers on `assignments` and
+  `projects`, carry-forward on `brief_versions`, six new functions (interpretation submit/review,
+  confirm brief, editor/admin start, `get_assignment_gate`) and Phase 6 replacements for
+  `in_progress`. Spec and plan calls (`docs/superpowers/specs|plans/2026-11-14-phase7-*`) await
+  owner review. F and KB5 untouched.
 - **TokenEconomizer trial** (local scope; see CHANGELOG): propose-only tool pruning, micro-skills,
   loop guard nudges. Review proposals with `/tokeneconomizer:status` before applying.
 - **Design system:** `docs/DESIGN_SYSTEM.md`; tokens, shell (`src/components/app-shell/`), status
   pills, empty/loading/error states applied to admin lists.
-- **Tests (2026-11-14):** pgTAP 842/842 after Phases 5-6 (was 475), Vitest 132/132 (`npm run check` green), Playwright smoke
+- **Tests (2026-11-14):** pgTAP 1133/1133 after Phase 7 (842 after Phases 5-6), Vitest 132/132 (`npm run check` green), Playwright smoke
   12/12 (incl. signed-out gates for `/admin/projects`, `/admin/projects/new`, `/admin/clients`).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
   migration protection, approval for push/commit and hosted operations). Tests:
@@ -88,10 +97,10 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 
 ## Next task
 
-1. Owner review of the Phases 5-6 database diff and plan calls (db-security review recommended),
-   then commit (needs owner approval).
-2. Plan and build the Phase 5-6 screens (admin Assets/Editors/Folder shares/Notes panels,
-   `/admin/access-review`, `/editor` dashboard and project page). F and KB7 stay open.
+1. Owner review of the Phases 5-6 and Phase 7 database diffs, spec and plan calls (db-security
+   review recommended), then commit (needs owner approval).
+2. Phase 7 screens (editor steps panel, admin gate panel and interpretation review) after review;
+   Phase 5-6 screens. Phase 8 submissions must require `private.assignment_gate(..).ready`.
 3. Signed-in browser check of `/admin/projects`, `/admin/clients` and the conversion form.
 
 Before public launch: KB1, KB2, KB8, P, Turnstile (O), production SMTP, real service list and

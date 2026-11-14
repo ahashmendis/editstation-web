@@ -68,6 +68,13 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "assignment.not_selected": "Editor not selected",
   "assignment.reassigned": "Editor reassigned",
 
+  "interpretation.submitted": "Interpretation submitted",
+  "interpretation.accepted": "Interpretation accepted",
+  "interpretation.changes_requested": "Interpretation changes requested",
+  "brief_confirmation.confirmed": "Brief confirmed",
+  "brief_confirmation.carried_forward": "Brief confirmation carried forward",
+  "assignment.in_progress": "Work started",
+
   "client.merged": "Client merged",
 };
 

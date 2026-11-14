@@ -257,7 +257,9 @@ export async function getEditorDashboard() {
     projectRows.length >= PROJECT_LIMIT || assignmentRows.length >= ASSIGNMENT_LIMIT;
 
   const confirmed = new Set(
-    assignmentRows.filter((a) => a.status === "confirmed").map((a) => a.project_id),
+    assignmentRows
+      .filter((a) => a.status === "confirmed" || a.status === "in_progress")
+      .map((a) => a.project_id),
   );
   // Newest live assignment per project drives the card's amount (same rule as getEditorProject);
   // with none live, the newest one is kept only so the card can show its closed state.

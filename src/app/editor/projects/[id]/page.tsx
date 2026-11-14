@@ -14,6 +14,8 @@ import { RespondForms } from "@/features/access/components/forms";
 import { NegotiationHistory } from "@/features/access/components/negotiation-history";
 import { ASSET_PROVIDER_LABEL, formatMoney, type AssetProvider } from "@/features/access/constants";
 import { getEditorProject } from "@/features/access/queries";
+import { EditorConfirmationPanel } from "@/features/confirmation/components/editor-panel";
+import { getConfirmationData } from "@/features/confirmation/queries";
 import { BRIEF_TYPE_LABEL, type BriefType } from "@/features/projects/constants";
 import { requireActiveEditor } from "@/lib/auth/access";
 
@@ -67,11 +69,15 @@ async function EditorProjectContent({
   if (!detail) notFound();
 
   const { project: p, current, assignments, negotiations, brief } = detail;
-  const confirmed = assignments.some((a) => a.status === "confirmed");
+  const working = assignments.find((a) => a.status === "confirmed" || a.status === "in_progress");
+  const confirmed = Boolean(working);
+  const confirmation = working ? (await getConfirmationData([working.id])).get(working.id) : null;
   const briefType = p.brief_type as BriefType;
   const live =
     current &&
-    ["offered", "counteroffer_pending", "accepted", "confirmed"].includes(current.status);
+    ["offered", "counteroffer_pending", "accepted", "confirmed", "in_progress"].includes(
+      current.status,
+    );
 
   return (
     <AreaShell
@@ -103,7 +109,9 @@ async function EditorProjectContent({
             <p className="text-sm">
               {current.status === "offered" ? "Offer: " : null}
               {current.status === "counteroffer_pending" ? "Your counteroffer: " : null}
-              {current.status === "accepted" || current.status === "confirmed"
+              {current.status === "accepted" ||
+              current.status === "confirmed" ||
+              current.status === "in_progress"
                 ? "Agreed pay: "
                 : null}
               <strong className="tabular-nums">
@@ -167,6 +175,20 @@ async function EditorProjectContent({
           ) : null}
         </CardContent>
       </Card>
+
+      {working && confirmation ? (
+        <EditorConfirmationPanel
+          projectId={p.id}
+          assignmentId={working.id}
+          assignmentStatus={working.status as "confirmed" | "in_progress"}
+          paused={p.status === "on_hold"}
+          deadline={p.deadline}
+          deliverables={detail.deliverables.map((d) => ({ id: d.id, name: d.name }))}
+          agreedAmount={working.agreedAmount}
+          agreedCurrency={working.agreedCurrency}
+          data={confirmation}
+        />
+      ) : null}
 
       <Card>
         <CardHeader>

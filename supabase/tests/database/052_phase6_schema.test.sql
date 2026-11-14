@@ -75,7 +75,7 @@ grant select on expected to authenticated;
 select enum_has_labels('public', 'project_access_reason', array['invited', 'available'],
   'project_access_reason labels');
 select enum_has_labels('public', 'assignment_status', array['offered', 'counteroffer_pending', 'accepted',
-  'confirmed', 'declined', 'withdrawn', 'not_selected', 'reassigned'], 'assignment_status labels');
+  'confirmed', 'in_progress', 'declined', 'withdrawn', 'not_selected', 'reassigned'], 'assignment_status labels');
 select enum_has_labels('public', 'negotiation_role', array['admin', 'editor'], 'negotiation_role labels');
 select enum_has_labels('public', 'negotiation_action', array['offer', 'counter', 'accept', 'decline', 'withdraw'],
   'negotiation_action labels');
@@ -175,11 +175,12 @@ from unnest(enum_range(null::public.assignment_status)) f(s),
      unnest(enum_range(null::public.assignment_status)) t(s);
 insert into public.projects (id, title, brief_type, status) select project_id, 'Matrix', 'creative_led', 'open' from matrix;
 insert into public.assignments (id, project_id, editor_id, status, proposed_amount, agreed_amount, agreed_currency,
-  confirmed_at, closed_at)
+  confirmed_at, started_at, closed_at)
 select id, project_id, '52000000-0000-0000-0000-000000000001', from_s, 1000,
   case when from_s not in ('offered', 'counteroffer_pending') then 1000 end,
   case when from_s not in ('offered', 'counteroffer_pending') then 'LKR' end,
-  case when from_s in ('confirmed', 'reassigned') then now() end,
+  case when from_s in ('confirmed', 'in_progress', 'reassigned') then now() end,
+  case when from_s = 'in_progress' then now() end,
   case when from_s in ('declined', 'withdrawn', 'not_selected', 'reassigned') then now() end
 from matrix;
 
@@ -195,7 +196,8 @@ begin
         status = r.to_s,
         agreed_amount = case when r.to_s not in ('offered', 'counteroffer_pending') then 1000 end,
         agreed_currency = case when r.to_s not in ('offered', 'counteroffer_pending') then 'LKR' end,
-        confirmed_at = case when r.to_s in ('confirmed', 'reassigned') then now() end,
+        confirmed_at = case when r.to_s in ('confirmed', 'in_progress', 'reassigned') then now() end,
+        started_at = case when r.to_s = 'in_progress' then now() end,
         closed_at = case when r.to_s in ('declined', 'withdrawn', 'not_selected', 'reassigned') then now() end
       where id = r.id;
       v_ok := v_ok || (r.from_s || '>' || r.to_s);
@@ -214,10 +216,10 @@ select is(
     'offered>not_selected', 'counteroffer_pending>accepted', 'counteroffer_pending>offered',
     'counteroffer_pending>declined', 'counteroffer_pending>withdrawn', 'counteroffer_pending>not_selected',
     'accepted>confirmed', 'accepted>withdrawn', 'accepted>not_selected', 'confirmed>reassigned',
-    'confirmed>withdrawn',
+    'confirmed>withdrawn', 'in_progress>reassigned', 'in_progress>withdrawn',
     'offered>offered', 'counteroffer_pending>counteroffer_pending', 'accepted>accepted', 'confirmed>confirmed',
-    'declined>declined', 'withdrawn>withdrawn', 'not_selected>not_selected', 'reassigned>reassigned']) x),
-  'exactly the 15 allowed transitions (and same-status updates) succeed over all 64 pairs');
+    'in_progress>in_progress', 'declined>declined', 'withdrawn>withdrawn', 'not_selected>not_selected', 'reassigned>reassigned']) x),
+  'exactly the allowed transitions (and same-status updates) succeed over all 81 pairs; confirmed>in_progress is refused by the gate');
 select ok((select bool_and(a.status = m.from_s) from matrix m join public.assignments a on a.id = m.id
   where m.from_s <> m.to_s and not private.assignment_transition_allowed(m.from_s, m.to_s)),
   'refused transitions leave the status unchanged');
@@ -280,8 +282,12 @@ select ok((select bool_and((select array_agg(k order by k) from jsonb_object_key
 select is((select details ->> 'from' || '>' || (details ->> 'to') from public.activity_logs
   where action = 'assignment.accepted' and entity_id = '52000000-0000-0000-0000-0000000000b9'),
   'offered>accepted', 'the audit row records the from and to statuses');
-select is((select count(*)::int from public.activity_logs where entity_type = 'assignment'
-  and details::text like '%7777%'), 0, 'assignment audit rows hold no amounts');
+-- Every assignment audit row (not just the seeded one) carries only id and status keys, so none
+-- can hold an amount.
+select ok((select count(*) > 1 and bool_and((select array_agg(k order by k) from jsonb_object_keys(details) k)
+    = array['assignment_id', 'editor_id', 'from', 'project_id', 'to'])
+  from public.activity_logs where entity_type = 'assignment'),
+  'assignment audit rows hold no amounts (only the allowed details keys, across all rows)');
 
 select * from finish();
 

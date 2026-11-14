@@ -115,6 +115,25 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   is not active, whose project is closed, or whose editor has no live assignment.
 - Audit details hold ids and statuses only (no amounts, messages, emails, links or note text).
 
+## Confirmation gate controls (Phase 7, implemented on branch, pending owner review)
+
+- `editor_interpretations` and `brief_confirmations`: select-only grants, one combined policy each
+  (admin, or own rows and `private.is_active_editor()`); no client data or client pricing.
+- Editors write only through `editor_submit_interpretation`, `editor_confirm_brief` and
+  `editor_start_work`; another editor's and an unknown assignment both return "Assignment not
+  found."; locks follow project → assignment (`private.lock_assignment`). Admins review
+  interpretations and may start work on the editor's behalf (`admin_start_work`, editor must be
+  active).
+- In-progress gate enforced in the database: `BEFORE UPDATE` triggers refuse moving an assignment
+  to `in_progress` unless `private.assignment_gate(..).ready` (admin-approved pay, current brief
+  version confirmed without deadline/pay drift, interpretation accepted where required), and a
+  project to `in_progress` without an `in_progress` assignment. This holds for the table owner too.
+- Confirmations are immutable (`guard_append_only`); interpretations allow one review update and
+  actor clearing only. Brief versions referenced by confirmations cannot be deleted (trigger and FK).
+- Brief confirmation is optimistic: the editor sends the version, deadline and pay they saw; a
+  mismatch is refused.
+- Audit details: ids, version numbers and kind only (no amounts, deadlines, deliverables or text).
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |
@@ -129,6 +148,7 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 | Folder shares, admin notes         | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
 | `project_internal`, clients        | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
 | Access, assignments, offers        | —                      | —                                                                   | own rows (read); answer own offer via `editor_respond_offer`                                                                       | read; write via functions only       |
+| Interpretations, confirmations     | —                      | —                                                                   | own rows (read); submit/confirm/start via `editor_*` functions while `confirmed`/`in_progress`                                     | read; review/start via functions     |
 | Submissions, revisions             | —                      | —                                                                   | own; submit via function; no review fields                                                                                         | full                                 |
 | Payments, payout details           | —                      | —                                                                   | own (read); payout details own                                                                                                     | full; mark paid via function         |
 | Activity logs                      | —                      | —                                                                   | —                                                                                                                                  | read only (no one can update/delete) |

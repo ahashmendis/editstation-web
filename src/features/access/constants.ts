@@ -37,6 +37,7 @@ export const ASSIGNMENT_STATUSES = [
   "counteroffer_pending",
   "accepted",
   "confirmed",
+  "in_progress",
   "declined",
   "withdrawn",
   "not_selected",
@@ -50,6 +51,7 @@ export const ASSIGNMENT_ADMIN_LABEL: Record<AssignmentStatus, string> = {
   counteroffer_pending: "Counteroffer",
   accepted: "Accepted",
   confirmed: "Confirmed",
+  in_progress: "In progress",
   declined: "Declined",
   withdrawn: "Withdrawn",
   not_selected: "Not selected",
@@ -62,6 +64,7 @@ export const ASSIGNMENT_EDITOR_LABEL: Record<AssignmentStatus, string> = {
   counteroffer_pending: "Counteroffer sent",
   accepted: "Accepted, waiting for confirmation",
   confirmed: "Confirmed",
+  in_progress: "In progress",
   declined: "Declined",
   withdrawn: "Offer withdrawn",
   not_selected: "Not selected",
@@ -73,6 +76,7 @@ export const ASSIGNMENT_TONE: Record<AssignmentStatus, StatusTone> = {
   counteroffer_pending: "warning", // needs the admin's reply
   accepted: "warning", // needs the admin's confirmation
   confirmed: "success",
+  in_progress: "success",
   declined: "neutral",
   withdrawn: "neutral",
   not_selected: "neutral",
@@ -84,6 +88,7 @@ export const LIVE_ASSIGNMENT_STATUSES: readonly AssignmentStatus[] = [
   "counteroffer_pending",
   "accepted",
   "confirmed",
+  "in_progress",
 ];
 
 export function isLiveAssignment(status: AssignmentStatus): boolean {

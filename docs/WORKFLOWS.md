@@ -96,7 +96,7 @@ Re-application after rejection (decision M): only an admin can reopen a rejected
 9. Editing begins → submission → admin review against brief and references.
 10. Approve, or request revision → completed → payment recorded.
 
-**Phase 4 statuses (admin-driven):** `draft` to `open` (needs a ready brief; sets `first_opened_at` once), `open` to `draft`, `draft`/`open` to `cancelled`, `draft`/`open` to `on_hold` and back only to the status held (`status_before_hold`). Cancelled and archived projects refuse edits (`ES409`). `assigned`, `in_progress`, `in_review`, `revision_requested`, `approved` and `completed` exist in the enum but are pending (set by Phases 6-8).
+**Phase 4 statuses (admin-driven):** `draft` to `open` (needs a ready brief; sets `first_opened_at` once), `open` to `draft`, `draft`/`open` to `cancelled`, `draft`/`open` to `on_hold` and back only to the status held (`status_before_hold`). Cancelled and archived projects refuse edits (`ES409`). `assigned` is set by Phase 6 confirmation and `in_progress` only by the Phase 7 start functions; `in_review`, `revision_requested`, `approved` and `completed` are pending (Phase 8). `on_hold` from `assigned`/`in_progress` stays refused.
 
 **Brief versioning (Phase 4):** before first opening, version 1 is edited in place. After it, any content change (brief text, deliverables, references) creates version n+1 with a snapshot and a required change summary; versions are never overwritten. A new version carries `requires_reacknowledgement` (set by the admin; forced `true` when deliverables change). Deadline and proposed-pay changes do not bump the version in Phase 4.
 
@@ -110,12 +110,33 @@ project and an active editor: it sets `confirmed`, the project `assigned`, every
 assignment `not_selected`, and revokes every other editor's access. `admin_reassign` sets the
 confirmed row `reassigned`, the project back to `open`, and revokes that editor's access.
 Terminal states: `declined`, `withdrawn`, `not_selected`, `reassigned`; a new offer afterwards
-creates a new row. Offers and responses are refused while the project is `on_hold`.
+creates a new row. Offers and responses are refused while the project is `on_hold`. Phase 7 adds
+`confirmed → in_progress` (gated start) and `in_progress → reassigned | withdrawn`; reassign,
+withdraw/revoke ("use reassign") and the revoke checklist treat `in_progress` like `confirmed`.
 
 ### Brief confirmation (KB §5.1)
 
 Store editor, project, timestamp, confirmed brief version, deadline, deliverables, compensation,
 status. A material brief change increments the version and may require re-acknowledgement.
+
+**Phase 7 order and gate (as built, pending owner review; spec call 1 flagged).** Decision B shows
+the full brief only after admin confirmation, so the KB's steps run 8 → 6 → 7 → 9: the admin
+confirms the assignment (Phase 6, selection and pay approval); then, where
+`requires_interpretation`, the editor submits an interpretation and the admin accepts it or asks
+for changes (new submission per round); then the editor confirms the brief, sending the version,
+deadline and pay they saw (copied into an immutable `brief_confirmations` row; a mismatch is
+refused); then the editor (or an admin on their behalf) starts work: assignment `confirmed →
+in_progress`, project `assigned → in_progress`. The KB's step-8 intent ("nothing starts until the
+admin approved") is kept by the gate: start needs admin-approved pay, an accepted interpretation
+where required, and a confirmation of the current version without drift. Database triggers enforce
+it for every path.
+
+Re-acknowledgement and drift: a new brief version with `requires_reacknowledgement = false` carries
+the latest confirmation forward (recorded as a `carried_forward` row) when it was for the previous
+version; with `true` the editor must confirm again, and an accepted interpretation from before that
+version is no longer valid. A changed (or cleared) deadline or agreed pay after confirmation also
+requires re-confirmation (spec call 6, flagged). After start, a material change does not move the
+assignment back; the gate turns not ready and Phase 8 submissions must require `ready`.
 
 ## 4. Status sets as written in the knowledge base
 
@@ -145,7 +166,7 @@ derived from its assignments. Reasoning is in OPEN_QUESTIONS J.
 
 A reassignment closes the current assignment (`reassigned`/`withdrawn`) and creates a new one;
 history is never overwritten. As built (Phase 6, pending owner review): cancelling a project is
-allowed from `draft`, `open` and `assigned`; it closes every live assignment as `withdrawn` (with
+allowed from `draft`, `open`, `assigned` and (Phase 7) `in_progress`; it closes every live assignment as `withdrawn` (with
 an admin withdraw history row) and revokes every live access row. `open → draft` is refused once
 any access row or assignment exists. Folder shares are not revoked automatically: they appear on
 the revoke checklist. Pay consequences: OPEN_QUESTIONS F. Suspending or revoking an
