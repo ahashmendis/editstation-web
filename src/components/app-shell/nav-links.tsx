@@ -1,6 +1,13 @@
 "use client";
 
-import { ClipboardCheck, Inbox, LayoutDashboard, Settings } from "lucide-react";
+import {
+  ClipboardCheck,
+  FolderKanban,
+  Inbox,
+  LayoutDashboard,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,6 +21,8 @@ const ICONS = {
   dashboard: LayoutDashboard,
   inquiries: Inbox,
   applications: ClipboardCheck,
+  projects: FolderKanban,
+  clients: Users,
   settings: Settings,
 } as const;
 

@@ -26,7 +26,9 @@ enums, not free-form strings. Anything marked **PROPOSED** needs owner approval 
 | `closed`        | No response / client withdrew (terminal)            |
 | `spam`          | Junk submission; excluded from metrics (terminal)   |
 
-`converted` is set only by the Phase 4 conversion; admins can reopen declined/closed/spam inquiries.
+`converted` is set only by `admin_convert_inquiry` (implemented in Phase 4); admins can reopen declined/closed/spam inquiries.
+
+**Conversion (Phase 4):** the "Convert to project" form on the inquiry page calls `admin_convert_inquiry` for inquiries in `new`/`reviewing`/`contacted`/`in_discussion`. One transaction: match the client by `lower(btrim(email))` among unmerged clients (or create one from the inquiry, or use a chosen `client_id`; an archived match fails `ES409`), create a `draft` project prefilled from the inquiry (brief type required), `project_internal` with `source_inquiry_id`, brief version 1, then set the inquiry to `converted` with `converted_project_id`. Any error rolls everything back. Client price is never copied from the budget label.
 
 ## 2. Editor registration and verification _(2026-11-11; question D resolved)_
 
@@ -93,6 +95,10 @@ Re-application after rejection (decision M): only an admin can reopen a rejected
 8. Admin confirms the assignment (selection between several editors: OPEN_QUESTIONS C).
 9. Editing begins → submission → admin review against brief and references.
 10. Approve, or request revision → completed → payment recorded.
+
+**Phase 4 statuses (admin-driven):** `draft` to `open` (needs a ready brief; sets `first_opened_at` once), `open` to `draft`, `draft`/`open` to `cancelled`, `draft`/`open` to `on_hold` and back only to the status held (`status_before_hold`). Cancelled and archived projects refuse edits (`ES409`). `assigned`, `in_progress`, `in_review`, `revision_requested`, `approved` and `completed` exist in the enum but are pending (set by Phases 6-8).
+
+**Brief versioning (Phase 4):** before first opening, version 1 is edited in place. After it, any content change (brief text, deliverables, references) creates version n+1 with a snapshot and a required change summary; versions are never overwritten. A new version carries `requires_reacknowledgement` (set by the admin; forced `true` when deliverables change). Deadline and proposed-pay changes do not bump the version in Phase 4.
 
 ### Brief confirmation (KB §5.1)
 

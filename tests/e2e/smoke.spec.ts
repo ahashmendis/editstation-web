@@ -43,7 +43,16 @@ test("unknown pages show the not-found page with a 404 status", async ({ page })
 });
 
 test.describe("signed-out access gates", () => {
-  for (const path of ["/apply", "/editor", "/admin", "/admin/applications", "/mfa"]) {
+  for (const path of [
+    "/apply",
+    "/editor",
+    "/admin",
+    "/admin/applications",
+    "/admin/projects",
+    "/admin/projects/new",
+    "/admin/clients",
+    "/mfa",
+  ]) {
     test(`${path} redirects to sign-in and keeps the destination`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(/\/sign-in\?next=/);

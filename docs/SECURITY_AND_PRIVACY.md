@@ -78,24 +78,39 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   an app honeypot. Turnstile is required before public launch (decision O).
 - The client IP is never stored: only a SHA-256 hash, kept one hour, for rate limiting.
 - Inquiry audit entries contain no personal data; an actor is recorded only if that profile exists.
-- Inquiry data is admin-only (MFA); `converted` is reserved for the Phase 4 conversion.
+- Inquiry data is admin-only (MFA); `converted` is set only by `admin_convert_inquiry` (Phase 4).
+
+## Project, brief and client controls (implemented in Phase 4)
+
+- `clients`, `projects`, `project_internal`, `brief_versions`, `project_deliverables` and
+  `project_references` have RLS on and an admin-only (`private.is_admin()`, MFA) `select` policy.
+  Editors, applicants and anonymous users have no access. Nobody, admins included, has a direct
+  insert/update/delete grant: writes go only through `public.admin_*` functions (`require_admin()`
+  in the body, `ES4xx` errors).
+- Client identity and client price live only in `project_internal` / `clients`, never on `projects`.
+- Brief versions are immutable after the project's first opening (`first_opened_at`, set once and
+  guarded by trigger): before it, version 1 is edited in place; after it, any content change
+  inserts version n+1 with a required change summary, and a trigger blocks changing existing
+  versions.
+- Phase 5-6 editor `select` policies may cover `projects`, `project_deliverables`,
+  `project_references` and `brief_versions` only, never `project_internal` or `clients`.
 
 ## Access matrix (target; each cell becomes pgTAP tests)
 
-| Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                 | Admin                                |
-| ---------------------------------- | ---------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------ |
-| Client inquiry                     | submit only (function) | —                                                                   | —                                                                             | full                                 |
-| Own profile                        | —                      | read/update permitted fields                                        | read/update permitted fields                                                  | full                                 |
-| Own application                    | —                      | read; edit while draft/info requested; submit/withdraw via function | read                                                                          | full; decide via function            |
-| Vetting notes, assessments results | —                      | — (own test instructions only)                                      | —                                                                             | full                                 |
-| `admin_users`, `access_status`     | —                      | read own status only                                                | read own status only                                                          | change via audited function          |
-| Projects, briefs, references       | —                      | —                                                                   | only projects in `project_access` / assigned                                  | full                                 |
-| Assets                             | —                      | —                                                                   | `opportunity` for accessible projects; `assigned` once confirmed (question B) | full                                 |
-| `project_internal`, clients        | —                      | —                                                                   | —                                                                             | full                                 |
-| Assignments, offers, confirmations | —                      | —                                                                   | own; write via functions                                                      | full                                 |
-| Submissions, revisions             | —                      | —                                                                   | own; submit via function; no review fields                                    | full                                 |
-| Payments, payout details           | —                      | —                                                                   | own (read); payout details own                                                | full; mark paid via function         |
-| Activity logs                      | —                      | —                                                                   | —                                                                             | read only (no one can update/delete) |
+| Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                        | Admin                                |
+| ---------------------------------- | ---------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------ |
+| Client inquiry                     | submit only (function) | —                                                                   | —                                                                                    | full                                 |
+| Own profile                        | —                      | read/update permitted fields                                        | read/update permitted fields                                                         | full                                 |
+| Own application                    | —                      | read; edit while draft/info requested; submit/withdraw via function | read                                                                                 | full; decide via function            |
+| Vetting notes, assessments results | —                      | — (own test instructions only)                                      | —                                                                                    | full                                 |
+| `admin_users`, `access_status`     | —                      | read own status only                                                | read own status only                                                                 | change via audited function          |
+| Projects, briefs, references       | —                      | —                                                                   | none yet (admin only in Phase 4); later only projects in `project_access` / assigned | read; write via functions only       |
+| Assets                             | —                      | —                                                                   | `opportunity` for accessible projects; `assigned` once confirmed (question B)        | full                                 |
+| `project_internal`, clients        | —                      | —                                                                   | —                                                                                    | read; write via functions only       |
+| Assignments, offers, confirmations | —                      | —                                                                   | own; write via functions                                                             | full                                 |
+| Submissions, revisions             | —                      | —                                                                   | own; submit via function; no review fields                                           | full                                 |
+| Payments, payout details           | —                      | —                                                                   | own (read); payout details own                                                       | full; mark paid via function         |
+| Activity logs                      | —                      | —                                                                   | —                                                                                    | read only (no one can update/delete) |
 
 `—` = no access. Editors B cannot see anything belonging to editor A.
 

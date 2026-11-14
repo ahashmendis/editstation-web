@@ -10,12 +10,7 @@ export type Database = {
     };
     Functions: {
       graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
+        Args: { extensions?: Json; operationName?: string; query?: string; variables?: Json };
         Returns: Json;
       };
     };
@@ -33,16 +28,17 @@ export type Database = {
           action: string;
           actor_id: string | null;
           created_at: string;
-          details: Json;
+          details: NonNullable<Json>;
           entity_id: string;
           entity_type: string;
           id: number;
         };
+        ComputedFields: never;
         Insert: {
           action: string;
           actor_id?: string | null;
           created_at?: string;
-          details?: Json;
+          details?: NonNullable<Json>;
           entity_id: string;
           entity_type: string;
           id?: never;
@@ -51,7 +47,7 @@ export type Database = {
           action?: string;
           actor_id?: string | null;
           created_at?: string;
-          details?: Json;
+          details?: NonNullable<Json>;
           entity_id?: string;
           entity_type?: string;
           id?: never;
@@ -75,6 +71,7 @@ export type Database = {
           revoked_by: string | null;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           granted_at?: string;
           granted_by?: string | null;
@@ -131,6 +128,7 @@ export type Database = {
           response: string | null;
           response_link: string | null;
         };
+        ComputedFields: never;
         Insert: {
           application_id: string;
           assessed_at?: string | null;
@@ -185,6 +183,82 @@ export type Database = {
           },
         ];
       };
+      brief_versions: {
+        Row: {
+          audience: string | null;
+          brand_constraints: string | null;
+          change_summary: string | null;
+          core_message: string | null;
+          created_at: string;
+          created_by: string | null;
+          deliverables: NonNullable<Json>;
+          desired_outcome: string | null;
+          id: string;
+          instructions: string | null;
+          mandatory_content: string | null;
+          prohibited_content: string | null;
+          project_id: string;
+          references: NonNullable<Json>;
+          requires_reacknowledgement: boolean;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          audience?: string | null;
+          brand_constraints?: string | null;
+          change_summary?: string | null;
+          core_message?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          deliverables?: NonNullable<Json>;
+          desired_outcome?: string | null;
+          id?: string;
+          instructions?: string | null;
+          mandatory_content?: string | null;
+          prohibited_content?: string | null;
+          project_id: string;
+          references?: NonNullable<Json>;
+          requires_reacknowledgement?: boolean;
+          updated_at?: string;
+          version: number;
+        };
+        Update: {
+          audience?: string | null;
+          brand_constraints?: string | null;
+          change_summary?: string | null;
+          core_message?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          deliverables?: NonNullable<Json>;
+          desired_outcome?: string | null;
+          id?: string;
+          instructions?: string | null;
+          mandatory_content?: string | null;
+          prohibited_content?: string | null;
+          project_id?: string;
+          references?: NonNullable<Json>;
+          requires_reacknowledgement?: boolean;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brief_versions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brief_versions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       budget_ranges: {
         Row: {
           active: boolean;
@@ -197,6 +271,7 @@ export type Database = {
           sort_order: number;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           active?: boolean;
           created_at?: string;
@@ -229,6 +304,7 @@ export type Database = {
           client_notes: string | null;
           company: string | null;
           contact_name: string;
+          converted_project_id: string | null;
           description: string;
           email: string;
           expected_deadline: string | null;
@@ -244,6 +320,7 @@ export type Database = {
           submitted_at: string;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           budget_currency?: string;
           budget_label: string;
@@ -251,6 +328,7 @@ export type Database = {
           client_notes?: string | null;
           company?: string | null;
           contact_name: string;
+          converted_project_id?: string | null;
           description: string;
           email: string;
           expected_deadline?: string | null;
@@ -273,6 +351,7 @@ export type Database = {
           client_notes?: string | null;
           company?: string | null;
           contact_name?: string;
+          converted_project_id?: string | null;
           description?: string;
           email?: string;
           expected_deadline?: string | null;
@@ -294,6 +373,13 @@ export type Database = {
             columns: ["budget_range_id"];
             isOneToOne: false;
             referencedRelation: "budget_ranges";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_inquiries_converted_project_id_fkey";
+            columns: ["converted_project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
             referencedColumns: ["id"];
           },
           {
@@ -319,6 +405,7 @@ export type Database = {
           label: string | null;
           url: string;
         };
+        ComputedFields: never;
         Insert: {
           id?: string;
           inquiry_id: string;
@@ -337,6 +424,64 @@ export type Database = {
             columns: ["inquiry_id"];
             isOneToOne: false;
             referencedRelation: "client_inquiries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      clients: {
+        Row: {
+          archived_at: string | null;
+          company: string | null;
+          created_at: string;
+          created_by: string | null;
+          email: string;
+          id: string;
+          merged_into_id: string | null;
+          name: string;
+          notes: string | null;
+          phone: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          company?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          email: string;
+          id?: string;
+          merged_into_id?: string | null;
+          name: string;
+          notes?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          company?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          email?: string;
+          id?: string;
+          merged_into_id?: string | null;
+          name?: string;
+          notes?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clients_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "clients_merged_into_id_fkey";
+            columns: ["merged_into_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
             referencedColumns: ["id"];
           },
         ];
@@ -361,6 +506,7 @@ export type Database = {
           terms_version: string | null;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           attempt?: number;
           created_at?: string;
@@ -445,6 +591,7 @@ export type Database = {
           label: string | null;
           url: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           editor_id: string;
@@ -476,6 +623,7 @@ export type Database = {
           editor_id: string;
           kind: Database["public"]["Enums"]["profile_option_kind"];
         };
+        ComputedFields: never;
         Insert: {
           code: string;
           created_at?: string;
@@ -523,6 +671,7 @@ export type Database = {
           updated_at: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           access_change_reason?: string | null;
           access_changed_at?: string | null;
@@ -582,6 +731,7 @@ export type Database = {
           id: string;
           note: string;
         };
+        ComputedFields: never;
         Insert: {
           application_id: string;
           author_id?: string | null;
@@ -621,6 +771,7 @@ export type Database = {
           inquiry_id: string;
           note: string;
         };
+        ComputedFields: never;
         Insert: {
           author_id?: string | null;
           created_at?: string;
@@ -660,6 +811,7 @@ export type Database = {
           label: string;
           sort_order: number;
         };
+        ComputedFields: never;
         Insert: {
           active?: boolean;
           code: string;
@@ -685,6 +837,7 @@ export type Database = {
           phone: string | null;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           email: string;
@@ -703,6 +856,249 @@ export type Database = {
         };
         Relationships: [];
       };
+      project_deliverables: {
+        Row: {
+          aspect_ratio: string | null;
+          created_at: string;
+          duration_seconds: number | null;
+          format: string | null;
+          id: string;
+          name: string;
+          notes: string | null;
+          project_id: string;
+          resolution: string | null;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          aspect_ratio?: string | null;
+          created_at?: string;
+          duration_seconds?: number | null;
+          format?: string | null;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          project_id: string;
+          resolution?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          aspect_ratio?: string | null;
+          created_at?: string;
+          duration_seconds?: number | null;
+          format?: string | null;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          project_id?: string;
+          resolution?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_deliverables_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_internal: {
+        Row: {
+          client_id: string | null;
+          client_price: number | null;
+          client_price_currency: string;
+          created_at: string;
+          internal_notes: string | null;
+          project_id: string;
+          source_inquiry_id: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_id?: string | null;
+          client_price?: number | null;
+          client_price_currency?: string;
+          created_at?: string;
+          internal_notes?: string | null;
+          project_id: string;
+          source_inquiry_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          client_id?: string | null;
+          client_price?: number | null;
+          client_price_currency?: string;
+          created_at?: string;
+          internal_notes?: string | null;
+          project_id?: string;
+          source_inquiry_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_internal_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_internal_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_internal_source_inquiry_id_fkey";
+            columns: ["source_inquiry_id"];
+            isOneToOne: true;
+            referencedRelation: "client_inquiries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_references: {
+        Row: {
+          access_notes: string | null;
+          category: string | null;
+          created_at: string;
+          end_seconds: number | null;
+          id: string;
+          observation_notes: string | null;
+          priority: Database["public"]["Enums"]["reference_priority"];
+          project_id: string;
+          sort_order: number;
+          start_seconds: number | null;
+          title: string | null;
+          updated_at: string;
+          url: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          access_notes?: string | null;
+          category?: string | null;
+          created_at?: string;
+          end_seconds?: number | null;
+          id?: string;
+          observation_notes?: string | null;
+          priority?: Database["public"]["Enums"]["reference_priority"];
+          project_id: string;
+          sort_order?: number;
+          start_seconds?: number | null;
+          title?: string | null;
+          updated_at?: string;
+          url: string;
+        };
+        Update: {
+          access_notes?: string | null;
+          category?: string | null;
+          created_at?: string;
+          end_seconds?: number | null;
+          id?: string;
+          observation_notes?: string | null;
+          priority?: Database["public"]["Enums"]["reference_priority"];
+          project_id?: string;
+          sort_order?: number;
+          start_seconds?: number | null;
+          title?: string | null;
+          updated_at?: string;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_references_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      projects: {
+        Row: {
+          archived_at: string | null;
+          brief_type: Database["public"]["Enums"]["brief_type"];
+          created_at: string;
+          created_by: string | null;
+          current_brief_version: number;
+          deadline: string | null;
+          first_opened_at: string | null;
+          id: string;
+          proposed_amount: number | null;
+          proposed_currency: string;
+          requires_interpretation: boolean;
+          revision_allowance: number;
+          service_type_code: string | null;
+          status: Database["public"]["Enums"]["project_status"];
+          status_before_hold: Database["public"]["Enums"]["project_status"] | null;
+          summary: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          brief_type: Database["public"]["Enums"]["brief_type"];
+          created_at?: string;
+          created_by?: string | null;
+          current_brief_version?: number;
+          deadline?: string | null;
+          first_opened_at?: string | null;
+          id?: string;
+          proposed_amount?: number | null;
+          proposed_currency?: string;
+          requires_interpretation?: boolean;
+          revision_allowance?: number;
+          service_type_code?: string | null;
+          status?: Database["public"]["Enums"]["project_status"];
+          status_before_hold?: Database["public"]["Enums"]["project_status"] | null;
+          summary?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          brief_type?: Database["public"]["Enums"]["brief_type"];
+          created_at?: string;
+          created_by?: string | null;
+          current_brief_version?: number;
+          deadline?: string | null;
+          first_opened_at?: string | null;
+          id?: string;
+          proposed_amount?: number | null;
+          proposed_currency?: string;
+          requires_interpretation?: boolean;
+          revision_allowance?: number;
+          service_type_code?: string | null;
+          status?: Database["public"]["Enums"]["project_status"];
+          status_before_hold?: Database["public"]["Enums"]["project_status"] | null;
+          summary?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "projects_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "projects_service_type_code_fkey";
+            columns: ["service_type_code"];
+            isOneToOne: false;
+            referencedRelation: "service_types";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       service_types: {
         Row: {
           active: boolean;
@@ -712,6 +1108,7 @@ export type Database = {
           sort_order: number;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           active?: boolean;
           code: string;
@@ -743,6 +1140,11 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_archive_project: {
+        Args: { p_archive: boolean; p_project_id: string };
+        Returns: undefined;
+      };
+      admin_convert_inquiry: { Args: { p_input: Json; p_inquiry_id: string }; Returns: string };
       admin_create_application_request: {
         Args: {
           p_application_id: string;
@@ -751,6 +1153,9 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_create_client: { Args: { p_input: Json }; Returns: string };
+      admin_create_project: { Args: { p_input: Json }; Returns: string };
+      admin_merge_clients: { Args: { p_source: string; p_target: string }; Returns: undefined };
       admin_record_assessment_result: {
         Args: {
           p_notes?: string;
@@ -763,10 +1168,8 @@ export type Database = {
         Args: { p_application_id: string; p_message?: string };
         Returns: undefined;
       };
-      admin_reopen_application: {
-        Args: { p_editor_id: string };
-        Returns: string;
-      };
+      admin_reopen_application: { Args: { p_editor_id: string }; Returns: string };
+      admin_save_brief: { Args: { p_input: Json; p_project_id: string }; Returns: number };
       admin_set_editor_access: {
         Args: {
           p_editor_id: string;
@@ -783,16 +1186,19 @@ export type Database = {
         };
         Returns: undefined;
       };
-      admin_start_application_review: {
-        Args: { p_application_id: string };
+      admin_set_project_status: {
+        Args: {
+          p_note?: string;
+          p_project_id: string;
+          p_status: Database["public"]["Enums"]["project_status"];
+        };
         Returns: undefined;
       };
+      admin_start_application_review: { Args: { p_application_id: string }; Returns: undefined };
+      admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
+      admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
       respond_to_application_request: {
-        Args: {
-          p_request_id: string;
-          p_response: string;
-          p_response_link?: string;
-        };
+        Args: { p_request_id: string; p_response: string; p_response_link?: string };
         Returns: undefined;
       };
       save_editor_profile: {
@@ -834,7 +1240,7 @@ export type Database = {
         Args: { p_privacy_version: string; p_terms_version: string };
         Returns: string;
       };
-      withdraw_editor_application: { Args: never; Returns: string };
+      withdraw_editor_application: { Args: Record<PropertyKey, never>; Returns: string };
     };
     Enums: {
       application_request_kind: "info" | "test";
@@ -848,6 +1254,7 @@ export type Database = {
         | "rejected"
         | "withdrawn";
       assessment_result: "passed" | "failed" | "inconclusive";
+      brief_type: "fully_instructed" | "reference_based" | "creative_led";
       editor_access_status: "none" | "active" | "suspended" | "revoked";
       editor_level: "junior" | "professional" | "specialist";
       inquiry_status:
@@ -860,6 +1267,18 @@ export type Database = {
         | "closed"
         | "spam";
       profile_option_kind: "specialisation" | "software";
+      project_status:
+        | "draft"
+        | "open"
+        | "assigned"
+        | "in_progress"
+        | "in_review"
+        | "revision_requested"
+        | "approved"
+        | "completed"
+        | "on_hold"
+        | "cancelled";
+      reference_priority: "essential" | "optional";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -881,9 +1300,7 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
@@ -906,9 +1323,7 @@ export type TablesInsert<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
@@ -930,9 +1345,7 @@ export type TablesUpdate<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
@@ -954,9 +1367,7 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -970,9 +1381,7 @@ export type CompositeTypes<
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
@@ -996,6 +1405,7 @@ export const Constants = {
         "withdrawn",
       ],
       assessment_result: ["passed", "failed", "inconclusive"],
+      brief_type: ["fully_instructed", "reference_based", "creative_led"],
       editor_access_status: ["none", "active", "suspended", "revoked"],
       editor_level: ["junior", "professional", "specialist"],
       inquiry_status: [
@@ -1009,6 +1419,19 @@ export const Constants = {
         "spam",
       ],
       profile_option_kind: ["specialisation", "software"],
+      project_status: [
+        "draft",
+        "open",
+        "assigned",
+        "in_progress",
+        "in_review",
+        "revision_requested",
+        "approved",
+        "completed",
+        "on_hold",
+        "cancelled",
+      ],
+      reference_priority: ["essential", "optional"],
     },
   },
 } as const;

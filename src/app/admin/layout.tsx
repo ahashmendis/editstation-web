@@ -8,6 +8,8 @@ import { requireAdmin } from "@/lib/auth/access";
 const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Overview", icon: "dashboard", exact: true },
   { href: "/admin/inquiries", label: "Inquiries", icon: "inquiries" },
+  { href: "/admin/projects", label: "Projects", icon: "projects" },
+  { href: "/admin/clients", label: "Clients", icon: "clients" },
   { href: "/admin/applications", label: "Applications", icon: "applications" },
   { href: "/admin/settings", label: "Settings", icon: "settings" },
 ];

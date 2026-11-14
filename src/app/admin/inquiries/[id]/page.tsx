@@ -8,19 +8,26 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AdminActionForm } from "@/features/applications/components/admin-action-form";
 import { SafeLink } from "@/features/applications/components/snapshot-view";
 import { formatDateTime } from "@/features/applications/components/status-badge";
 import { addInquiryNoteAction, setInquiryStatusAction } from "@/features/inquiries/admin-actions";
 import { InquiryStatusBadge } from "@/features/inquiries/components/inquiry-status-badge";
-import { INQUIRY_STATUS_LABEL, SETTABLE_INQUIRY_STATUSES } from "@/features/inquiries/constants";
+import {
+  INQUIRY_STATUS_LABEL,
+  OPEN_INQUIRY_STATUSES,
+  SETTABLE_INQUIRY_STATUSES,
+} from "@/features/inquiries/constants";
 import { getInquiryDetail } from "@/features/inquiries/queries";
+import { convertInquiryAction } from "@/features/projects/admin-actions";
+import { BRIEF_TYPES, BRIEF_TYPE_LABEL } from "@/features/projects/constants";
+import { selectClassName } from "@/features/projects/components/select-class";
+import { getConvertedProject, getProjectFormOptions } from "@/features/projects/queries";
 import { requireAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Inquiry · Admin · EDITSTATION" };
-
-const selectClass = "border-input h-9 rounded-md border bg-transparent px-3 text-sm";
 
 export default function InquiryPage({ params }: PageProps<"/admin/inquiries/[id]">) {
   return (
@@ -41,6 +48,11 @@ async function InquiryContent({
   const detail = await getInquiryDetail(id);
   if (!detail) notFound();
   const { inquiry: q, links, notes, activity } = detail;
+  const canConvert = OPEN_INQUIRY_STATUSES.includes(q.status);
+  const [convertedProject, convertOptions] = await Promise.all([
+    getConvertedProject(q.converted_project_id),
+    canConvert ? getProjectFormOptions() : null,
+  ]);
 
   const rows: [string, string | null][] = [
     ["Company / agency", q.company],
@@ -69,8 +81,11 @@ async function InquiryContent({
             <InquiryStatusBadge status={q.status} />
           </div>
           <CardDescription>
-            Contact the client directly to discuss scope, pricing and deadlines. Converting a
-            confirmed inquiry into a project arrives in Phase 4.
+            {canConvert
+              ? "Contact the client directly to discuss scope, pricing and deadlines. Convert this inquiry once the client has confirmed the work."
+              : q.status === "converted"
+                ? "This inquiry has been converted into a project."
+                : "This inquiry is closed. Reopen it to continue."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 text-sm">
@@ -113,6 +128,85 @@ async function InquiryContent({
         </CardContent>
       </Card>
 
+      {q.status === "converted" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Project</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm">
+            {convertedProject ? (
+              <Link href={`/admin/projects/${convertedProject.id}`} className="underline">
+                {convertedProject.title}
+              </Link>
+            ) : (
+              <p className="text-muted-foreground">The linked project could not be found.</p>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {canConvert && convertOptions ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Convert to project</CardTitle>
+            <CardDescription>
+              Creates a draft project and a client record from this inquiry in one step. Leave a
+              field empty to use what the client sent. You can finish the brief on the next page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AdminActionForm action={convertInquiryAction} submitLabel="Convert to project">
+              <input type="hidden" name="inquiryId" value={q.id} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2 sm:col-span-2">
+                  <Label htmlFor="convert-title">Project title (optional)</Label>
+                  <Input id="convert-title" name="title" maxLength={200} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="convert-brief-type">Brief type</Label>
+                  <select
+                    id="convert-brief-type"
+                    name="briefType"
+                    className={selectClassName}
+                    defaultValue=""
+                    required
+                  >
+                    <option value="" disabled>
+                      Choose…
+                    </option>
+                    {BRIEF_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {BRIEF_TYPE_LABEL[t]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="convert-deadline">Deadline (optional)</Label>
+                  <Input id="convert-deadline" name="deadline" type="date" />
+                </div>
+                <div className="grid gap-2 sm:col-span-2">
+                  <Label htmlFor="convert-client">Client</Label>
+                  <select
+                    id="convert-client"
+                    name="clientId"
+                    className={selectClassName}
+                    defaultValue=""
+                  >
+                    <option value="">Match or create from this inquiry</option>
+                    {convertOptions.clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {[c.name, c.company].filter(Boolean).join(", ")} ({c.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </AdminActionForm>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {q.status !== "converted" ? (
         <Card>
           <CardHeader>
@@ -123,7 +217,7 @@ async function InquiryContent({
               <input type="hidden" name="inquiryId" value={q.id} />
               <select
                 name="status"
-                className={selectClass}
+                className={selectClassName}
                 defaultValue=""
                 aria-label="New status"
                 required

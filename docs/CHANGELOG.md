@@ -3,6 +3,24 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-14: Phase 4, projects, briefs, clients, inquiry conversion
+
+- Branch `phase4-projects`, **uncommitted**. Migrations `20261114050211_phase4_schema`,
+  `..050359_phase4_inquiry_link`, `..050658_phase4_brief_helpers_and_create`,
+  `..051059_phase4_brief_versioning`, `..051417_phase4_project_status`,
+  `..051655_phase4_clients_and_conversion`.
+- Tables: `clients`, `projects`, `project_internal`, `brief_versions`, `project_deliverables`,
+  `project_references` (pulled forward from Phase 5), `client_inquiries.converted_project_id`.
+  Admin-read-only RLS; writes via `admin_create_project`, `admin_save_brief`, `admin_update_project`,
+  `admin_set_project_status`, `admin_archive_project`, `admin_create_client`, `admin_update_client`,
+  `admin_merge_clients`, `admin_convert_inquiry`. Brief versions immutable after first opening.
+- UI: `/admin/projects` (list, new, detail), `/admin/clients`, "Convert to project" on the inquiry
+  page. Statuses draft/open/on_hold/cancelled; others pending.
+- pgTAP tests 040-046; 465/465 passing in total. Not yet checked in a signed-in browser.
+- Follow-up found: pre-Phase-4 functions executable by PUBLIC (exceptions listed in test 046).
+- Spec and plan: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`,
+  `docs/superpowers/plans/2026-11-14-phase4-database.md`.
+
 ## 2026-11-13: decisions J and T
 
 - Owner chose the recommendations. **T:** minimal admin-only `clients` table, created when the
