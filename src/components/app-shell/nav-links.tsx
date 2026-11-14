@@ -6,6 +6,7 @@ import {
   Inbox,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +24,7 @@ const ICONS = {
   applications: ClipboardCheck,
   projects: FolderKanban,
   clients: Users,
+  access: ShieldCheck,
   settings: Settings,
 } as const;
 

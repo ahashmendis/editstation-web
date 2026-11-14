@@ -10,6 +10,8 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminActionForm } from "@/features/applications/components/admin-action-form";
 import { formatDateTime } from "@/features/applications/components/status-badge";
+import { AdminAccessPanels } from "@/features/access/components/admin-panels";
+import { getProjectAccessData } from "@/features/access/queries";
 import { archiveProjectAction, setProjectStatusAction } from "@/features/projects/admin-actions";
 import {
   BriefEditorForm,
@@ -48,7 +50,11 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
   await requireAdmin();
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [detail, options] = await Promise.all([getProjectDetail(id), getProjectFormOptions()]);
+  const [detail, options, access] = await Promise.all([
+    getProjectDetail(id),
+    getProjectFormOptions(),
+    getProjectAccessData(id),
+  ]);
   if (!detail) notFound();
   const {
     project: p,
@@ -111,7 +117,8 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
             {archived ? <span className="text-muted-foreground text-sm">Archived</span> : null}
           </div>
           <CardDescription>
-            Editors cannot see any project yet. Later stages arrive in later phases.
+            Editors only see this project after you invite them, and only the summary until you
+            confirm one.
             {internal?.source_inquiry_id ? (
               <>
                 {" "}
@@ -226,6 +233,19 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
           />
         </CardContent>
       </Card>
+
+      <AdminAccessPanels
+        projectId={p.id}
+        locked={locked}
+        canOffer={!locked && opened && status === "open"}
+        currency={p.proposed_currency}
+        references={references.map((r) => ({
+          id: r.id,
+          title: r.title,
+          early_access: r.early_access,
+        }))}
+        data={access}
+      />
 
       <Card>
         <CardHeader>

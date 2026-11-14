@@ -100,6 +100,18 @@ Re-application after rejection (decision M): only an admin can reopen a rejected
 
 **Brief versioning (Phase 4):** before first opening, version 1 is edited in place. After it, any content change (brief text, deliverables, references) creates version n+1 with a snapshot and a required change summary; versions are never overwritten. A new version carries `requires_reacknowledgement` (set by the admin; forced `true` when deliverables change). Deadline and proposed-pay changes do not bump the version in Phase 4.
 
+**Phase 6 assignment lifecycle (as built, pending owner review):** the admin invites active
+editors to an open project (`admin_grant_project_access`) and makes a pay offer
+(`admin_make_offer`, amount required, one currency per assignment). From `offered` the editor
+accepts (agreed amount = offer), declines or counters (`counteroffer_pending`); the admin answers a
+counter with accept, a new amount (back to `offered`) or decline. The admin may withdraw from
+`offered`/`counteroffer_pending`/`accepted`. `admin_confirm_assignment` needs `accepted`, an open
+project and an active editor: it sets `confirmed`, the project `assigned`, every other live
+assignment `not_selected`, and revokes every other editor's access. `admin_reassign` sets the
+confirmed row `reassigned`, the project back to `open`, and revokes that editor's access.
+Terminal states: `declined`, `withdrawn`, `not_selected`, `reassigned`; a new offer afterwards
+creates a new row. Offers and responses are refused while the project is `on_hold`.
+
 ### Brief confirmation (KB §5.1)
 
 Store editor, project, timestamp, confirmed brief version, deadline, deliverables, compensation,
@@ -132,6 +144,10 @@ derived from its assignments. Reasoning is in OPEN_QUESTIONS J.
 ## 6. Reassignment / cancellation
 
 A reassignment closes the current assignment (`reassigned`/`withdrawn`) and creates a new one;
-history is never overwritten. Pay consequences: OPEN_QUESTIONS F. Suspending or revoking an
+history is never overwritten. As built (Phase 6, pending owner review): cancelling a project is
+allowed from `draft`, `open` and `assigned`; it closes every live assignment as `withdrawn` (with
+an admin withdraw history row) and revokes every live access row. `open → draft` is refused once
+any access row or assignment exists. Folder shares are not revoked automatically: they appear on
+the revoke checklist. Pay consequences: OPEN_QUESTIONS F. Suspending or revoking an
 editor with live assignments needs an admin decision per assignment (reassign or keep); the app
 should list them rather than act silently.

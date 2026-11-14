@@ -11,6 +11,13 @@ describe("activityLabel", () => {
     expect(activityLabel("application.approved")).toBe("Application approved");
   });
 
+  it("maps Phase 5 and 6 codes", () => {
+    expect(activityLabel("assignment.confirmed")).toBe("Editor confirmed");
+    expect(activityLabel("project_access.granted")).toBe("Editor invited");
+    expect(activityLabel("asset_grant.revoked")).toBe("Folder share removed");
+    expect(activityLabel("project.note_added")).toBe("Note added");
+  });
+
   it("falls back to Updated", () => {
     expect(activityLabel("something.else")).toBe("Updated");
   });

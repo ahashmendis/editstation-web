@@ -95,22 +95,43 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 - Phase 5-6 editor `select` policies may cover `projects`, `project_deliverables`,
   `project_references` and `brief_versions` only, never `project_internal` or `clients`.
 
+## Editor access controls (Phases 5-6, implemented on branch, pending owner review)
+
+- Editor reads are tiered by `private.editor_project_stage(project_id)` (`none` / `opportunity` /
+  `assigned`, decision B), granted to `authenticated` only because RLS policies call it. Each table
+  has one combined `select` policy (`(select private.is_admin()) or <editor rule>`).
+- Every editor rule requires `private.is_active_editor()`: suspending or revoking an editor hides
+  everything immediately, their own assignments and history included. Cancelled and archived
+  projects are `none` for every editor.
+- `asset_access_grants` and `project_notes` are admin-only; editor-readable new tables
+  (`project_assets`, `project_access`, `assignments`, `negotiation_offers`) hold no client data.
+- Editors write only through `editor_respond_offer` (own offer, from `offered`, project open);
+  another editor's offer and an unknown id both return "Offer not found.". Only an admin confirms
+  (one confirmed per project, enforced by a partial unique index and row locks); confirmation
+  revokes every other editor's access.
+- Assignment transitions are enforced in the functions and by a guard trigger; negotiation
+  history and notes are append-only (update and delete refused by trigger, for postgres too).
+- Folder shares are recorded by hand; `admin_pending_revocations()` lists live shares whose editor
+  is not active, whose project is closed, or whose editor has no live assignment.
+- Audit details hold ids and statuses only (no amounts, messages, emails, links or note text).
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
-| Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                        | Admin                                |
-| ---------------------------------- | ---------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------ |
-| Client inquiry                     | submit only (function) | —                                                                   | —                                                                                    | full                                 |
-| Own profile                        | —                      | read/update permitted fields                                        | read/update permitted fields                                                         | full                                 |
-| Own application                    | —                      | read; edit while draft/info requested; submit/withdraw via function | read                                                                                 | full; decide via function            |
-| Vetting notes, assessments results | —                      | — (own test instructions only)                                      | —                                                                                    | full                                 |
-| `admin_users`, `access_status`     | —                      | read own status only                                                | read own status only                                                                 | change via audited function          |
-| Projects, briefs, references       | —                      | —                                                                   | none yet (admin only in Phase 4); later only projects in `project_access` / assigned | read; write via functions only       |
-| Assets                             | —                      | —                                                                   | `opportunity` for accessible projects; `assigned` once confirmed (question B)        | full                                 |
-| `project_internal`, clients        | —                      | —                                                                   | —                                                                                    | read; write via functions only       |
-| Assignments, offers, confirmations | —                      | —                                                                   | own; write via functions                                                             | full                                 |
-| Submissions, revisions             | —                      | —                                                                   | own; submit via function; no review fields                                           | full                                 |
-| Payments, payout details           | —                      | —                                                                   | own (read); payout details own                                                       | full; mark paid via function         |
-| Activity logs                      | —                      | —                                                                   | —                                                                                    | read only (no one can update/delete) |
+| Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |
+| ---------------------------------- | ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Client inquiry                     | submit only (function) | —                                                                   | —                                                                                                                                  | full                                 |
+| Own profile                        | —                      | read/update permitted fields                                        | read/update permitted fields                                                                                                       | full                                 |
+| Own application                    | —                      | read; edit while draft/info requested; submit/withdraw via function | read                                                                                                                               | full; decide via function            |
+| Vetting notes, assessments results | —                      | — (own test instructions only)                                      | —                                                                                                                                  | full                                 |
+| `admin_users`, `access_status`     | —                      | read own status only                                                | read own status only                                                                                                               | change via audited function          |
+| Projects, briefs, references       | —                      | —                                                                   | project + deliverables at `opportunity`; early-access references at `opportunity`; all references and brief versions at `assigned` | read; write via functions only       |
+| Assets                             | —                      | —                                                                   | early-access assets at `opportunity`; all at `assigned`                                                                            | full; write via functions only       |
+| Folder shares, admin notes         | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
+| `project_internal`, clients        | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
+| Access, assignments, offers        | —                      | —                                                                   | own rows (read); answer own offer via `editor_respond_offer`                                                                       | read; write via functions only       |
+| Submissions, revisions             | —                      | —                                                                   | own; submit via function; no review fields                                                                                         | full                                 |
+| Payments, payout details           | —                      | —                                                                   | own (read); payout details own                                                                                                     | full; mark paid via function         |
+| Activity logs                      | —                      | —                                                                   | —                                                                                                                                  | read only (no one can update/delete) |
 
 `—` = no access. Editors B cannot see anything belonging to editor A.
 

@@ -52,3 +52,5 @@ next-env.d.ts
 # graphify output
 graphify-out/
 .playwright-mcp/
+marketing/ffmpeg-tool/
+marketing/**/frames/

@@ -3,6 +3,24 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-14: Phases 5-6 database layer (assets, editor access, offers, assignments)
+
+- Branch `phase4-followups`, **uncommitted, pending owner review**. Migrations
+  `20261114061439_phase5_assets_schema`, `..061746_phase5_assets_functions`,
+  `..062112_phase6_access_schema`, `..062429_phase6_editor_visibility`,
+  `..062924_phase6_admin_negotiation`, `..063511_phase6_editor_respond`,
+  `..063650_phase6_project_status_changes`.
+- Tables `project_assets`, `asset_access_grants`, `project_access`, `assignments`,
+  `negotiation_offers`, `project_notes`; `project_references.early_access`. Editor reads tiered by
+  `private.editor_project_stage`; one combined select policy per table (avoids the
+  multiple-permissive-policies advisor). Append-only history and notes refuse update and delete.
+- `admin_set_project_status`: `open → draft` refused once editors had access; cancel allowed from
+  `assigned`, closing live assignments and revoking access.
+- pgTAP 050-058 added, 044 (expected transitions) and 046 (RLS-helper allow-list) updated: 842/842.
+  Advisors: no issues. Types regenerated.
+- Spec and plan: `docs/superpowers/specs/2026-11-14-phase5-6-editor-access-design.md`,
+  `docs/superpowers/plans/2026-11-14-phase5-6-database.md`.
+
 ## 2026-11-14: Phase 4, projects, briefs, clients, inquiry conversion
 
 - Branch `phase4-projects`, **uncommitted**. Migrations `20261114050211_phase4_schema`,

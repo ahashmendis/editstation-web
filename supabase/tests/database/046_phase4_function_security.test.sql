@@ -6,7 +6,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(20);
+select plan(21);
 
 create function pg_temp.as_user(p_uid uuid, p_aal text default 'aal1')
 returns void language plpgsql as $$
@@ -36,7 +36,8 @@ insert into exc_invoker values
 -- private helpers RLS policies call as the API role.
 create temp table allow_private_exec (name text primary key);
 insert into allow_private_exec values
-  ('private.is_admin'), ('private.is_admin_account'), ('private.is_active_editor');
+  ('private.is_admin'), ('private.is_admin_account'), ('private.is_active_editor'),
+  ('private.editor_project_stage');
 
 -- ---------------------------------------------------------------------------
 -- Catalogue rules
@@ -70,7 +71,7 @@ select is_empty($$ select sig from fns where schema = 'private'
   and schema || '.' || name not in (select name from allow_private_exec) $$,
   'private functions are executable by no API role (except the RLS helpers)');
 
-select is_empty($$ select sig from fns where schema = 'private' and name not in ('is_admin', 'is_admin_account', 'is_active_editor')
+select is_empty($$ select sig from fns where schema = 'private' and name not in ('is_admin', 'is_admin_account', 'is_active_editor', 'editor_project_stage')
   and exists (select 1 from aclexplode(acl) a where pg_get_userbyid(a.grantee) in ('anon', 'authenticated', 'service_role')) $$,
   'no private function has an explicit grant to an API role (except the RLS helpers)');
 
@@ -85,6 +86,9 @@ select ok(not has_function_privilege('anon', 'private.is_admin_account()', 'exec
       and has_function_privilege('authenticated', 'private.is_admin_account()', 'execute')
       and has_function_privilege('authenticated', 'private.is_active_editor()', 'execute'),
   'is_admin_account and is_active_editor are executable by authenticated only');
+select ok(has_function_privilege('authenticated', 'private.editor_project_stage(uuid)', 'execute')
+      and not has_function_privilege('anon', 'private.editor_project_stage(uuid)', 'execute'),
+  'editor_project_stage is executable by authenticated only (editor RLS policies call it)');
 select is_empty($$ select sig from fns f join pg_catalog.pg_type t on t.oid = (select prorettype from pg_proc where oid = f.oid)
   where t.typname = 'trigger'
     and (has_function_privilege('anon', f.oid, 'execute') or has_function_privilege('authenticated', f.oid, 'execute')

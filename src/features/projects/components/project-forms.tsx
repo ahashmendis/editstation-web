@@ -141,7 +141,14 @@ function DetailsFields({
   const v = (name: keyof DetailsDefaults) => state.values?.[name] ?? d[name];
   return (
     <div className="grid gap-4">
-      <Field name="title" label="Title" required defaultValue={v("title")} state={state} />
+      <Field
+        name="title"
+        label="Title"
+        required
+        hint="Invited editors see this. Keep client names out."
+        defaultValue={v("title")}
+        state={state}
+      />
       <div className="grid gap-4 sm:grid-cols-2">
         <Select
           name="briefType"
@@ -178,7 +185,7 @@ function DetailsFields({
       <TextareaField
         name="summary"
         label="Summary"
-        hint="A short description. Editors may see this later."
+        hint="A short description. Every invited editor sees the title and summary, so don't put client names or passwords here."
         defaultValue={v("summary")}
         state={state}
       />

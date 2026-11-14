@@ -52,6 +52,22 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "project.on_hold": "Put on hold",
   "project.cancelled": "Cancelled",
 
+  "project.assets_changed": "Assets changed",
+  "project.early_access_changed": "Early-access setting changed",
+  "project.note_added": "Note added",
+  "asset_grant.recorded": "Folder share recorded",
+  "asset_grant.revoked": "Folder share removed",
+  "project_access.granted": "Editor invited",
+  "project_access.revoked": "Editor access removed",
+  "assignment.offered": "Offer sent",
+  "assignment.counteroffer_pending": "Counteroffer received",
+  "assignment.accepted": "Offer accepted",
+  "assignment.confirmed": "Editor confirmed",
+  "assignment.declined": "Offer declined",
+  "assignment.withdrawn": "Offer withdrawn",
+  "assignment.not_selected": "Editor not selected",
+  "assignment.reassigned": "Editor reassigned",
+
   "client.merged": "Client merged",
 };
 

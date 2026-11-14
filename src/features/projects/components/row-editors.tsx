@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { EARLY_ACCESS_HINT } from "@/features/access/constants";
+
 import { selectClassName } from "./select-class";
 import { MAX_DELIVERABLES, MAX_REFERENCES } from "../constants";
 
@@ -209,15 +211,24 @@ export function ReferencesEditor({ initial }: { initial: ReferenceRow[] }) {
                 <Input {...bind("category")} placeholder="Pacing, colour, sound…" maxLength={80} />
               </Cell>
               <Cell id={id("observationNotes")} label="What to notice" className="sm:col-span-2">
-                <Textarea {...bind("observationNotes")} rows={2} maxLength={2000} />
+                <Textarea
+                  {...bind("observationNotes")}
+                  rows={2}
+                  maxLength={2000}
+                  aria-describedby={id("early-hint")}
+                />
               </Cell>
               <Cell id={id("accessNotes")} label="Access notes" className="sm:col-span-2">
                 <Input
                   {...bind("accessNotes")}
-                  placeholder="Password, login hints…"
+                  placeholder="Login hints…"
                   maxLength={1000}
+                  aria-describedby={id("early-hint")}
                 />
               </Cell>
+              <p id={id("early-hint")} className="text-muted-foreground text-xs sm:col-span-2">
+                {EARLY_ACCESS_HINT}
+              </p>
             </div>
             <Button
               type="button"

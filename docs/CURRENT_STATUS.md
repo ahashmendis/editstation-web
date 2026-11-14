@@ -1,7 +1,8 @@
 # Current Status
 
-**Phase:** 4 (projects, briefs, clients, inquiry conversion) implemented on branch
-`phase4-projects`, **uncommitted**. `main` = Phases 0-3 plus Windows setup. Nothing pushed.
+**Phase:** Phases 5-6 **database layer done** on branch `phase4-followups` (uncommitted, pending
+owner review); admin and editor screens next. Phase 4 committed (`8428036`, `af7e233`). Nothing
+pushed.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V; KB3
 placeholder list (OPEN_QUESTIONS).
 **Last updated:** 2026-11-14
@@ -21,11 +22,18 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   detail), `/admin/clients`, and a "Convert to project" form on the inquiry page
   (`admin_convert_inquiry`). Statuses `draft`/`open`/`on_hold`/`cancelled` only; later statuses
   exist in the enum but are set by later phases.
+- **Phases 5-6 database (uncommitted, pending owner review):** seven migrations
+  `20261114061439` to `20261114063650` (`project_assets`, `project_references.early_access`,
+  `asset_access_grants`, `project_access`, `assignments`, `negotiation_offers`, `project_notes`);
+  tiered editor reads via `private.editor_project_stage`; 16 new or replaced functions (assets,
+  early access, folder shares and revoke checklist, access, offers, counters, confirm, reassign,
+  notes, `editor_respond_offer`, cancellation from `assigned`). Plan calls in
+  `docs/superpowers/plans/2026-11-14-phase5-6-database.md` await owner review.
 - **TokenEconomizer trial** (local scope; see CHANGELOG): propose-only tool pruning, micro-skills,
   loop guard nudges. Review proposals with `/tokeneconomizer:status` before applying.
 - **Design system:** `docs/DESIGN_SYSTEM.md`; tokens, shell (`src/components/app-shell/`), status
   pills, empty/loading/error states applied to admin lists.
-- **Tests (2026-11-14):** pgTAP 472/472, Vitest 132/132 (`npm run check` green), Playwright smoke
+- **Tests (2026-11-14):** pgTAP 842/842 after Phases 5-6 (was 475), Vitest 132/132 (`npm run check` green), Playwright smoke
   12/12 (incl. signed-out gates for `/admin/projects`, `/admin/projects/new`, `/admin/clients`).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
   migration protection, approval for push/commit and hosted operations). Tests:
@@ -40,6 +48,9 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   and signed-out gates; not in CI), mobile layouts in depth.
 - Not exercised in the browser: application reject, reopen, withdraw, practical-test results.
 - Suspended users keep their session (they lose access on the next request).
+- Suspending or revoking an editor does not close their assignments automatically (WORKFLOWS §6:
+  the admin decides per assignment). The admin project page's Editors panel shows a "Suspended" /
+  "Access revoked" badge next to such an editor while they hold a live or confirmed assignment.
 - No admin UI for `profile_options`; editors cannot edit their profile after approval.
 - Notifications (KB §17.10) not built. Placeholder legal pages only (`placeholder-2026-11-11`).
 
@@ -77,11 +88,11 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 
 ## Next task
 
-1. Owner review of the Phase 4 diff, then commit (needs owner approval) and merge.
-2. Signed-in browser check of `/admin/projects`, `/admin/clients` and the conversion form.
-3. Phase 5 (assets, reference visibility, asset access grants); `project_references` already
-   exists. Constraints from Phase 4 are in DEVELOPMENT_ROADMAP. Blocking questions B, K, KB7.
-4. Owner-approved follow-up migration for the PUBLIC-executable functions above.
+1. Owner review of the Phases 5-6 database diff and plan calls (db-security review recommended),
+   then commit (needs owner approval).
+2. Plan and build the Phase 5-6 screens (admin Assets/Editors/Folder shares/Notes panels,
+   `/admin/access-review`, `/editor` dashboard and project page). F and KB7 stay open.
+3. Signed-in browser check of `/admin/projects`, `/admin/clients` and the conversion form.
 
 Before public launch: KB1, KB2, KB8, P, Turnstile (O), production SMTP, real service list and
 budget ranges (Settings screen).

@@ -55,29 +55,53 @@ grants. Every write goes through a `public.admin_*` function (`admin_create_proj
 `admin_convert_inquiry`). Enums: `project_status` (all ten values created now), `brief_type`
 (`fully_instructed`/`reference_based`/`creative_led`), `reference_priority` (`essential`/`optional`).
 
-| Table                  | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                    | Created                      |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| `projects`             | **editor-safe fields only**: title, `brief_type`, `service_type_code`, `status` (default `draft`), `status_before_hold`, summary, deadline, `requires_interpretation`, `proposed_amount` + `proposed_currency` (pay offered to editors), `revision_allowance` (default 3), `current_brief_version`, `first_opened_at` (set once, never cleared), created_by, archived_at | Phase 4                      |
-| `project_internal`     | **admin-only, 1:1 with `projects`**: `client_id` (FK `clients`), `source_inquiry_id` (unique FK `client_inquiries`), `client_price` + `client_price_currency`, internal notes                                                                                                                                                                                            | Phase 4                      |
-| `brief_versions`       | project, `version` (unique per project), `change_summary`, created_by, `instructions`, `desired_outcome`, `audience`, `core_message`, `brand_constraints`, `mandatory_content`, `prohibited_content`, `requires_reacknowledgement`, `deliverables` and `"references"` (jsonb snapshots). Immutable once the project has been opened                                      | Phase 4                      |
-| `project_deliverables` | live rows: project, name, format/resolution/aspect_ratio/duration_seconds, notes, sort_order                                                                                                                                                                                                                                                                             | Phase 4                      |
-| `project_references`   | **pulled forward from Phase 5**; KB §4.2 fields as links only (`https://`): title, url, start/end seconds, observation notes, `priority`, category, access notes, sort_order. Admin-only for now                                                                                                                                                                         | Phase 4                      |
-| `project_assets`       | project, label, url, provider, visibility stage (`opportunity`/`assigned`, question B)                                                                                                                                                                                                                                                                                   | Phase 5                      |
-| `asset_access_grants`  | asset or project folder, editor, shared-with account email, shared_by/at, revoked_by/at                                                                                                                                                                                                                                                                                  | Phase 5 (if K = per-account) |
+| Table                  | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                    | Created |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `projects`             | **editor-safe fields only**: title, `brief_type`, `service_type_code`, `status` (default `draft`), `status_before_hold`, summary, deadline, `requires_interpretation`, `proposed_amount` + `proposed_currency` (pay offered to editors), `revision_allowance` (default 3), `current_brief_version`, `first_opened_at` (set once, never cleared), created_by, archived_at | Phase 4 |
+| `project_internal`     | **admin-only, 1:1 with `projects`**: `client_id` (FK `clients`), `source_inquiry_id` (unique FK `client_inquiries`), `client_price` + `client_price_currency`, internal notes                                                                                                                                                                                            | Phase 4 |
+| `brief_versions`       | project, `version` (unique per project), `change_summary`, created_by, `instructions`, `desired_outcome`, `audience`, `core_message`, `brand_constraints`, `mandatory_content`, `prohibited_content`, `requires_reacknowledgement`, `deliverables` and `"references"` (jsonb snapshots). Immutable once the project has been opened                                      | Phase 4 |
+| `project_deliverables` | live rows: project, name, format/resolution/aspect_ratio/duration_seconds, notes, sort_order                                                                                                                                                                                                                                                                             | Phase 4 |
+| `project_references`   | **pulled forward from Phase 5**; KB §4.2 fields as links only (`https://`): title, url, start/end seconds, observation notes, `priority`, category, access notes, sort_order. Admin-only for now                                                                                                                                                                         | Phase 4 |
+
+Phase 6 adds editor `select` policies to `projects`, `project_deliverables`, `project_references`
+(plus `early_access boolean`, Phase 5) and `brief_versions`; see below.
 
 Constraints worth knowing: `projects_hold_state_chk` (`status_before_hold` set iff `on_hold`);
 `first_opened_at` guarded by `private.guard_first_opened_at`; `brief_versions` guarded by
 `private.guard_brief_versions`; project changes audited by `private.audit_projects`.
 
-## Assignment and agreement
+## Assets, access, offers and assignments _(Phases 5-6, implemented on branch, pending owner review)_
 
-| Table                    | Purpose / key columns                                                                                                               | Created |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `project_access`         | project, editor, granted_by, reason (invited/available). Drives editor visibility                                                   | Phase 6 |
-| `assignments`            | project, editor, status, proposed/agreed amount, currency, confirmed_by/at. Partial unique index: one active assignment per project | Phase 6 |
-| `negotiation_offers`     | append-only: assignment, from role, amount, message, outcome                                                                        | Phase 6 |
-| `editor_interpretations` | assignment, brief version, content, status, admin feedback                                                                          | Phase 7 |
-| `brief_confirmations`    | KB §5.1 fields, storing a copy of deadline, deliverables, amount at confirmation time                                               | Phase 7 |
+Spec `docs/superpowers/specs/2026-11-14-phase5-6-editor-access-design.md`; plan calls in
+`docs/superpowers/plans/2026-11-14-phase5-6-database.md` (awaiting owner review). Migrations
+`20261114061439` to `20261114063650`. No direct writes for anyone: admin writes via
+`public.admin_*` (`require_admin()`), editor writes via `public.editor_respond_offer`
+(`private.require_active_editor()`). Enums: `asset_provider`, `project_access_reason`
+(`invited`/`available`), `assignment_status` (`offered`, `counteroffer_pending`, `accepted`,
+`confirmed`, `declined`, `withdrawn`, `not_selected`, `reassigned`), `negotiation_role`,
+`negotiation_action` (`offer`/`counter`/`accept`/`decline`/`withdraw`).
+
+| Table                 | Key columns / rules                                                                                                                                                                                                                           | Editor reads                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `project_assets`      | project (cascade), label, https url, `provider`, `kind` (free text ≤40), notes, `early_access`, sort_order. Synced by `admin_save_assets` (never bumps the brief version)                                                                     | `assigned`, or `opportunity` + early |
+| `asset_access_grants` | manual folder shares (decision K): project, editor, `shared_with_email` (normalised), provider, folder_url, shared/revoked by/at, revoke_reason. One live grant per (project, editor, email). Revoke checklist: `admin_pending_revocations()` | never                                |
+| `project_access`      | project, editor, `reason`, granted/revoked by/at. One live row per (project, editor)                                                                                                                                                          | own rows (active editors)            |
+| `assignments`         | project, editor, `status`, `proposed_amount` + `currency`, `agreed_amount` + `agreed_currency` (set on accept), confirmed_by/at, closed_at. One live row per (project, editor); one `confirmed` per project; transitions guarded by trigger   | own rows (active editors)            |
+| `negotiation_offers`  | append-only (update/delete refused by trigger, except `created_by` set null): assignment, `from_role`, `action`, amount + currency (null for decline/withdraw), message ≤2000                                                                 | rows of own assignments              |
+| `project_notes`       | admin notes log (KB6), append-only: project, author, note ≤4000                                                                                                                                                                               | never                                |
+
+Editor stage: `private.editor_project_stage(project)` = `none` unless active editor and the project
+is not cancelled/archived; `assigned` with a `confirmed` assignment; `opportunity` with live access
+or a live (`offered`/`counteroffer_pending`/`accepted`) assignment. `projects` and
+`project_deliverables` visible at both stages; `brief_versions` (all versions) at `assigned`.
+Assignment status changes are audited by trigger (`assignment.<status>`, ids and statuses only).
+
+## Later assignment tables
+
+| Table                    | Purpose / key columns                                                                 | Created |
+| ------------------------ | ------------------------------------------------------------------------------------- | ------- |
+| `editor_interpretations` | assignment, brief version, content, status, admin feedback                            | Phase 7 |
+| `brief_confirmations`    | KB §5.1 fields, storing a copy of deadline, deliverables, amount at confirmation time | Phase 7 |
 
 ## Delivery, money, audit
 
@@ -103,8 +127,9 @@ client_inquiries.converted_project_id ─> projects         (set by admin_conver
 clients 1─* project_internal; clients.merged_into_id ─> clients  (merge repoints, never deletes)
 projects 1─* brief_versions, project_deliverables, project_references (Phase 4); project_assets (Phase 5)
 projects 1─* project_access *─1 editor_profiles
-projects 1─* assignments *─1 editor_profiles   (≤1 active per project)
-assignments 1─* negotiation_offers, brief_confirmations, submissions, payments
+projects 1─* assignments *─1 editor_profiles   (≤1 confirmed per project)
+projects 1─* asset_access_grants *─1 editor_profiles; projects 1─* project_notes
+assignments 1─* negotiation_offers (Phase 6), brief_confirmations, submissions, payments
 ```
 
 ## RLS summary

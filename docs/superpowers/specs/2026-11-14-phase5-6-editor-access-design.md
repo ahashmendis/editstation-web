@@ -103,9 +103,11 @@ default false` (B: visible in the opportunity summary), `sort_order`, timestamps
 `private.editor_project_stage(p_project_id) returns text`, security definer, stable:
 
 - `none` unless `private.is_active_editor()`.
+- `none` if the project is `cancelled` or archived, for every editor, including the confirmed one
+  (plan call 4).
 - `assigned` if the caller has an assignment on the project with status `confirmed`.
-- `opportunity` if the caller has a live `project_access` row and the project is not `cancelled`
-  or archived, or a live assignment (`offered`, `counteroffer_pending`, `accepted`).
+- `opportunity` if the caller has a live `project_access` row or a live assignment (`offered`,
+  `counteroffer_pending`, `accepted`).
 - otherwise `none`.
 
 Policies (`for select to authenticated`, added alongside the existing admin policies):

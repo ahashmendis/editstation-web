@@ -183,6 +183,155 @@ export type Database = {
           },
         ];
       };
+      asset_access_grants: {
+        Row: {
+          created_at: string;
+          editor_id: string;
+          folder_url: string | null;
+          id: string;
+          project_id: string;
+          provider: Database["public"]["Enums"]["asset_provider"];
+          revoke_reason: string | null;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          shared_at: string;
+          shared_by: string | null;
+          shared_with_email: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          editor_id: string;
+          folder_url?: string | null;
+          id?: string;
+          project_id: string;
+          provider: Database["public"]["Enums"]["asset_provider"];
+          revoke_reason?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          shared_at?: string;
+          shared_by?: string | null;
+          shared_with_email: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          editor_id?: string;
+          folder_url?: string | null;
+          id?: string;
+          project_id?: string;
+          provider?: Database["public"]["Enums"]["asset_provider"];
+          revoke_reason?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          shared_at?: string;
+          shared_by?: string | null;
+          shared_with_email?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "asset_access_grants_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "asset_access_grants_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "asset_access_grants_revoked_by_fkey";
+            columns: ["revoked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "asset_access_grants_shared_by_fkey";
+            columns: ["shared_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assignments: {
+        Row: {
+          agreed_amount: number | null;
+          agreed_currency: string | null;
+          closed_at: string | null;
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+          created_at: string;
+          currency: string;
+          editor_id: string;
+          id: string;
+          project_id: string;
+          proposed_amount: number;
+          status: Database["public"]["Enums"]["assignment_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          agreed_amount?: number | null;
+          agreed_currency?: string | null;
+          closed_at?: string | null;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          currency?: string;
+          editor_id: string;
+          id?: string;
+          project_id: string;
+          proposed_amount: number;
+          status?: Database["public"]["Enums"]["assignment_status"];
+          updated_at?: string;
+        };
+        Update: {
+          agreed_amount?: number | null;
+          agreed_currency?: string | null;
+          closed_at?: string | null;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          currency?: string;
+          editor_id?: string;
+          id?: string;
+          project_id?: string;
+          proposed_amount?: number;
+          status?: Database["public"]["Enums"]["assignment_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assignments_confirmed_by_fkey";
+            columns: ["confirmed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assignments_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "assignments_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       brief_versions: {
         Row: {
           audience: string | null;
@@ -803,6 +952,58 @@ export type Database = {
           },
         ];
       };
+      negotiation_offers: {
+        Row: {
+          action: Database["public"]["Enums"]["negotiation_action"];
+          amount: number | null;
+          assignment_id: string;
+          created_at: string;
+          created_by: string | null;
+          currency: string | null;
+          from_role: Database["public"]["Enums"]["negotiation_role"];
+          id: string;
+          message: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: Database["public"]["Enums"]["negotiation_action"];
+          amount?: number | null;
+          assignment_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string | null;
+          from_role: Database["public"]["Enums"]["negotiation_role"];
+          id?: string;
+          message?: string | null;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["negotiation_action"];
+          amount?: number | null;
+          assignment_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string | null;
+          from_role?: Database["public"]["Enums"]["negotiation_role"];
+          id?: string;
+          message?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_offers_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "negotiation_offers_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profile_options: {
         Row: {
           active: boolean;
@@ -855,6 +1056,126 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      project_access: {
+        Row: {
+          created_at: string;
+          editor_id: string;
+          granted_at: string;
+          granted_by: string | null;
+          id: string;
+          project_id: string;
+          reason: Database["public"]["Enums"]["project_access_reason"];
+          revoked_at: string | null;
+          revoked_by: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          editor_id: string;
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          project_id: string;
+          reason: Database["public"]["Enums"]["project_access_reason"];
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          editor_id?: string;
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          project_id?: string;
+          reason?: Database["public"]["Enums"]["project_access_reason"];
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_access_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "project_access_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_access_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_access_revoked_by_fkey";
+            columns: ["revoked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_assets: {
+        Row: {
+          created_at: string;
+          early_access: boolean;
+          id: string;
+          kind: string | null;
+          label: string;
+          notes: string | null;
+          project_id: string;
+          provider: Database["public"]["Enums"]["asset_provider"];
+          sort_order: number;
+          updated_at: string;
+          url: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          early_access?: boolean;
+          id?: string;
+          kind?: string | null;
+          label: string;
+          notes?: string | null;
+          project_id: string;
+          provider?: Database["public"]["Enums"]["asset_provider"];
+          sort_order?: number;
+          updated_at?: string;
+          url: string;
+        };
+        Update: {
+          created_at?: string;
+          early_access?: boolean;
+          id?: string;
+          kind?: string | null;
+          label?: string;
+          notes?: string | null;
+          project_id?: string;
+          provider?: Database["public"]["Enums"]["asset_provider"];
+          sort_order?: number;
+          updated_at?: string;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_assets_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       project_deliverables: {
         Row: {
@@ -963,11 +1284,52 @@ export type Database = {
           },
         ];
       };
+      project_notes: {
+        Row: {
+          author_id: string | null;
+          created_at: string;
+          id: string;
+          note: string;
+          project_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note: string;
+          project_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string;
+          project_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_notes_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_notes_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       project_references: {
         Row: {
           access_notes: string | null;
           category: string | null;
           created_at: string;
+          early_access: boolean;
           end_seconds: number | null;
           id: string;
           observation_notes: string | null;
@@ -984,6 +1346,7 @@ export type Database = {
           access_notes?: string | null;
           category?: string | null;
           created_at?: string;
+          early_access?: boolean;
           end_seconds?: number | null;
           id?: string;
           observation_notes?: string | null;
@@ -999,6 +1362,7 @@ export type Database = {
           access_notes?: string | null;
           category?: string | null;
           created_at?: string;
+          early_access?: boolean;
           end_seconds?: number | null;
           id?: string;
           observation_notes?: string | null;
@@ -1132,6 +1496,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_add_project_note: { Args: { p_note: string; p_project_id: string }; Returns: string };
       admin_approve_application: {
         Args: {
           p_application_id: string;
@@ -1144,6 +1509,7 @@ export type Database = {
         Args: { p_archive: boolean; p_project_id: string };
         Returns: undefined;
       };
+      admin_confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_convert_inquiry: { Args: { p_input: Json; p_inquiry_id: string }; Returns: string };
       admin_create_application_request: {
         Args: {
@@ -1155,7 +1521,39 @@ export type Database = {
       };
       admin_create_client: { Args: { p_input: Json }; Returns: string };
       admin_create_project: { Args: { p_input: Json }; Returns: string };
+      admin_grant_project_access: {
+        Args: {
+          p_editor_ids: string[];
+          p_project_id: string;
+          p_reason: Database["public"]["Enums"]["project_access_reason"];
+        };
+        Returns: number;
+      };
+      admin_make_offer: {
+        Args: {
+          p_amount: number;
+          p_currency?: string;
+          p_editor_id: string;
+          p_message?: string;
+          p_project_id: string;
+        };
+        Returns: string;
+      };
       admin_merge_clients: { Args: { p_source: string; p_target: string }; Returns: undefined };
+      admin_pending_revocations: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          editor_id: string;
+          folder_url: string;
+          grant_id: string;
+          project_id: string;
+          provider: Database["public"]["Enums"]["asset_provider"];
+          reason: string;
+          shared_at: string;
+          shared_with_email: string;
+        }[];
+      };
+      admin_reassign: { Args: { p_assignment_id: string; p_message?: string }; Returns: undefined };
       admin_record_assessment_result: {
         Args: {
           p_notes?: string;
@@ -1164,12 +1562,45 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_record_asset_grant: {
+        Args: {
+          p_editor_id: string;
+          p_email: string;
+          p_folder_url?: string;
+          p_project_id: string;
+          p_provider: Database["public"]["Enums"]["asset_provider"];
+        };
+        Returns: string;
+      };
       admin_reject_application: {
         Args: { p_application_id: string; p_message?: string };
         Returns: undefined;
       };
       admin_reopen_application: { Args: { p_editor_id: string }; Returns: string };
+      admin_respond_counter: {
+        Args: {
+          p_action: string;
+          p_amount?: number;
+          p_assignment_id: string;
+          p_currency?: string;
+          p_message?: string;
+        };
+        Returns: undefined;
+      };
+      admin_revoke_asset_grant: {
+        Args: { p_grant_id: string; p_reason?: string };
+        Returns: undefined;
+      };
+      admin_revoke_project_access: {
+        Args: { p_editor_id: string; p_project_id: string };
+        Returns: undefined;
+      };
+      admin_save_assets: { Args: { p_items: Json; p_project_id: string }; Returns: undefined };
       admin_save_brief: { Args: { p_input: Json; p_project_id: string }; Returns: number };
+      admin_set_asset_early_access: {
+        Args: { p_asset_id: string; p_value: boolean };
+        Returns: undefined;
+      };
       admin_set_editor_access: {
         Args: {
           p_editor_id: string;
@@ -1194,9 +1625,27 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_set_reference_early_access: {
+        Args: { p_reference_id: string; p_value: boolean };
+        Returns: undefined;
+      };
       admin_start_application_review: { Args: { p_application_id: string }; Returns: undefined };
       admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
+      admin_withdraw_offer: {
+        Args: { p_assignment_id: string; p_message?: string };
+        Returns: undefined;
+      };
+      editor_respond_offer: {
+        Args: {
+          p_action: string;
+          p_amount?: number;
+          p_assignment_id: string;
+          p_currency?: string;
+          p_message?: string;
+        };
+        Returns: undefined;
+      };
       respond_to_application_request: {
         Args: { p_request_id: string; p_response: string; p_response_link?: string };
         Returns: undefined;
@@ -1254,6 +1703,16 @@ export type Database = {
         | "rejected"
         | "withdrawn";
       assessment_result: "passed" | "failed" | "inconclusive";
+      asset_provider: "google_drive" | "dropbox" | "other";
+      assignment_status:
+        | "offered"
+        | "counteroffer_pending"
+        | "accepted"
+        | "confirmed"
+        | "declined"
+        | "withdrawn"
+        | "not_selected"
+        | "reassigned";
       brief_type: "fully_instructed" | "reference_based" | "creative_led";
       editor_access_status: "none" | "active" | "suspended" | "revoked";
       editor_level: "junior" | "professional" | "specialist";
@@ -1266,7 +1725,10 @@ export type Database = {
         | "declined"
         | "closed"
         | "spam";
+      negotiation_action: "offer" | "counter" | "accept" | "decline" | "withdraw";
+      negotiation_role: "admin" | "editor";
       profile_option_kind: "specialisation" | "software";
+      project_access_reason: "invited" | "available";
       project_status:
         | "draft"
         | "open"
@@ -1405,6 +1867,17 @@ export const Constants = {
         "withdrawn",
       ],
       assessment_result: ["passed", "failed", "inconclusive"],
+      asset_provider: ["google_drive", "dropbox", "other"],
+      assignment_status: [
+        "offered",
+        "counteroffer_pending",
+        "accepted",
+        "confirmed",
+        "declined",
+        "withdrawn",
+        "not_selected",
+        "reassigned",
+      ],
       brief_type: ["fully_instructed", "reference_based", "creative_led"],
       editor_access_status: ["none", "active", "suspended", "revoked"],
       editor_level: ["junior", "professional", "specialist"],
@@ -1418,7 +1891,10 @@ export const Constants = {
         "closed",
         "spam",
       ],
+      negotiation_action: ["offer", "counter", "accept", "decline", "withdraw"],
+      negotiation_role: ["admin", "editor"],
       profile_option_kind: ["specialisation", "software"],
+      project_access_reason: ["invited", "available"],
       project_status: [
         "draft",
         "open",
