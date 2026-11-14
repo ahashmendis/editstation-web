@@ -96,8 +96,8 @@ reset role;
 select pg_temp.as_user('44000000-0000-0000-0000-00000000000a', 'aal2');
 select is(
   (select array_agg(x order by x collate "C") from unnest(pg_temp.try_matrix()) x),
-  array['assigned>cancelled', 'draft>cancelled', 'draft>on_hold', 'draft>open', 'in_progress>cancelled', 'on_hold>draft',
-        'open>cancelled', 'open>draft', 'open>on_hold'],
+  array['assigned>cancelled', 'draft>cancelled', 'draft>on_hold', 'draft>open', 'in_progress>cancelled', 'in_review>cancelled', 'on_hold>draft',
+        'open>cancelled', 'open>draft', 'open>on_hold', 'revision_requested>cancelled'],
   'exactly the allowed transitions succeed over every status pair');
 reset role;
 
@@ -109,7 +109,7 @@ select is((select status_before_hold from public.projects p join matrix m on m.i
   'putting a project on hold stores the previous status');
 select ok((select bool_and(p.status = m.from_s) from matrix m join public.projects p on p.id = m.id
   where m.from_s || '>' || m.to_s not in ('draft>open', 'draft>cancelled', 'draft>on_hold', 'open>draft',
-    'open>cancelled', 'open>on_hold', 'on_hold>draft', 'assigned>cancelled', 'in_progress>cancelled')),
+    'open>cancelled', 'open>on_hold', 'on_hold>draft', 'assigned>cancelled', 'in_progress>cancelled', 'in_review>cancelled', 'revision_requested>cancelled')),
   'refused transitions leave the status unchanged');
 
 -- ---------------------------------------------------------------------------

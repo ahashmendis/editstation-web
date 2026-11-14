@@ -75,6 +75,15 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "brief_confirmation.carried_forward": "Brief confirmation carried forward",
   "assignment.in_progress": "Work started",
 
+  "submission.submitted": "Work submitted",
+  "submission.reviewed": "Submission reviewed",
+  "revision_request.created": "Change requested",
+  "revision_request.classified": "Change request classified",
+  "revision_request.acknowledged": "Change request acknowledged",
+  "revision_request.in_progress": "Revision in progress",
+  "revision_request.resubmitted": "Revision resubmitted",
+  "revision_request.approved": "Revision approved",
+
   "payment.created": "Payment record created",
   "payment.pending_approval": "Sent for approval",
   "payment.approved": "Payment approved",

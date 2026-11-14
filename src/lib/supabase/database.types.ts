@@ -1815,6 +1815,106 @@ export type Database = {
           },
         ];
       };
+      revision_requests: {
+        Row: {
+          acknowledged_at: string | null;
+          assignment_id: string;
+          beyond_allowance: boolean;
+          classified_at: string | null;
+          classified_by: string | null;
+          counts_against_allowance: boolean | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          project_id: string;
+          reason: string;
+          resolved_at: string | null;
+          resubmitted_at: string | null;
+          round_number: number | null;
+          status: Database["public"]["Enums"]["revision_status"];
+          submission_id: string;
+          type: Database["public"]["Enums"]["revision_type"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string | null;
+          assignment_id: string;
+          beyond_allowance?: boolean;
+          classified_at?: string | null;
+          classified_by?: string | null;
+          counts_against_allowance?: never;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          project_id: string;
+          reason: string;
+          resolved_at?: string | null;
+          resubmitted_at?: string | null;
+          round_number?: number | null;
+          status?: Database["public"]["Enums"]["revision_status"];
+          submission_id: string;
+          type: Database["public"]["Enums"]["revision_type"];
+          updated_at?: string;
+        };
+        Update: {
+          acknowledged_at?: string | null;
+          assignment_id?: string;
+          beyond_allowance?: boolean;
+          classified_at?: string | null;
+          classified_by?: string | null;
+          counts_against_allowance?: never;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          project_id?: string;
+          reason?: string;
+          resolved_at?: string | null;
+          resubmitted_at?: string | null;
+          round_number?: number | null;
+          status?: Database["public"]["Enums"]["revision_status"];
+          submission_id?: string;
+          type?: Database["public"]["Enums"]["revision_type"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "revision_requests_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "revision_requests_classified_by_fkey";
+            columns: ["classified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "revision_requests_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "revision_requests_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "revision_requests_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       service_types: {
         Row: {
           active: boolean;
@@ -1843,6 +1943,113 @@ export type Database = {
         };
         Relationships: [];
       };
+      submissions: {
+        Row: {
+          assignment_id: string;
+          confirmed_deadline: string;
+          created_at: string;
+          editor_id: string;
+          export_details: string | null;
+          feedback: string | null;
+          id: string;
+          is_late: boolean;
+          link: string;
+          notes: string | null;
+          outcome: Database["public"]["Enums"]["submission_outcome"] | null;
+          project_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          revision_request_id: string | null;
+          submitted_at: string;
+          submitted_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          assignment_id: string;
+          confirmed_deadline: string;
+          created_at?: string;
+          editor_id: string;
+          export_details?: string | null;
+          feedback?: string | null;
+          id?: string;
+          is_late: boolean;
+          link: string;
+          notes?: string | null;
+          outcome?: Database["public"]["Enums"]["submission_outcome"] | null;
+          project_id: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          revision_request_id?: string | null;
+          submitted_at?: string;
+          submitted_by?: string | null;
+          version: number;
+        };
+        Update: {
+          assignment_id?: string;
+          confirmed_deadline?: string;
+          created_at?: string;
+          editor_id?: string;
+          export_details?: string | null;
+          feedback?: string | null;
+          id?: string;
+          is_late?: boolean;
+          link?: string;
+          notes?: string | null;
+          outcome?: Database["public"]["Enums"]["submission_outcome"] | null;
+          project_id?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          revision_request_id?: string | null;
+          submitted_at?: string;
+          submitted_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "submissions_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submissions_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "submissions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submissions_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submissions_revision_request_fkey";
+            columns: ["revision_request_id"];
+            isOneToOne: false;
+            referencedRelation: "revision_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "submissions_submitted_by_fkey";
+            columns: ["submitted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1858,10 +2065,19 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_approve_project: {
+        Args: { p_feedback?: string; p_project_id: string };
+        Returns: undefined;
+      };
       admin_archive_project: {
         Args: { p_archive: boolean; p_project_id: string };
         Returns: undefined;
       };
+      admin_classify_revision: {
+        Args: { p_reason: string; p_revision_id: string; p_type: string };
+        Returns: undefined;
+      };
+      admin_complete_project: { Args: { p_project_id: string }; Returns: undefined };
       admin_confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_convert_inquiry: { Args: { p_input: Json; p_inquiry_id: string }; Returns: string };
       admin_create_application_request: {
@@ -1953,6 +2169,16 @@ export type Database = {
         Args: { p_decision: string; p_feedback?: string; p_interpretation_id: string };
         Returns: undefined;
       };
+      admin_review_submission: {
+        Args: {
+          p_feedback?: string;
+          p_outcome: string;
+          p_reason?: string;
+          p_revision_type?: string;
+          p_submission_id: string;
+        };
+        Returns: string;
+      };
       admin_revoke_asset_grant: {
         Args: { p_grant_id: string; p_reason?: string };
         Returns: undefined;
@@ -2011,6 +2237,10 @@ export type Database = {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
       };
+      editor_acknowledge_revision: {
+        Args: { p_revision_id: string; p_start?: boolean };
+        Returns: undefined;
+      };
       editor_confirm_brief: {
         Args: {
           p_amount: number;
@@ -2060,6 +2290,15 @@ export type Database = {
           p_questions?: string;
           p_will_adapt: string;
           p_will_reproduce: string;
+        };
+        Returns: string;
+      };
+      editor_submit_work: {
+        Args: {
+          p_assignment_id: string;
+          p_export_details?: string;
+          p_link: string;
+          p_notes?: string;
         };
         Returns: string;
       };
@@ -2182,6 +2421,11 @@ export type Database = {
         | "on_hold"
         | "cancelled";
       reference_priority: "essential" | "optional";
+      revision_status:
+        "requested" | "acknowledged" | "in_progress" | "resubmitted" | "approved" | "disputed";
+      revision_type: "client_revision" | "editor_correction" | "scope_change";
+      submission_outcome:
+        "approved" | "revision_requested" | "rejected_needs_discussion" | "scope_change_required";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2354,6 +2598,21 @@ export const Constants = {
         "cancelled",
       ],
       reference_priority: ["essential", "optional"],
+      revision_status: [
+        "requested",
+        "acknowledged",
+        "in_progress",
+        "resubmitted",
+        "approved",
+        "disputed",
+      ],
+      revision_type: ["client_revision", "editor_correction", "scope_change"],
+      submission_outcome: [
+        "approved",
+        "revision_requested",
+        "rejected_needs_discussion",
+        "scope_change_required",
+      ],
     },
   },
 } as const;

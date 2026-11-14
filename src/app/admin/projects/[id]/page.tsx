@@ -33,6 +33,8 @@ import {
   getProjectDetail,
   getProjectFormOptions,
 } from "@/features/projects/queries";
+import { AdminReviewPanel } from "@/features/submissions/components/panels";
+import { getSubmissionData } from "@/features/submissions/queries";
 import { requireAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Project · Admin · EDITSTATION" };
@@ -52,10 +54,11 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
   await requireAdmin();
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [detail, options, access] = await Promise.all([
+  const [detail, options, access, submissionData] = await Promise.all([
     getProjectDetail(id),
     getProjectFormOptions(),
     getProjectAccessData(id),
+    getSubmissionData(id),
   ]);
   if (!detail) notFound();
   const working = access.assignments.filter(
@@ -270,6 +273,18 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
             : [];
         })}
       />
+
+      {submissionData.submissions.length > 0 ||
+      ["in_progress", "in_review", "revision_requested", "approved", "completed"].includes(
+        status,
+      ) ? (
+        <AdminReviewPanel
+          projectId={p.id}
+          projectStatus={archived ? "archived" : status}
+          revisionAllowance={p.revision_allowance}
+          data={submissionData}
+        />
+      ) : null}
 
       <Card>
         <CardHeader>

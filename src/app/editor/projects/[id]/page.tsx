@@ -17,6 +17,8 @@ import { getEditorProject } from "@/features/access/queries";
 import { EditorConfirmationPanel } from "@/features/confirmation/components/editor-panel";
 import { getConfirmationData } from "@/features/confirmation/queries";
 import { BRIEF_TYPE_LABEL, type BriefType } from "@/features/projects/constants";
+import { EditorSubmissionsPanel } from "@/features/submissions/components/panels";
+import { getSubmissionData } from "@/features/submissions/queries";
 import { requireActiveEditor } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Project · Editor · EDITSTATION" };
@@ -71,7 +73,10 @@ async function EditorProjectContent({
   const { project: p, current, assignments, negotiations, brief } = detail;
   const working = assignments.find((a) => a.status === "confirmed" || a.status === "in_progress");
   const confirmed = Boolean(working);
-  const confirmation = working ? (await getConfirmationData([working.id])).get(working.id) : null;
+  const [confirmations, submissionData] = working
+    ? await Promise.all([getConfirmationData([working.id]), getSubmissionData(detail.project.id)])
+    : [null, null];
+  const confirmation = working ? (confirmations?.get(working.id) ?? null) : null;
   const briefType = p.brief_type as BriefType;
   const live =
     current &&
@@ -187,6 +192,15 @@ async function EditorProjectContent({
           agreedAmount={working.agreedAmount}
           agreedCurrency={working.agreedCurrency}
           data={confirmation}
+        />
+      ) : null}
+
+      {working?.status === "in_progress" && submissionData ? (
+        <EditorSubmissionsPanel
+          projectId={p.id}
+          assignmentId={working.id}
+          projectStatus={p.status}
+          data={submissionData}
         />
       ) : null}
 

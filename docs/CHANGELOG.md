@@ -3,6 +3,23 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-14: Phase 8 submissions, review and revision classification
+
+- Branch `phase8-submissions`, **uncommitted, pending owner review**. Spec
+  `docs/superpowers/specs/2026-11-14-phase8-submissions-design.md` (calls §7). Migrations
+  `20261114154439_phase8_schema`, `..154444_phase8_functions`, `..154448_phase8_earlier_phase_changes`.
+- `submissions`, `revision_requests` (enums `submission_outcome`, `revision_type`,
+  `revision_status`), guards, project review-status guard, audit trigger. Functions
+  `editor_submit_work`, `editor_acknowledge_revision`, `admin_review_submission`,
+  `admin_approve_project`, `admin_classify_revision`, `admin_complete_project`. Replaced
+  `project_transition_allowed`, `admin_reassign`, `private.require_working_assignment` (review
+  statuses). Approval moves `not_due` payments to `pending_approval`.
+- Screens: editor project page Submissions card (submit, change requests with acknowledge/start,
+  history); admin project page Review card (pending version, approve, outcome/feedback/classify,
+  rounds x/allowance with beyond warning, late count, classify open requests, complete, history).
+- Verification: pgTAP 1482/1482 (080-082 new, 044 updated), advisors clean, `npm run check` green
+  (Vitest 223), Playwright 17/17. Not checked in a signed-in browser.
+
 ## 2026-11-14: Phase 9 payments and earnings tracker
 
 - Branch `phase4-followups`, **uncommitted, pending owner review**. Migrations

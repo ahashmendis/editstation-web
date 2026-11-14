@@ -134,6 +134,22 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   mismatch is refused.
 - Audit details: ids, version numbers and kind only (no amounts, deadlines, deliverables or text).
 
+## Submission and review controls (Phase 8, implemented on branch, pending owner review)
+
+- `submissions` and `revision_requests`: select-only grants, one policy each (admin aal2, or the
+  owning editor while `private.editor_project_stage(project) <> 'none'`); no write grants; no
+  client data, client pricing or money columns. Links only (https), never media.
+- Editors write only through `editor_submit_work` (own `in_progress` assignment, Phase 7 gate
+  `ready`, no pending submission, no disputed request) and `editor_acknowledge_revision`. Admins
+  use `admin_review_submission`, `admin_approve_project`, `admin_classify_revision`,
+  `admin_complete_project`. All raise `ES4xx` only.
+- Guards hold for the table owner: submission content immutable (one review update, actor
+  clearing), revision links immutable and status moves limited to the lifecycle, no deletes; the
+  project statuses `in_review`/`revision_requested`/`approved`/`completed` need their facts
+  (pending submission, open request, approved latest submission, prior `approved`).
+- Audit details: ids, version, `is_late`, outcome/type/status names and round number only (no
+  links, notes, export details, feedback, reasons or dates).
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |
