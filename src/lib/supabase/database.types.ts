@@ -1190,6 +1190,172 @@ export type Database = {
           },
         ];
       };
+      payment_notes: {
+        Row: {
+          author_id: string | null;
+          created_at: string;
+          id: string;
+          note: string;
+          payment_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note: string;
+          payment_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string;
+          payment_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_notes_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_notes_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payments: {
+        Row: {
+          amount: number;
+          approved_at: string | null;
+          approved_by: string | null;
+          assignment_id: string;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          due_date: string | null;
+          editor_id: string;
+          held_from_status: Database["public"]["Enums"]["payment_status"] | null;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          marked_paid_at: string | null;
+          marked_paid_by: string | null;
+          on_hold_reason: string | null;
+          project_id: string;
+          reversal_reason: string | null;
+          reverses_payment_id: string | null;
+          status: Database["public"]["Enums"]["payment_status"];
+          transaction_reference: string | null;
+          transfer_date: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          assignment_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          currency: string;
+          due_date?: string | null;
+          editor_id: string;
+          held_from_status?: Database["public"]["Enums"]["payment_status"] | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          marked_paid_at?: string | null;
+          marked_paid_by?: string | null;
+          on_hold_reason?: string | null;
+          project_id: string;
+          reversal_reason?: string | null;
+          reverses_payment_id?: string | null;
+          status?: Database["public"]["Enums"]["payment_status"];
+          transaction_reference?: string | null;
+          transfer_date?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          assignment_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          due_date?: string | null;
+          editor_id?: string;
+          held_from_status?: Database["public"]["Enums"]["payment_status"] | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          marked_paid_at?: string | null;
+          marked_paid_by?: string | null;
+          on_hold_reason?: string | null;
+          project_id?: string;
+          reversal_reason?: string | null;
+          reverses_payment_id?: string | null;
+          status?: Database["public"]["Enums"]["payment_status"];
+          transaction_reference?: string | null;
+          transfer_date?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_approved_by_fkey";
+            columns: ["approved_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "payments_marked_paid_by_fkey";
+            columns: ["marked_paid_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_reverses_payment_id_fkey";
+            columns: ["reverses_payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profile_options: {
         Row: {
           active: boolean;
@@ -1682,6 +1848,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_add_payment_note: { Args: { p_note: string; p_payment_id: string }; Returns: string };
       admin_add_project_note: { Args: { p_note: string; p_project_id: string }; Returns: string };
       admin_approve_application: {
         Args: {
@@ -1725,6 +1892,10 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_mark_payment_paid: {
+        Args: { p_payment_id: string; p_transaction_reference: string; p_transfer_date: string };
+        Returns: undefined;
+      };
       admin_merge_clients: { Args: { p_source: string; p_target: string }; Returns: undefined };
       admin_pending_revocations: {
         Args: Record<PropertyKey, never>;
@@ -1762,6 +1933,7 @@ export type Database = {
         Args: { p_application_id: string; p_message?: string };
         Returns: undefined;
       };
+      admin_release_payment_hold: { Args: { p_payment_id: string }; Returns: undefined };
       admin_reopen_application: { Args: { p_editor_id: string }; Returns: string };
       admin_respond_counter: {
         Args: {
@@ -1772,6 +1944,10 @@ export type Database = {
           p_message?: string;
         };
         Returns: undefined;
+      };
+      admin_reverse_payment: {
+        Args: { p_payment_id: string; p_reason: string; p_reopen: boolean };
+        Returns: string;
       };
       admin_review_interpretation: {
         Args: { p_decision: string; p_feedback?: string; p_interpretation_id: string };
@@ -1807,6 +1983,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_set_payment_due_date: {
+        Args: { p_due_date: string; p_payment_id: string };
+        Returns: undefined;
+      };
+      admin_set_payment_status: {
+        Args: { p_payment_id: string; p_reason?: string; p_status: string };
+        Returns: undefined;
+      };
       admin_set_project_status: {
         Args: {
           p_note?: string;
@@ -1836,6 +2020,27 @@ export type Database = {
           p_deadline: string;
         };
         Returns: string;
+      };
+      editor_list_payments: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          amount: number;
+          approved_at: string;
+          created_at: string;
+          currency: string;
+          due_date: string;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          marked_paid_at: string;
+          on_hold_reason: string;
+          project_id: string;
+          project_title: string;
+          reversal_reason: string;
+          reverses_payment_id: string;
+          status: Database["public"]["Enums"]["payment_status"];
+          transaction_reference: string;
+          transfer_date: string;
+        }[];
       };
       editor_respond_offer: {
         Args: {
@@ -1960,6 +2165,9 @@ export type Database = {
       interpretation_status: "submitted" | "accepted" | "changes_requested";
       negotiation_action: "offer" | "counter" | "accept" | "decline" | "withdraw";
       negotiation_role: "admin" | "editor";
+      payment_kind: "assignment" | "reversal";
+      payment_status:
+        "not_due" | "pending_approval" | "approved" | "processing" | "paid" | "on_hold";
       profile_option_kind: "specialisation" | "software";
       project_access_reason: "invited" | "available";
       project_status:
@@ -2129,6 +2337,8 @@ export const Constants = {
       interpretation_status: ["submitted", "accepted", "changes_requested"],
       negotiation_action: ["offer", "counter", "accept", "decline", "withdraw"],
       negotiation_role: ["admin", "editor"],
+      payment_kind: ["assignment", "reversal"],
+      payment_status: ["not_due", "pending_approval", "approved", "processing", "paid", "on_hold"],
       profile_option_kind: ["specialisation", "software"],
       project_access_reason: ["invited", "available"],
       project_status: [

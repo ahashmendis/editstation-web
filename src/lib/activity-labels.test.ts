@@ -18,6 +18,13 @@ describe("activityLabel", () => {
     expect(activityLabel("project.note_added")).toBe("Note added");
   });
 
+  it("maps Phase 9 payment codes", () => {
+    expect(activityLabel("payment.created")).toBe("Payment record created");
+    expect(activityLabel("payment.hold_released")).toBe("Hold released");
+    expect(activityLabel("payment.reversed")).toBe("Payment reversed");
+    expect(activityLabel("payment_note.added")).toBe("Note added");
+  });
+
   it("falls back to Updated", () => {
     expect(activityLabel("something.else")).toBe("Updated");
   });

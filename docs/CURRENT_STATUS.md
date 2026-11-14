@@ -1,7 +1,13 @@
 # Current Status
 
-**Phase:** Phase 7 **database layer done** on branch `phase4-followups` (uncommitted, pending
-owner review), on top of the uncommitted-review Phases 5-6 database. **Flagged for the owner:**
+**Phase:** Phase 9 **payments and earnings done** (database + screens) on branch
+`phase4-followups` (uncommitted, pending owner review). **Phase 9 flags:** (a) F: ended
+assignments put unpaid payments on hold automatically with a fixed editor-visible reason (spec call
+2); (b) E: mark paid cannot check verified payout details yet (call 11) — resolve before recording
+real transfers; (c) suspended/revoked editors lose the earnings screen (call 9). Spec/plan calls
+(`docs/superpowers/specs|plans/2026-11-14-phase9-earnings*`) await owner review.
+Phase 7 **database layer done** (uncommitted, pending owner review), on top of the
+uncommitted-review Phases 5-6 database. **Flagged for the owner:**
 (1) order: admin confirmation stays first (decision B), then interpretation, brief confirmation and
 a gated start (spec call 1); (2) drift: any deadline or agreed-pay change after confirmation
 requires re-confirmation (spec call 6). Phase 4 committed. Nothing pushed.
@@ -42,8 +48,11 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   loop guard nudges. Review proposals with `/tokeneconomizer:status` before applying.
 - **Design system:** `docs/DESIGN_SYSTEM.md`; tokens, shell (`src/components/app-shell/`), status
   pills, empty/loading/error states applied to admin lists.
-- **Tests (2026-11-14):** pgTAP 1133/1133 after Phase 7 (842 after Phases 5-6), Vitest 132/132 (`npm run check` green), Playwright smoke
-  12/12 (incl. signed-out gates for `/admin/projects`, `/admin/projects/new`, `/admin/clients`).
+- **Phase 9 (uncommitted, pending owner review):** `payments` + `payment_notes`, creation/hold
+  triggers on `assignments`, six `admin_*` payment functions and `editor_list_payments`; screens
+  `/editor/earnings`, `/admin/earnings`, `/admin/earnings/[id]`. Not yet checked signed in.
+- **Tests (2026-11-14):** pgTAP 1357/1357 after Phase 9 (1133 after Phase 7), Vitest 212/212
+  (`npm run check` green), Playwright smoke 17/17 (incl. signed-out gates for the earnings routes).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
   migration protection, approval for push/commit and hosted operations). Tests:
   `node --test .claude/hooks/guard.test.mjs`.

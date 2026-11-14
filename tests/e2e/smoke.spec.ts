@@ -53,6 +53,9 @@ test.describe("signed-out access gates", () => {
     "/admin/clients",
     "/admin/access-review",
     "/editor/projects/6f3c2d1e-0b4a-4c6d-8e9f-1a2b3c4d5e6f",
+    "/editor/earnings",
+    "/admin/earnings",
+    "/admin/earnings/7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
     "/mfa",
   ]) {
     test(`${path} redirects to sign-in and keeps the destination`, async ({ page }) => {

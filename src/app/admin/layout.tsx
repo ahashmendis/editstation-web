@@ -9,6 +9,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Overview", icon: "dashboard", exact: true },
   { href: "/admin/inquiries", label: "Inquiries", icon: "inquiries" },
   { href: "/admin/projects", label: "Projects", icon: "projects" },
+  { href: "/admin/earnings", label: "Earnings", icon: "earnings" },
   { href: "/admin/clients", label: "Clients", icon: "clients" },
   { href: "/admin/access-review", label: "Access review", icon: "access" },
   { href: "/admin/applications", label: "Applications", icon: "applications" },

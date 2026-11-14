@@ -27,7 +27,7 @@ Open items first. Read a question's full section only when it becomes relevant.
 | B    | Editor visibility before assignment           | Resolved 2026-11-14         | —                         |
 | C    | Several editors accepting the same project    | Resolved 2026-11-14         | —                         |
 | F    | Pay for extra rounds, scope changes, kill fee | Open                        | Phase 8                   |
-| I    | Canonical payment statuses                    | Open                        | Phase 9                   |
+| I    | Canonical payment statuses                    | Resolved 2026-11-14         | —                         |
 | K    | Asset sharing: per-account vs link            | Resolved 2026-11-14         | —                         |
 | KB4  | Client prices and editor pay ranges           | Open                        | Pilot                     |
 | KB5  | Turnaround and late-delivery rules            | Open                        | Phase 8; policy for pilot |
@@ -36,7 +36,7 @@ Open items first. Read a question's full section only when it becomes relevant.
 | KB9  | Payment schedule                              | Open                        | Phase 9                   |
 | KB10 | Notification events for release 1             | Open                        | Phase 10                  |
 
-Resolved (see decisions log): A, B, C, D, E, H, J, K, KB6, L, M, N, O, R, S, T, U, V.
+Resolved (see decisions log): A, B, C, D, E, H, I, J, K, KB6, L, M, N, O, R, S, T, U, V.
 
 ## Decisions log
 
@@ -63,6 +63,7 @@ Format: date, question: decision.
 - 2026-11-14, **C** Several editors accepting: Adopt the recommendation. The admin chooses manually; the others are marked "not selected". No first-come-first-served.
 - 2026-11-14, **KB6** Project communication: Adopt the recommendation for the pilot. Email or the existing channel, plus an admin-only notes log per project; no in-app chat.
 - 2026-11-14, **KB7** Storage provider: still open (needs the owner's actual provider). Phase 5 stores a provider value per asset (Google Drive, Dropbox, other), so the schema does not wait on it.
+- 2026-11-14, **I** Payment statuses: Adopt the recommendation (owner instruction: accept recommended). `not_due` → `pending_approval` → `approved` → `processing` → `paid`, plus `on_hold` (reachable from any state before paid, with a required reason; a dispute is a reason). The record is created at assignment confirmation so committed-but-unpaid costs show. `paid` is final; corrections happen through an audited reversal entry. No `cancelled` status (depends on F, still open). Design: `docs/superpowers/specs/2026-11-14-phase9-earnings-design.md`.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 ---
@@ -317,7 +318,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
   multi-currency adds exchange-rate handling.
 - **Blocks:** Phase 3 (budget field) and Phase 4 (client price).
 
-### I. Canonical payment statuses
+### I. Canonical payment statuses: RESOLVED 2026-11-14 (recommendation adopted)
 
 - **The difference:** §8.2 lists _Not due · Pending approval · Approved for payment · Processing ·
   Paid · On hold / disputed_. §10.4 lists _Pending approval · Approved · Processing · Paid · On

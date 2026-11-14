@@ -75,6 +75,17 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "brief_confirmation.carried_forward": "Brief confirmation carried forward",
   "assignment.in_progress": "Work started",
 
+  "payment.created": "Payment record created",
+  "payment.pending_approval": "Sent for approval",
+  "payment.approved": "Payment approved",
+  "payment.processing": "Transfer in progress",
+  "payment.paid": "Marked paid",
+  "payment.on_hold": "Put on hold",
+  "payment.hold_released": "Hold released",
+  "payment.due_date_set": "Due date set",
+  "payment.reversed": "Payment reversed",
+  "payment_note.added": "Note added",
+
   "client.merged": "Client merged",
 };
 

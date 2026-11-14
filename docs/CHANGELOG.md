@@ -3,6 +3,25 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-14: Phase 9 payments and earnings tracker
+
+- Branch `phase4-followups`, **uncommitted, pending owner review**. Migrations
+  `20261114145816_phase9_payments_schema`, `..145820_phase9_payment_triggers`,
+  `..145824_phase9_payment_functions`.
+- `payments` (enums `payment_status`, `payment_kind`; insert/update/delete guards that hold for the
+  table owner; paid rows immutable except actor clears) and admin-only append-only
+  `payment_notes`; select-only grants, one policy each. Triggers on `assignments`: payment created at
+  `accepted → confirmed`; unpaid payments held on `confirmed|in_progress → reassigned|withdrawn`.
+  Functions `admin_set_payment_status`, `admin_release_payment_hold`, `admin_mark_payment_paid`,
+  `admin_set_payment_due_date`, `admin_reverse_payment`, `admin_add_payment_note`,
+  `editor_list_payments`. Audit details: ids and enum names only.
+- Screens: `/editor/earnings`, `/admin/earnings` (summary per currency, filters, by editor,
+  project margin), `/admin/earnings/[id]` (actions, notes, history); nav "Earnings". Summaries are
+  pure TypeScript (`src/features/payments/summary.ts`, Asia/Colombo month).
+- pgTAP 070-076 added (role refusals for all seven functions consolidated in 076). 1357/1357.
+  Advisors: no issues. Types regenerated. Vitest 212/212. Playwright 17/17 (gates for the three
+  earnings routes). Signed-in browser check not done yet.
+
 ## 2026-11-14: Phase 7 database layer (interpretation, brief confirmation, in-progress gate)
 
 - Branch `phase4-followups`, **uncommitted, pending owner review**. Migrations

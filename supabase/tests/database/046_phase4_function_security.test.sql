@@ -31,7 +31,9 @@ where n.nspname in ('public', 'private')
 create temp table exc_invoker (name text primary key);
 insert into exc_invoker values
   ('private.limit_portfolio_links'), ('private.prevent_activity_log_changes'),
-  ('private.require_user'), ('private.set_updated_at');
+  ('private.require_user'), ('private.set_updated_at'),
+  -- Phase 9: pure immutable lookup, reads no table.
+  ('private.payment_transition_allowed');
 
 -- private helpers RLS policies call as the API role.
 create temp table allow_private_exec (name text primary key);

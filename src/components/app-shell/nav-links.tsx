@@ -8,6 +8,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,6 +27,7 @@ const ICONS = {
   clients: Users,
   access: ShieldCheck,
   settings: Settings,
+  earnings: Wallet,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;
