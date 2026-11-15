@@ -220,3 +220,61 @@ decision I; no client billing records beyond `project_internal.client_price`.
   without seeing client amounts (KB9a).
 - Payout details (E): `editor_payout_details` + verification, needed before the first editor
   milestone is marked paid.
+
+### Additions from the second 2026-11-15 decisions (F2, KB9a, KB9b, KB7a, E go-ahead)
+
+These refine the plan above; still nothing is built.
+
+- **Project terms agreement** (admin-only, append-only, versioned): one record per agreed version
+  holding client milestones (default 50/50), revision policy, cancellation/kill-fee schedule
+  (stages and amounts or shares, entered per project), and the day counts with their defaults:
+  deposit 14 days after invoice, balance 7 days after completion/approval, editor payment within
+  7 days of payable, late-balance protection 14 days after the balance is due. A trigger refuses
+  in-place edits; once work begins a change needs a new version with a reason.
+- **`compensation_adjustments`** (F2): kind (`extra_round | scope_change | cancellation`), amount,
+  currency, linked revision request or scope quote, status (`offered | accepted | declined |
+withdrawn`), offered/answered by and at. Created by `admin_*`, answered by
+  `editor_respond_adjustment`; work on the linked request is blocked until `accepted`. Accepted
+  adjustments create their own editor payment rows. The original agreed amount is never edited.
+- **Editor payment rows**: one per milestone and per accepted adjustment; add `milestone`,
+  `payable_at`, `payable_reason` (`client_deposit_verified | client_balance_verified |
+late_balance_protection | adjustment_accepted | cancellation_settlement`), and a client-safe
+  `waiting_on_client boolean` that editors may see. Replace `payments_open_key`.
+- **Partial dispute holds** (KB9a-4): today a hold covers a whole payment row. Support holding only
+  the disputed portion, e.g. by splitting the row into disputed and undisputed parts with an
+  audited split, so undisputed money is not frozen.
+- **Cancellation settlement** (KB9a-3): compute what the editor earned under the agreed schedule
+  at the stage reached; create the settlement row, or an audited reversal for any overpayment;
+  record the client refund on the client milestones (admin-only).
+- **Deposit gate** (KB9b-4): `private.assignment_gate` also requires a verified client deposit
+  milestone; `in_progress` is refused without it.
+- **Timed rules** (KB9a-1, KB9a-2): auto-hold after an unpaid deposit and late-balance protection
+  need a scheduled job. The project uses no scheduler today. Options: `pg_cron` (hosted) calling a
+  `private` function, or a check that runs when an admin opens the dashboard. Design call for
+  Phase 12; both must be audited.
+- **Assets** (KB7a): `access_type` (`editor_account | anyone_with_link`) on `asset_access_grants`
+  (or the asset), with the warning shown to admins; revocation checklist states
+  `removal_requested_at` and `removal_confirmed_at` (+ by); new notification kind
+  `asset_inaccessible` to admins.
+- **Payout details** (E): design `editor_payout_details` (masked account number, verification
+  state, audited reads of the full number, admin phone-verification step) and the mark-paid check
+  for a verified account. **No real bank data may be stored until counsel confirms PDPA
+  handling**; build behind a disabled flag or with local test data only.
+
+**Conflicts with what Phases 0-11 built** (to resolve in Phase 12 design):
+
+1. Project `on_hold` is refused from `assigned`/`in_progress` (Phase 4 rule), but KB9a-2 puts a
+   project on hold when the deposit does not clear, which can happen after an editor is assigned.
+2. The start gate does not check client money; KB9b-4 requires a verified deposit.
+3. One open editor payment per assignment (`payments_open_key`), created whole at confirmation;
+   the decisions need milestones, adjustments and settlements as separate rows.
+4. Ending an assignment puts unpaid payments on hold automatically (Phase 9, flagged under F);
+   F2/KB9a-3 say cancellation must settle completed work and kill fees instead of freezing pay.
+5. Holds are whole-row; KB9a-4 needs partial holds.
+6. `revision_allowance` is editable until cancel/archive and is not an agreement; F requires a
+   locked, versioned agreement (default 3 kept on the form).
+7. `editor_list_payments` returns `on_hold_reason` text to editors; with client-payment waits,
+   reasons must never contain client financial details (use the `waiting_on_client` flag).
+8. The revoke checklist treats shares as something Lenscape revokes; KB7a needs request/confirm
+   states for client-owned folders.
+9. No scheduler exists for the 14-day rules.

@@ -150,13 +150,15 @@ changes is in `docs/DATABASE_SCHEMA.md` ("Planned changes from the 2026-11-15 de
 1. The admin records each client-provided Google Drive or Dropbox link: name, description,
    provider, access instructions. Status starts `awaiting_access`.
 2. When an editor is confirmed, the admin asks the client to share the folder with that editor's
-   Google/Dropbox account and records the share (`asset_access_grants`: shared by the client,
-   recorded by the admin).
+   Google/Dropbox account (preferred) and records the share and its access type
+   (`editor_account` or `anyone_with_link`; the latter is flagged with a security warning).
 3. The editor opens the link and marks it accessible, or reports it inaccessible with a short
-   note. A report notifies the admin and sets the asset to `inaccessible` until resolved.
+   note. A report notifies the admin and sets the asset to `inaccessible` until resolved. A working
+   URL alone never counts as verified.
 4. The admin follows up with the client and marks it `verified` once the editor confirms access.
-5. At unassignment or close, the revoke checklist lists every client share; Lenscape cannot revoke
-   them itself (KB7a: removal request to the client).
+5. At unassignment or close, the access-revocation checklist lists every client share. The admin
+   requests removal from the client and records `removal_requested` then `removal_confirmed`;
+   ending the assignment never marks access as removed.
 
 **Revision policy (F).**
 
@@ -168,16 +170,31 @@ changes is in `docs/DATABASE_SCHEMA.md` ("Planned changes from the 2026-11-15 de
 3. Review classifies each request as editor correction, client revision or scope change. Client
    revisions count against included rounds; past them, each is flagged chargeable at the agreed
    charge. Scope changes create a separate quote record, never a revision round.
+4. Extra editor pay (F2): before a chargeable round that needs extra work, or a scope change,
+   begins, the admin offers the editor an adjustment (scope: agreed with the revised client price);
+   the editor accepts or declines in the app. The extra work is blocked until it is accepted.
 
 **Payments (KB9).**
 
-1. Client: deposit milestone (50% proposed) due before production; balance milestone (50%) at
-   completion. The admin records each transfer and verifies receipt.
-2. Editor: total agreed before work (as today). Milestone 1 (50%) becomes payable once the client
-   deposit is verified and the editor has confirmed the assignment; milestone 2 (50%) once the
-   project is approved and the client balance is verified.
-3. Every milestone keeps amount, currency, due date, transfer reference and verification status.
-4. Open risks: KB9a (late or unpaid client money), F2 (kill fees, pay for extra rounds).
+0. Before production the admin records the project's agreed terms as one auditable agreement:
+   client milestones (default 50/50), revision policy, cancellation/kill-fee schedule, and the day
+   counts (defaults: deposit 14 days, balance 7 days after completion, editor payment within 7
+   days, late-balance protection 14 days). Later changes are new agreement versions.
+1. Client: the deposit invoice is issued; the admin records the transfer and verifies receipt. If
+   unverified 14 days after issue, the project goes on hold automatically and the admin extends or
+   cancels. The balance is due 7 days after the completion/approval milestone.
+2. Start gate: editor accepted, pay agreed, brief confirmed **and** client deposit verified.
+3. Editor milestone 1 (default 50%) becomes payable when the deposit is verified and the
+   assignment confirmed; milestone 2 when the project is approved and the client balance is
+   verified, or 14 days after the balance fell due if still unpaid (Lenscape carries the risk),
+   unless a dispute applies. Each is paid within 7 days of becoming payable, after the admin
+   verifies the transfer, to a verified payout account (E).
+4. Editors see each milestone's status, including "Waiting for client payment"; never client
+   amounts.
+5. Dispute on final delivery: only the disputed portion of milestone 2 goes on hold.
+6. Cancellation: apply the agreed schedule; the editor is paid for completed work plus any kill
+   fee; overpayments are reversed (audited); the client is refunded the unused portion.
+7. Every milestone keeps amount, currency, due date, transfer reference and verification status.
 
 ## 4. Status sets as written in the knowledge base
 

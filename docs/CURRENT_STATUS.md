@@ -179,7 +179,7 @@ tested locally; nothing has run on hosted infrastructure.
 1. Owner decisions of 2026-11-15 (KB7 client Drive/Dropbox links, F per-project revision policy,
    KB9 50/50 client and editor milestones) are recorded in docs only; **code still reflects the old
    model** (default 3 rounds, one editor payment per assignment, no client billing records, no
-   asset verification). Answer KB9a, KB9b, F2, KB7a, then design Phase 12 (planned changes in
+   asset verification). F2, KB9a, KB9b, KB7a and the E go-ahead were answered the same day; next: design Phase 12 (planned changes in
    `DATABASE_SCHEMA.md`). Security assessment: separate, owner-led (findings S1-S10 in
    `SECURITY_AND_PRIVACY.md`).
 2. Extend signed-in e2e to the offer → confirmation → submission → review → payment path

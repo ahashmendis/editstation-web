@@ -27,7 +27,7 @@ Open items first. Read a question's full section only when it becomes relevant.
 | B    | Editor visibility before assignment         | Resolved 2026-11-14         | —                         |
 | C    | Several editors accepting the same project  | Resolved 2026-11-14         | —                         |
 | F    | Client revision policy (per project)        | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| F2   | Editor pay: chargeable rounds, scope, kills | Open (narrowed from F)      | Phase 12 payments         |
+| F2   | Editor pay: chargeable rounds, scope, kills | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
 | F3   | "No included" vs "paid from round 1"        | Resolved 2026-11-15 (same)  | —                         |
 | I    | Canonical payment statuses                  | Resolved 2026-11-14         | —                         |
 | K    | Asset sharing: per-account vs link          | Resolved 2026-11-14         | —                         |
@@ -35,10 +35,10 @@ Open items first. Read a question's full section only when it becomes relevant.
 | KB5  | Turnaround and late-delivery rules          | Open                        | Phase 8; policy for pilot |
 | KB6  | Project communication                       | Resolved 2026-11-14 (pilot) | —                         |
 | KB7  | Storage provider                            | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB7a | Client link sharing: limits and clean-up    | Open (narrowed from KB7)    | Pilot                     |
+| KB7a | Client link sharing: limits and clean-up    | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
 | KB9  | Payment schedule (client and editor)        | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB9a | Late/unpaid client balance: editor impact   | Open (narrowed from KB9)    | First real project        |
-| KB9b | 50/50 fixed or per project; payment terms   | Open (narrowed from KB9)    | Phase 12 payments         |
+| KB9a | Late/unpaid client balance: editor impact   | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
+| KB9b | 50/50 fixed or per project; payment terms   | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
 | KB10 | Notification events for release 1           | Resolved 2026-11-14         | Phase 10                  |
 
 Resolved (see decisions log): A, B, C, D, E, F, H, I, J, K, KB6, KB7, KB9, L, M, N, O, R, S, T,
@@ -77,6 +77,12 @@ Format: date, question: decision.
 - 2026-11-15, **KB7** Storage provider (owner): Client-provided **Google Drive and Dropbox** links. EDITSTATION stores asset metadata and links only and never hosts large video files. Links need not be public: the client grants access to the authorised editor. Per asset: provider, link, asset/folder name, description, access instructions, access verification status; editors can report a link as inaccessible. Narrows K: sharing is done by the client, not by Lenscape, so `asset_access_grants` records what the client shared and who verified it. Open follow-ups: KB7a.
 - 2026-11-15, **F** Revision policy (owner): Configurable **per project** (the new-project form pre-fills 3 included rounds; the admin changes it, e.g. to 0), replacing the universal "3 free rounds". Policy: a configurable number of included client rounds (0..n, e.g. 3), where 0 means client revisions are chargeable from round 1 (F3: "no included revisions" and "paid revisions from the first round" are the same policy), plus a configurable client charge for each additional round. Three separate categories: **editor corrections** (mistakes against the approved brief, never charged to the client), **client revisions** (requested changes to a submitted version; these use included rounds or are charged), **scope changes** (new requirements or substantial change of creative direction, quoted separately). The agreed policy is recorded against the project as an auditable agreement and is **not silently changed after work begins**. No charge amounts are set by default (owner/admin enters them per project). Open follow-ups: F2, F3.
 - 2026-11-15, **KB9** Payment schedule (owner): Proposed standard. **Client:** 50% before production begins, 50% at completion under the agreed delivery and approval terms. **Editor** (separate from client billing): total compensation agreed before work starts; 50% at commencement, after the client deposit has cleared and the editor has confirmed the assignment; the remaining 50% after final approval and receipt of the corresponding client balance. Bank transfers only; no payment gateway or escrow in the MVP. Record for every milestone: amount, currency, due date, transfer reference and verification status. Open follow-ups: KB9a, KB9b; E (payout details) is now needed before the first editor milestone.
+- 2026-11-15, **F2** Editor pay for extra work and cancellations (owner): (a) Extra client revision round: extra editor compensation where the round needs additional paid work, agreed per job **before the round begins**. (b) Scope change: extra editor compensation agreed per job, alongside the revised client price, **before the scope change begins**. (c) Cancellation after work starts: an amount based on how far the work got, using a cancellation/kill-fee schedule **agreed per project before work begins**; the editor is paid for completed work plus any agreed cancellation compensation; a client cancellation never automatically forfeits editor pay. (d) Any additional editor compensation is an offer the editor explicitly accepts in the app before the extra work begins.
+- 2026-11-15, **KB9a** Late or unpaid client money (owner): (1) Approved work, client balance unpaid: Lenscape pays the editor's second milestone after a waiting period, default **14 calendar days after the client balance becomes due**, and carries the collection risk from then on, unless there is a genuine delivery dispute or contractual issue. (2) Client deposit not cleared: default **14 calendar days after the deposit invoice is issued**; then the project is automatically put on hold and the admin decides to extend or cancel; no editor work starts before clearance. (3) Cancellation after the deposit: refund the client's unused portion after deducting agreed completed work and applicable cancellation charges; the editor keeps pay for completed work and any agreed kill fee; any editor overpayment against the cancellation terms is reconciled (audited reversal); neither a full deposit refund nor keeping the whole first 50% is automatic. (4) Client disputes the final delivery: only the **disputed portion** of the editor's second payment goes on hold while the admin investigates; undisputed amounts are not frozen. (5) Editors may see a status such as "Waiting for client payment", never the client's price, balance, payment history or other confidential financial information.
+- 2026-11-15, **KB9b** Payment terms (owner): (1) 50/50 is the **default**, not a universal rule; the admin configures client milestones per project (e.g. 100% upfront, agreed agency invoice terms); all milestones are recorded and agreed before production. (2) Client balance due by default **7 calendar days** after the agreed completion/approval milestone. (3) Lenscape pays each editor milestone by default **within 7 calendar days** after it becomes payable, alongside the KB9a-1 protection. (4) Work cannot start until the client deposit has been received **and verified by an admin**, the editor has accepted the assignment, compensation is agreed and the brief is confirmed. All day counts are defaults the admin may change per project before it starts, recorded as an auditable agreement.
+- 2026-11-15, **KB7a** Client file links (owner): (1) "Anyone with the link" folders are accepted but flagged on the asset as such, with the access type and a security warning visible to the admin; access granted to the editor's own account is preferred. A working URL is never proof that access is authorised or that the editor can open it. (2) When an editor leaves a project or it ends, the admin works through an access-revocation checklist: request the client to remove the editor's access and record whether removal is confirmed; ending an assignment never implies access was removed. (3) The admin is notified whenever an editor reports an asset link as inaccessible (adds an event to KB10).
+- 2026-11-15, **E** Bank details, build go-ahead (owner): Approved in principle for Phase 12 as decided on 2026-11-11 (entered after approval, masked account number, phone verification of changes, access strictly restricted and audited). A **verified** payout account is mandatory before an editor payment is marked paid. **Real bank details must not be stored until Sri Lankan PDPA requirements are reviewed with counsel**: the interface and technical design may be prepared, but live collection waits for that confirmation.
+- 2026-11-15, **Phase 12 principles** (owner): Payment schedules, extra-work fees, cancellation terms and revision policies are configurable and recorded per project; the stated values are operational defaults the admin may change before a project starts. Every change and approval is audited; agreed financial terms are never silently changed after work begins; client financial data stays separate from editor-visible data; a payment is marked paid only after an authorised admin verifies the transfer; work never starts before the client-deposit, editor-acceptance and brief-confirmation gates are satisfied.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 ---
@@ -395,7 +401,7 @@ open as F2 (F3 resolved: "no included" = "paid from round 1"). Original reasonin
 - **Decision:** see the decisions log. Superseded recommendation: "whichever one Lenscape already
   uses".
 
-### KB7a. Client link sharing: limits and clean-up (open, narrowed from KB7)
+### KB7a. Client link sharing: limits and clean-up RESOLVED 2026-11-15 (see decisions log)
 
 - **Question 1:** If a client will only give an "anyone with the link" share, is that acceptable,
   or must the admin insist on sharing with the editor's account? (The decision says links need not
@@ -411,7 +417,7 @@ open as F2 (F3 resolved: "no included" = "paid from round 1"). Original reasonin
 
 - **Decision:** see the decisions log. Superseded recommendation: "owner decision".
 
-### KB9a. Late or unpaid client balance: impact on the editor (open, commercial/legal)
+### KB9a. Late or unpaid client balance: impact on the editor RESOLVED 2026-11-15 (see decisions log)
 
 The editor's milestones depend on client money (deposit cleared; balance received). Risks:
 
@@ -426,7 +432,7 @@ The editor's milestones depend on client money (deposit cleared; balance receive
 - Editor contracts (KB8) should state these terms; nothing here is decided by development.
 - **Blocks:** The first real project. Needs owner (and possibly legal) input.
 
-### KB9b. 50/50 fixed or per-project; payment terms (open)
+### KB9b. 50/50 fixed or per-project; payment terms RESOLVED 2026-11-15 (see decisions log)
 
 - **Question:** Is 50/50 the fixed rule or a per-project default the admin can change (e.g. 100%
   upfront for small jobs, invoice terms for agencies)? What are the due-date terms (days after
@@ -436,7 +442,7 @@ The editor's milestones depend on client money (deposit cleared; balance receive
   No default day counts until the owner supplies them.
 - **Blocks:** Phase 12 payment design.
 
-### F2. Editor pay for chargeable rounds, scope changes, cancellation and kill fees (open)
+### F2. Editor pay for chargeable rounds, scope changes, cancellation and kill fees RESOLVED 2026-11-15 (see decisions log)
 
 - **Question:** When a client pays for an extra revision round or a scope change, is the editor
   paid extra for it, and how is that amount agreed? On cancellation, what does the editor receive
