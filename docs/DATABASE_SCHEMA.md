@@ -163,3 +163,60 @@ brief_versions 1─* editor_interpretations, brief_confirmations (restrict); bri
 ## RLS summary
 
 See SECURITY_AND_PRIVACY.md for the full model and the per-identity access matrix.
+
+## Planned changes from the 2026-11-15 decisions (KB7, F, KB9; not built)
+
+Nothing below exists yet. Each item needs a design, owner approval, a **new** migration (never an
+edit to a committed one), pgTAP tests as admin, editor A, editor B, applicant and anon, and
+`npm run db:types`. Amounts, charges and day counts are never defaulted.
+
+**Assets (KB7).** Today: `project_assets` (label, https url, provider `google_drive | dropbox |
+other`, kind, notes, early_access); `asset_access_grants` records shares made by Lenscape
+(`shared_by` = admin); editors can only read assets.
+
+- `project_assets`: add `description`, `access_instructions`, `access_status`
+  (`awaiting_access | verified | inaccessible`), `verified_by`, `verified_at`. Decide whether
+  `other` stays as a provider value (decision names only Drive and Dropbox).
+- New `asset_access_reports` (append-only): asset, editor, note, created_at, resolved_by,
+  resolved_at. Insert only through a `public.editor_report_asset_inaccessible` function (assigned
+  editor of that project only), resolution through an `admin_*` function; both audited.
+- `asset_access_grants`: record that the client shared (`shared_by_client` / source) and add a
+  `removal_requested_at` step for the revoke checklist (KB7a).
+- New notification event (extends KB10, needs owner OK): "asset reported inaccessible" to admins.
+
+**Revision policy (F).** Today: `projects.revision_allowance smallint default 3` (0..20),
+editable by `admin_update_project` in any status except cancelled/archived, audited only as a
+field name; `revision_requests.beyond_allowance` flags client rounds past it; no charges; not part
+of `brief_confirmations`.
+
+- New `revision_policy_agreements` (append-only, versioned per project): policy type, included
+  rounds, charge per additional round + currency (nullable until known), reason for change,
+  agreed_by, agreed_at. Client charge columns are client pricing, so the table is **admin-only**;
+  editors see only what they need (included-rounds count) through a function or a separate
+  editor-safe column.
+- Lock: once any assignment is `in_progress`, a policy change requires a new agreement version
+  with a reason (trigger), never an in-place update. Keep 3 as the pre-filled number of included rounds on the new-project form (owner, 2026-11-15); the admin may change it, and the saved value is what the agreement records.
+- `revision_requests`: add `chargeable boolean` (client revisions past included rounds, or all
+  client revisions when none are included) linked to the agreement version in force.
+- Scope changes: new admin-only `scope_change_quotes` (request, description, quoted amount +
+  currency, status) rather than a revision round.
+- Editor pay for chargeable work: `compensation_adjustments` (F2, open).
+
+**Payments (KB9).** Today: one open `payments` row per assignment (`payments_open_key`), created
+at assignment confirmation as `not_due`, moved to `pending_approval` on approval; statuses per
+decision I; no client billing records beyond `project_internal.client_price`.
+
+- New admin-only `client_payment_milestones`: project, label (deposit/balance), share or amount,
+  currency, due date, received date, transfer reference, `verification_status`
+  (`expected | received_unverified | verified`), verified_by/at. Never editor-visible.
+- Editor `payments`: allow two milestone rows per assignment (replace the single-open-row index
+  with one per milestone), each with its own due date, transfer reference and verification status.
+  Milestone 1 becomes payable when the client deposit is verified and the assignment is confirmed;
+  milestone 2 when the project is approved and the client balance is verified.
+- Gate: decide whether `private.assignment_gate` also requires a verified client deposit before
+  `in_progress` (decision says "50% upfront before production begins"; today the gate does not
+  check client money).
+- Editor visibility: editors may need to see that a milestone is waiting on client payment
+  without seeing client amounts (KB9a).
+- Payout details (E): `editor_payout_details` + verification, needed before the first editor
+  milestone is marked paid.

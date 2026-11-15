@@ -14,29 +14,38 @@ Question IDs: **A–K** from the architecture review, **L–V** raised by the 20
 
 Open items first. Read a question's full section only when it becomes relevant.
 
-| ID   | Topic                                         | Status                      | Blocks                    |
-| ---- | --------------------------------------------- | --------------------------- | ------------------------- |
-| W    | Re-application after withdrawal               | Open (conservative default) | Nothing; confirm any time |
-| G    | Practical tests: paid? tracked?               | Open                        | Phase 9 (payment)         |
-| P    | Data retention and privacy notice             | Open                        | Public launch             |
-| KB1  | Legal registration and entity                 | Open                        | Public launch             |
-| KB2  | Final brand (trademark/domain)                | Open                        | Launch, production email  |
-| KB3  | Services and deliverables at launch           | Partly (placeholder list)   | Launch content            |
-| KB8  | Editor contract and portfolio permission      | Open                        | Launch of registration    |
-| A2   | Narrower "mark paid" permission               | Deferred                    | Phase 9 (if second admin) |
-| B    | Editor visibility before assignment           | Resolved 2026-11-14         | —                         |
-| C    | Several editors accepting the same project    | Resolved 2026-11-14         | —                         |
-| F    | Pay for extra rounds, scope changes, kill fee | Open                        | Phase 8                   |
-| I    | Canonical payment statuses                    | Resolved 2026-11-14         | —                         |
-| K    | Asset sharing: per-account vs link            | Resolved 2026-11-14         | —                         |
-| KB4  | Client prices and editor pay ranges           | Open                        | Pilot                     |
-| KB5  | Turnaround and late-delivery rules            | Open                        | Phase 8; policy for pilot |
-| KB6  | Project communication                         | Resolved 2026-11-14 (pilot) | —                         |
-| KB7  | Storage provider                              | Open (not blocking schema)  | Phase 5 go-live           |
-| KB9  | Payment schedule                              | Open                        | Phase 9                   |
-| KB10 | Notification events for release 1             | Resolved 2026-11-14         | Phase 10                  |
+| ID   | Topic                                       | Status                      | Blocks                    |
+| ---- | ------------------------------------------- | --------------------------- | ------------------------- |
+| W    | Re-application after withdrawal             | Open (conservative default) | Nothing; confirm any time |
+| G    | Practical tests: paid? tracked?             | Open                        | Phase 9 (payment)         |
+| P    | Data retention and privacy notice           | Open                        | Public launch             |
+| KB1  | Legal registration and entity               | Open                        | Public launch             |
+| KB2  | Final brand (trademark/domain)              | Open                        | Launch, production email  |
+| KB3  | Services and deliverables at launch         | Partly (placeholder list)   | Launch content            |
+| KB8  | Editor contract and portfolio permission    | Open                        | Launch of registration    |
+| A2   | Narrower "mark paid" permission             | Deferred                    | Phase 9 (if second admin) |
+| B    | Editor visibility before assignment         | Resolved 2026-11-14         | —                         |
+| C    | Several editors accepting the same project  | Resolved 2026-11-14         | —                         |
+| F    | Client revision policy (per project)        | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
+| F2   | Editor pay: chargeable rounds, scope, kills | Open (narrowed from F)      | Phase 12 payments         |
+| F3   | "No included" vs "paid from round 1"        | Resolved 2026-11-15 (same)  | —                         |
+| I    | Canonical payment statuses                  | Resolved 2026-11-14         | —                         |
+| K    | Asset sharing: per-account vs link          | Resolved 2026-11-14         | —                         |
+| KB4  | Client prices and editor pay ranges         | Open                        | Pilot                     |
+| KB5  | Turnaround and late-delivery rules          | Open                        | Phase 8; policy for pilot |
+| KB6  | Project communication                       | Resolved 2026-11-14 (pilot) | —                         |
+| KB7  | Storage provider                            | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
+| KB7a | Client link sharing: limits and clean-up    | Open (narrowed from KB7)    | Pilot                     |
+| KB9  | Payment schedule (client and editor)        | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
+| KB9a | Late/unpaid client balance: editor impact   | Open (narrowed from KB9)    | First real project        |
+| KB9b | 50/50 fixed or per project; payment terms   | Open (narrowed from KB9)    | Phase 12 payments         |
+| KB10 | Notification events for release 1           | Resolved 2026-11-14         | Phase 10                  |
 
-Resolved (see decisions log): A, B, C, D, E, H, I, J, K, KB6, L, M, N, O, R, S, T, U, V.
+Resolved (see decisions log): A, B, C, D, E, F, H, I, J, K, KB6, KB7, KB9, L, M, N, O, R, S, T,
+U, V.
+
+The 2026-11-15 decisions (KB7, F, KB9) are recorded but **not built**. What the code does today
+and what must change: `docs/DATABASE_SCHEMA.md` "Planned changes from the 2026-11-15 decisions".
 
 ## Decisions log
 
@@ -65,6 +74,9 @@ Format: date, question: decision.
 - 2026-11-14, **KB7** Storage provider: still open (needs the owner's actual provider). Phase 5 stores a provider value per asset (Google Drive, Dropbox, other), so the schema does not wait on it.
 - 2026-11-14, **I** Payment statuses: Adopt the recommendation (owner instruction: accept recommended). `not_due` → `pending_approval` → `approved` → `processing` → `paid`, plus `on_hold` (reachable from any state before paid, with a required reason; a dispute is a reason). The record is created at assignment confirmation so committed-but-unpaid costs show. `paid` is final; corrections happen through an audited reversal entry. No `cancelled` status (depends on F, still open). Design: `docs/superpowers/specs/2026-11-14-phase9-earnings-design.md`.
 - 2026-11-14, **KB10** Notification events: Adopt the recommendation (owner instruction "accept recommended"). To admin: new inquiry, new application, applicant response, counteroffer, submission. To applicant: application decision, information or test request. To editor: invitation, rate confirmed (assignment confirmed), revision requested, payment marked paid. Delivery: in-app now; email rows are queued in an outbox but not sent until production SMTP exists (launch gate). No external services.
+- 2026-11-15, **KB7** Storage provider (owner): Client-provided **Google Drive and Dropbox** links. EDITSTATION stores asset metadata and links only and never hosts large video files. Links need not be public: the client grants access to the authorised editor. Per asset: provider, link, asset/folder name, description, access instructions, access verification status; editors can report a link as inaccessible. Narrows K: sharing is done by the client, not by Lenscape, so `asset_access_grants` records what the client shared and who verified it. Open follow-ups: KB7a.
+- 2026-11-15, **F** Revision policy (owner): Configurable **per project** (the new-project form pre-fills 3 included rounds; the admin changes it, e.g. to 0), replacing the universal "3 free rounds". Policy: a configurable number of included client rounds (0..n, e.g. 3), where 0 means client revisions are chargeable from round 1 (F3: "no included revisions" and "paid revisions from the first round" are the same policy), plus a configurable client charge for each additional round. Three separate categories: **editor corrections** (mistakes against the approved brief, never charged to the client), **client revisions** (requested changes to a submitted version; these use included rounds or are charged), **scope changes** (new requirements or substantial change of creative direction, quoted separately). The agreed policy is recorded against the project as an auditable agreement and is **not silently changed after work begins**. No charge amounts are set by default (owner/admin enters them per project). Open follow-ups: F2, F3.
+- 2026-11-15, **KB9** Payment schedule (owner): Proposed standard. **Client:** 50% before production begins, 50% at completion under the agreed delivery and approval terms. **Editor** (separate from client billing): total compensation agreed before work starts; 50% at commencement, after the client deposit has cleared and the editor has confirmed the assignment; the remaining 50% after final approval and receipt of the corresponding client balance. Bank transfers only; no payment gateway or escrow in the MVP. Record for every milestone: amount, currency, due date, transfer reference and verification status. Open follow-ups: KB9a, KB9b; E (payout details) is now needed before the first editor milestone.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 ---
@@ -300,7 +312,10 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
   bidding. Offering to one editor at a time is slower but simplest.
 - **Blocks:** Phase 6.
 
-### F. Pay for extra rounds, scope changes, cancellation, kill fees
+### F. Pay for extra rounds, scope changes, cancellation, kill fees: CLIENT SIDE RESOLVED 2026-11-15
+
+The client revision policy is decided (decisions log, F). The editor side and cancellation remain
+open as F2 (F3 resolved: "no included" = "paid from round 1"). Original reasoning kept below.
 
 - **Why it matters:** It decides whether agreed pay can change after confirmation.
 - **Recommendation:** No rule recommended; this is a commercial decision. Mechanically: a
@@ -375,16 +390,68 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
   per project. In-app Q&A only if the pilot shows a need (KB §9.4 excludes complex chat).
 - **Blocks:** Phase 6.
 
-### KB7. Storage provider
+### KB7. Storage provider: RESOLVED 2026-11-15 (client-provided Google Drive / Dropbox links)
 
-- **Recommendation:** Whichever one Lenscape already uses with business-grade sharing controls.
-  Decide together with K.
-- **Blocks:** Phase 5.
+- **Decision:** see the decisions log. Superseded recommendation: "whichever one Lenscape already
+  uses".
 
-### KB9. Payment schedule
+### KB7a. Client link sharing: limits and clean-up (open, narrowed from KB7)
 
-- **Recommendation:** Owner decision. The data model supports both (due date per payment).
-- **Blocks:** Phase 9.
+- **Question 1:** If a client will only give an "anyone with the link" share, is that acceptable,
+  or must the admin insist on sharing with the editor's account? (The decision says links need not
+  be public; it does not say whether a public link is refused.)
+- **Question 2:** Lenscape cannot revoke access to a client-owned folder. At unassignment or
+  project close, should the admin send the client a removal request (tracked on the revoke
+  checklist), or is that left to the client?
+- **Recommendation:** Prefer per-account shares; accept a link share only when the client
+  insists, marked as such on the asset. Track a "removal requested" step on the checklist.
+- **Blocks:** The pilot, not the schema.
+
+### KB9. Payment schedule: RESOLVED 2026-11-15 (proposed 50/50 standard, bank transfer)
+
+- **Decision:** see the decisions log. Superseded recommendation: "owner decision".
+
+### KB9a. Late or unpaid client balance: impact on the editor (open, commercial/legal)
+
+The editor's milestones depend on client money (deposit cleared; balance received). Risks:
+
+- The client pays the balance late or never, after the editor has delivered and the work is
+  approved. Is the editor's second 50% held indefinitely, paid after a set period regardless, or
+  paid by Lenscape at its own risk?
+- The client deposit does not clear after the editor was selected. Does the assignment wait
+  (no start, no pay), and for how long before it is cancelled?
+- The project is cancelled after the deposit: what is refunded to the client, and what does the
+  editor keep of the first 50%? (overlaps F2, kill fees)
+- A client disputes the final delivery: does the editor's second payment go on hold?
+- Editor contracts (KB8) should state these terms; nothing here is decided by development.
+- **Blocks:** The first real project. Needs owner (and possibly legal) input.
+
+### KB9b. 50/50 fixed or per-project; payment terms (open)
+
+- **Question:** Is 50/50 the fixed rule or a per-project default the admin can change (e.g. 100%
+  upfront for small jobs, invoice terms for agencies)? What are the due-date terms (days after
+  invoice or approval) for the client balance and for each editor payment?
+- **Recommendation:** Store milestones per project with 50/50 as the default the admin can
+  override before work starts, recorded in the same auditable agreement as the revision policy.
+  No default day counts until the owner supplies them.
+- **Blocks:** Phase 12 payment design.
+
+### F2. Editor pay for chargeable rounds, scope changes, cancellation and kill fees (open)
+
+- **Question:** When a client pays for an extra revision round or a scope change, is the editor
+  paid extra for it, and how is that amount agreed? On cancellation, what does the editor receive
+  (kill fee), and does it depend on how far the work got?
+- **Recommendation (mechanism only):** a `compensation_adjustments` record proposed by the admin
+  and accepted by the editor, mirroring negotiation, so the original agreed amount is never
+  edited. Amounts are commercial decisions.
+- **Blocks:** Phase 12 payments.
+
+### F3. "No included revisions" vs "paid revisions from the first round": RESOLVED 2026-11-15
+
+- **Question:** The F decision listed both "no included revisions: client-requested revisions are
+  chargeable from the first round" and "paid revisions from the first round".
+- **Decision (owner):** They are the same policy. A project has 0..n included client rounds; with
+  0, every client revision is chargeable from round 1.
 
 ### KB10. Notification events for release 1: RESOLVED 2026-11-14 (recommendation adopted; in-app, email queued)
 

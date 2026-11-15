@@ -43,7 +43,10 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
   (never `42501`); the app shows only those messages (`userMessageFromDbError`).
 - Editor-visible tables must not hold client data or client pricing (RLS is row-level, not column-level).
 - No editing starts until compensation is agreed and admin-approved.
-- 3 free client revision rounds; editor-caused corrections and scope changes do not consume them.
+- Revision policy is per project (decision F, 2026-11-15): included rounds or chargeable from round
+  1, recorded as an auditable agreement, never silently changed after work begins. Editor
+  corrections are never charged; scope changes are quoted separately. Not built yet (Phase 12).
+- Client billing (50/50) and editor pay milestones are separate; client amounts stay admin-only.
 - Large media never goes into Postgres. Store links/metadata only.
 - Never expose secret keys to the browser. Never invent legal, tax, pricing, domain or trademark facts.
 - Do not decide items listed in `docs/OPEN_QUESTIONS.md`; ask the owner when one becomes blocking.

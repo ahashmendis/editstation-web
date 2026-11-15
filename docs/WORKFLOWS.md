@@ -98,7 +98,7 @@ Re-application after rejection (decision M): only an admin can reopen a rejected
 
 **Phase 4 statuses (admin-driven):** `draft` to `open` (needs a ready brief; sets `first_opened_at` once), `open` to `draft`, `draft`/`open` to `cancelled`, `draft`/`open` to `on_hold` and back only to the status held (`status_before_hold`). Cancelled and archived projects refuse edits (`ES409`). `assigned` is set by Phase 6 confirmation and `in_progress` only by the Phase 7 start functions; `in_review`, `revision_requested`, `approved` and `completed` are set only by the Phase 8 functions. `on_hold` from `assigned`/`in_progress`/`in_review`/`revision_requested` stays refused; cancellation is allowed from all four.
 
-**Phase 8 (submissions and review, on branch):** submit (`in_progress`/`revision_requested` → `in_review`; needs the Phase 7 gate) → review: `approved` (project → `approved`, the editor's `not_due` payment → `pending_approval`), `revision_requested` (client revision or editor correction), `scope_change_required` (scope change) or `rejected_needs_discussion` (request opens `disputed` until the admin classifies it); all non-approved outcomes → `revision_requested`. Admin then completes (`approved` → `completed`). Assignment stays `in_progress`. Revision: `requested` → `acknowledged` → `in_progress` → `resubmitted` → `approved`; `disputed` → `requested`. Only client revisions take a round (`beyond_allowance` past `revision_allowance`); no extra pay or late penalty is computed (F, KB5). Reassignment is allowed from `in_review`/`revision_requested` (project → `open`).
+**Phase 8 (submissions and review, on branch):** submit (`in_progress`/`revision_requested` → `in_review`; needs the Phase 7 gate) → review: `approved` (project → `approved`, the editor's `not_due` payment → `pending_approval`), `revision_requested` (client revision or editor correction), `scope_change_required` (scope change) or `rejected_needs_discussion` (request opens `disputed` until the admin classifies it); all non-approved outcomes → `revision_requested`. Admin then completes (`approved` → `completed`). Assignment stays `in_progress`. Revision: `requested` → `acknowledged` → `in_progress` → `resubmitted` → `approved`; `disputed` → `requested`. Only client revisions take a round (`beyond_allowance` past `revision_allowance`); no extra pay or late penalty is computed (F, KB5). **Superseded by decision F (2026-11-15):** the single `revision_allowance` integer (default 3, editable until cancel/archive) becomes a per-project policy agreement; see §3a. Reassignment is allowed from `in_review`/`revision_requested` (project → `open`).
 
 **Brief versioning (Phase 4):** before first opening, version 1 is edited in place. After it, any content change (brief text, deliverables, references) creates version n+1 with a snapshot and a required change summary; versions are never overwritten. A new version carries `requires_reacknowledgement` (set by the admin; forced `true` when deliverables change). Deadline and proposed-pay changes do not bump the version in Phase 4.
 
@@ -140,6 +140,45 @@ version is no longer valid. A changed (or cleared) deadline or agreed pay after 
 requires re-confirmation (spec call 6, flagged). After start, a material change does not move the
 assignment back; the gate turns not ready and Phase 8 submissions must require `ready`.
 
+## 3a. Target workflows from the 2026-11-15 decisions (KB7, F, KB9; not built)
+
+These describe the agreed target. The built behaviour above differs where noted; the list of
+changes is in `docs/DATABASE_SCHEMA.md` ("Planned changes from the 2026-11-15 decisions").
+
+**Assets (KB7).**
+
+1. The admin records each client-provided Google Drive or Dropbox link: name, description,
+   provider, access instructions. Status starts `awaiting_access`.
+2. When an editor is confirmed, the admin asks the client to share the folder with that editor's
+   Google/Dropbox account and records the share (`asset_access_grants`: shared by the client,
+   recorded by the admin).
+3. The editor opens the link and marks it accessible, or reports it inaccessible with a short
+   note. A report notifies the admin and sets the asset to `inaccessible` until resolved.
+4. The admin follows up with the client and marks it `verified` once the editor confirms access.
+5. At unassignment or close, the revoke checklist lists every client share; Lenscape cannot revoke
+   them itself (KB7a: removal request to the client).
+
+**Revision policy (F).**
+
+1. Before the project opens to editors, the admin sets the policy (the form pre-fills 3 included rounds): included rounds (0..n) or
+   chargeable from round 1 (0 included rounds; F3 confirmed these are the same), plus the client charge per additional round when known.
+2. The policy is recorded as a versioned agreement on the project. Once work begins (assignment
+   `in_progress`), changing it requires a new recorded agreement version with a reason; the old
+   version stays.
+3. Review classifies each request as editor correction, client revision or scope change. Client
+   revisions count against included rounds; past them, each is flagged chargeable at the agreed
+   charge. Scope changes create a separate quote record, never a revision round.
+
+**Payments (KB9).**
+
+1. Client: deposit milestone (50% proposed) due before production; balance milestone (50%) at
+   completion. The admin records each transfer and verifies receipt.
+2. Editor: total agreed before work (as today). Milestone 1 (50%) becomes payable once the client
+   deposit is verified and the editor has confirmed the assignment; milestone 2 (50%) once the
+   project is approved and the client balance is verified.
+3. Every milestone keeps amount, currency, due date, transfer reference and verification status.
+4. Open risks: KB9a (late or unpaid client money), F2 (kill fees, pay for extra rounds).
+
 ## 4. Status sets as written in the knowledge base
 
 **Project (§10.1):** Draft · Open/Available · Invited · Negotiation · Awaiting editor confirmation ·
@@ -171,6 +210,6 @@ history is never overwritten. As built (Phase 6, pending owner review): cancelli
 allowed from `draft`, `open`, `assigned` and (Phase 7) `in_progress`; it closes every live assignment as `withdrawn` (with
 an admin withdraw history row) and revokes every live access row. `open → draft` is refused once
 any access row or assignment exists. Folder shares are not revoked automatically: they appear on
-the revoke checklist. Pay consequences: OPEN_QUESTIONS F. Suspending or revoking an
+the revoke checklist. Pay consequences: OPEN_QUESTIONS F2 (kill fees) and KB9a (client deposit refunds and editor milestones). Suspending or revoking an
 editor with live assignments needs an admin decision per assignment (reassign or keep); the app
 should list them rather than act silently.

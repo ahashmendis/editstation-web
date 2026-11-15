@@ -222,3 +222,26 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 Rate limits and Supabase Auth protections on sign-up/sign-in/inquiry. Production auth emails via
 custom SMTP on a verified domain. Backups and a **tested** restore before the pilot. Audit log for
 sensitive actions.
+
+## Outstanding findings for a future authorised assessment (recorded 2026-11-15)
+
+The owner will run a separate security assessment with tools they provide. No security tools are
+installed and no penetration testing has been done. Carry these known items into that assessment;
+none has been exploited or confirmed beyond local review.
+
+| #   | Finding                                                                                                                                                       | Where                                                                     | Severity (internal view) | Status                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
+| S1  | Some Phase 1-3 functions keep the default PUBLIC execute grant (access helpers such as `private.is_admin`, Phase 2-3 public functions, two trigger functions) | listed in `supabase/tests/database/046_phase4_function_security.test.sql` | Low-medium               | Needs an owner-approved migration; helpers are used by RLS policies                        |
+| S2  | Suspended or revoked users keep their session until their next request                                                                                        | auth/session handling                                                     | Low                      | Accepted for now; access is re-checked on every request                                    |
+| S3  | Only `frame-ancestors` is set in the CSP; no script CSP (nonces)                                                                                              | `next.config.ts`                                                          | Low-medium               | Follow-up; affects rendering under `cacheComponents`                                       |
+| S4  | A "permission denied for function" error crashes this Supabase Postgres image (17.6.1.106)                                                                    | database                                                                  | Medium (availability)    | Mitigated by the function placement rule and pgTAP guardrail; re-check on the hosted image |
+| S5  | Inquiry form protection is honeypot + rate limit only; Turnstile not yet added                                                                                | `/inquire`                                                                | Medium before launch     | Launch gate (decision O)                                                                   |
+| S6  | 7 moderate `npm audit` advisories in dev-only lint tooling                                                                                                    | dev dependencies                                                          | Low                      | Do not `npm audit fix --force`                                                             |
+| S7  | A revoked admin can still read notifications already received (fixed text and project titles only)                                                            | `notifications` RLS                                                       | Low                      | Accepted (Phase 10 review)                                                                 |
+| S8  | Hosted configuration untested: MFA plan, SMTP, backups, network restrictions, auth rate limits                                                                | hosted Supabase / Vercel                                                  | Unknown                  | No hosted project yet                                                                      |
+| S9  | Asset links are client-owned; Lenscape cannot revoke access or see who opened a link (KB7, KB7a)                                                              | process                                                                   | Medium (data exposure)   | Process controls only; removal request to the client proposed                              |
+| S10 | Payout details (E) will hold bank account data once built                                                                                                     | future `editor_payout_details`                                            | High sensitivity         | Not built; PDPA handling to confirm with counsel                                           |
+
+Suggested scope for the assessment: RLS and function authorisation (all `public` functions),
+auth and MFA flows, server actions and route gates, headers/CSP, the public forms, the e2e helper
+that uses the local service key (local only), and the hosted configuration once it exists.
