@@ -1528,6 +1528,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number;
+          amount_before_split: number | null;
           approved_at: string | null;
           approved_by: string | null;
           assignment_id: string;
@@ -1541,18 +1542,24 @@ export type Database = {
           kind: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at: string | null;
           marked_paid_by: string | null;
+          milestone_seq: number;
           on_hold_reason: string | null;
+          payable_at: string | null;
+          payable_reason: Database["public"]["Enums"]["payment_payable_reason"] | null;
           project_id: string;
           reversal_reason: string | null;
           reverses_payment_id: string | null;
+          split_from_payment_id: string | null;
           status: Database["public"]["Enums"]["payment_status"];
           transaction_reference: string | null;
           transfer_date: string | null;
           updated_at: string;
+          waiting_on_client: boolean;
         };
         ComputedFields: never;
         Insert: {
           amount: number;
+          amount_before_split?: number | null;
           approved_at?: string | null;
           approved_by?: string | null;
           assignment_id: string;
@@ -1566,17 +1573,23 @@ export type Database = {
           kind?: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at?: string | null;
           marked_paid_by?: string | null;
+          milestone_seq?: number;
           on_hold_reason?: string | null;
+          payable_at?: string | null;
+          payable_reason?: Database["public"]["Enums"]["payment_payable_reason"] | null;
           project_id: string;
           reversal_reason?: string | null;
           reverses_payment_id?: string | null;
+          split_from_payment_id?: string | null;
           status?: Database["public"]["Enums"]["payment_status"];
           transaction_reference?: string | null;
           transfer_date?: string | null;
           updated_at?: string;
+          waiting_on_client?: boolean;
         };
         Update: {
           amount?: number;
+          amount_before_split?: number | null;
           approved_at?: string | null;
           approved_by?: string | null;
           assignment_id?: string;
@@ -1590,14 +1603,19 @@ export type Database = {
           kind?: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at?: string | null;
           marked_paid_by?: string | null;
+          milestone_seq?: number;
           on_hold_reason?: string | null;
+          payable_at?: string | null;
+          payable_reason?: Database["public"]["Enums"]["payment_payable_reason"] | null;
           project_id?: string;
           reversal_reason?: string | null;
           reverses_payment_id?: string | null;
+          split_from_payment_id?: string | null;
           status?: Database["public"]["Enums"]["payment_status"];
           transaction_reference?: string | null;
           transfer_date?: string | null;
           updated_at?: string;
+          waiting_on_client?: boolean;
         };
         Relationships: [
           {
@@ -1645,6 +1663,13 @@ export type Database = {
           {
             foreignKeyName: "payments_reverses_payment_id_fkey";
             columns: ["reverses_payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_split_from_payment_id_fkey";
+            columns: ["split_from_payment_id"];
             isOneToOne: false;
             referencedRelation: "payments";
             referencedColumns: ["id"];
@@ -2705,6 +2730,10 @@ export type Database = {
         Args: { p_reference_id: string; p_value: boolean };
         Returns: undefined;
       };
+      admin_split_payment_for_dispute: {
+        Args: { p_disputed_amount: number; p_payment_id: string; p_reason: string };
+        Returns: string;
+      };
       admin_start_application_review: { Args: { p_application_id: string }; Returns: undefined };
       admin_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
@@ -2748,17 +2777,19 @@ export type Database = {
           created_at: string;
           currency: string;
           due_date: string;
+          hold_label: Database["public"]["Enums"]["payment_hold_label"];
           id: string;
           kind: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at: string;
-          on_hold_reason: string;
+          milestone_seq: number;
           project_id: string;
           project_title: string;
-          reversal_reason: string;
           reverses_payment_id: string;
+          split_from_payment_id: string;
           status: Database["public"]["Enums"]["payment_status"];
           transaction_reference: string;
           transfer_date: string;
+          waiting_on_client: boolean;
         }[];
       };
       editor_report_asset_inaccessible: {
@@ -2917,8 +2948,16 @@ export type Database = {
         | "revision_requested"
         | "payment_paid"
         | "asset_inaccessible"
-        | "project_auto_held";
+        | "project_auto_held"
+        | "late_balance_payable";
+      payment_hold_label: "under_review" | "assignment_ended" | "waiting_for_client_payment";
       payment_kind: "assignment" | "reversal";
+      payment_payable_reason:
+        | "client_deposit_verified"
+        | "client_balance_verified"
+        | "late_balance_protection"
+        | "adjustment_accepted"
+        | "cancellation_settlement";
       payment_status:
         "not_due" | "pending_approval" | "approved" | "processing" | "paid" | "on_hold";
       profile_option_kind: "specialisation" | "software";
@@ -3115,8 +3154,17 @@ export const Constants = {
         "payment_paid",
         "asset_inaccessible",
         "project_auto_held",
+        "late_balance_payable",
       ],
+      payment_hold_label: ["under_review", "assignment_ended", "waiting_for_client_payment"],
       payment_kind: ["assignment", "reversal"],
+      payment_payable_reason: [
+        "client_deposit_verified",
+        "client_balance_verified",
+        "late_balance_protection",
+        "adjustment_accepted",
+        "cancellation_settlement",
+      ],
       payment_status: ["not_due", "pending_approval", "approved", "processing", "paid", "on_hold"],
       profile_option_kind: ["specialisation", "software"],
       project_access_reason: ["invited", "available"],

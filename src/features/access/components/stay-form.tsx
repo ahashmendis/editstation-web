@@ -128,10 +128,27 @@ export function TextField(
     type?: string;
     maxLength?: number;
     placeholder?: string;
+    /** Browser-side bounds for number inputs (the server still validates). */
+    min?: string;
+    max?: string;
+    step?: string;
   },
 ) {
-  const { id, name, label, state, hint, defaultValue, inputMode, type, maxLength, placeholder } =
-    props;
+  const {
+    id,
+    name,
+    label,
+    state,
+    hint,
+    defaultValue,
+    inputMode,
+    type,
+    maxLength,
+    placeholder,
+    min,
+    max,
+    step,
+  } = props;
   return (
     <div className="grid gap-2">
       <Label htmlFor={id}>{label}</Label>
@@ -142,6 +159,9 @@ export function TextField(
         inputMode={inputMode}
         maxLength={maxLength}
         placeholder={placeholder}
+        min={min}
+        max={max}
+        step={step}
         defaultValue={defaultValue ?? state.values?.[name]}
         aria-invalid={state.fieldErrors?.[name]?.length ? true : undefined}
         aria-describedby={describedBy(props)}

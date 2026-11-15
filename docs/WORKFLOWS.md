@@ -195,14 +195,16 @@ are agreed). Steps 3-4 remain planned (12D)._
    cancels. The balance is due 7 days after the completion/approval milestone.
 2. Start gate: editor accepted, pay agreed, brief confirmed **and** client deposit verified
    _(built in Phase 12C; the editor sees "Waiting for the client deposit")_.
-3. Editor milestone 1 (default 50%) becomes payable when the deposit is verified and the
+3. _(Built in Phase 12D part 1, pending owner review; the payout-account check is 12E. Due date =
+   business date it became payable + editor pay days; the admin may still change it.)_ Editor milestone 1 (default 50%) becomes payable when the deposit is verified and the
    assignment confirmed; milestone 2 when the project is approved and the client balance is
    verified, or 14 days after the balance fell due if still unpaid (Lenscape carries the risk),
    unless a dispute applies. Each is paid within 7 days of becoming payable, after the admin
    verifies the transfer, to a verified payout account (E).
-4. Editors see each milestone's status, including "Waiting for client payment"; never client
+4. _(Built in Phase 12D part 1: fixed labels only; hold reasons stay admin-only.)_ Editors see each milestone's status, including "Waiting for client payment"; never client
    amounts.
-5. Dispute on final delivery: only the disputed portion of milestone 2 goes on hold.
+5. _(Built in Phase 12D part 1: the admin splits the milestone; the editor sees "Under review" on
+   the disputed part.)_ Dispute on final delivery: only the disputed portion of milestone 2 goes on hold.
 6. Cancellation: apply the agreed schedule; the editor is paid for completed work plus any kill
    fee; overpayments are reversed (audited); the client is refunded the unused portion.
 7. Every milestone keeps amount, currency, due date, transfer reference and verification status.

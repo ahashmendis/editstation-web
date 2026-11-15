@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  splitDisputeSchema,
   markPaidSchema,
   parseAdminEarningsFilter,
   parseEditorEarningsFilter,
@@ -110,5 +111,37 @@ describe("earnings filters", () => {
       status: "on_hold",
     });
     expect(parseEditorEarningsFilter({})).toEqual({ status: null });
+  });
+});
+
+describe("splitDisputeSchema", () => {
+  const paymentId = "6f3c2d1e-0b4a-4c6d-8e9f-1a2b3c4d5e6f";
+  it("accepts whole cents and a reason", () => {
+    expect(
+      splitDisputeSchema.parse({ paymentId, amount: " 1500.50 ", reason: " Colour " }),
+    ).toEqual({ paymentId, amount: 1500.5, reason: "Colour" });
+  });
+  it("refuses zero, fractions of a cent, text and a missing reason", () => {
+    expect(splitDisputeSchema.safeParse({ paymentId, amount: "0", reason: "x" }).success).toBe(
+      false,
+    );
+    expect(splitDisputeSchema.safeParse({ paymentId, amount: "1.005", reason: "x" }).success).toBe(
+      false,
+    );
+    expect(splitDisputeSchema.safeParse({ paymentId, amount: "abc", reason: "x" }).success).toBe(
+      false,
+    );
+    expect(splitDisputeSchema.safeParse({ paymentId, amount: "10", reason: "  " }).success).toBe(
+      false,
+    );
+    expect(
+      splitDisputeSchema.safeParse({ paymentId, amount: "12345678901", reason: "x" }).success,
+    ).toBe(false);
+    expect(
+      splitDisputeSchema.safeParse({ paymentId, amount: "10", reason: "r".repeat(501) }).success,
+    ).toBe(false);
+    expect(
+      splitDisputeSchema.safeParse({ paymentId: "not-a-uuid", amount: "10", reason: "x" }).success,
+    ).toBe(false);
   });
 });

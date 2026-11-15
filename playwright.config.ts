@@ -8,11 +8,14 @@ const port = 3000;
 export default defineConfig({
   testDir: "tests/e2e",
   // Signed-in tests create e2e-only accounts and projects; remove them before and after a run.
-  globalSetup: "./tests/e2e/support/cleanup.ts",
+  // The setup also warms the signed-in pages so `next dev` compiles them before timed steps.
+  globalSetup: "./tests/e2e/support/global-setup.ts",
   globalTeardown: "./tests/e2e/support/cleanup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // `next dev` compiles pages on demand, so a loaded run can time out a step: retry once.
+  retries: process.env.CI ? 2 : 1,
+  workers: 2,
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://localhost:${port}`,

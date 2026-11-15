@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { StatusPill } from "@/components/status-pill";
 
-import { UNPAID_STATUSES } from "../constants";
+import { PAYABLE_REASON_LABEL, UNPAID_STATUSES, milestoneLabel } from "../constants";
 import type { AdminPaymentRow } from "../queries";
 import { colomboDay } from "../summary";
 import { Money } from "./money";
@@ -28,7 +28,15 @@ export function AdminPaymentsTable({ rows, now }: { rows: AdminPaymentRow[]; now
               </Link>
               <PaymentStatusPill status={row.status} kind={row.kind} />
             </div>
-            <p className="text-muted-foreground">{row.editorName}</p>
+            <p className="text-muted-foreground">
+              {row.editorName} · {milestoneLabel(row.milestoneSeq)}
+              {row.splitFromPaymentId ? " (disputed part)" : ""}
+            </p>
+            {row.payableReason ? (
+              <p className="text-muted-foreground text-xs">
+                {PAYABLE_REASON_LABEL[row.payableReason]}
+              </p>
+            ) : null}
             <p className="font-medium">
               <Money amount={row.amount} currency={row.currency} />
             </p>
@@ -45,6 +53,7 @@ export function AdminPaymentsTable({ rows, now }: { rows: AdminPaymentRow[]; now
           <tr>
             <th className="py-2 pr-4 font-medium">Project</th>
             <th className="py-2 pr-4 font-medium">Editor</th>
+            <th className="py-2 pr-4 font-medium">Milestone</th>
             <th className="py-2 pr-4 font-medium">Amount</th>
             <th className="py-2 pr-4 font-medium">Status</th>
             <th className="py-2 pr-4 font-medium">Due</th>
@@ -60,6 +69,17 @@ export function AdminPaymentsTable({ rows, now }: { rows: AdminPaymentRow[]; now
                 </Link>
               </td>
               <td className="py-2 pr-4">{row.editorName}</td>
+              <td className="py-2 pr-4">
+                {milestoneLabel(row.milestoneSeq)}
+                {row.splitFromPaymentId ? (
+                  <span className="text-muted-foreground block text-xs">Disputed part</span>
+                ) : null}
+                {row.payableReason ? (
+                  <span className="text-muted-foreground block text-xs">
+                    {PAYABLE_REASON_LABEL[row.payableReason]}
+                  </span>
+                ) : null}
+              </td>
               <td className="py-2 pr-4 whitespace-nowrap">
                 <Money amount={row.amount} currency={row.currency} />
               </td>

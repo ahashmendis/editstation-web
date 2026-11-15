@@ -43,8 +43,10 @@ begin
     'deadline', '2026-12-31', 'requires_interpretation', false, 'brief', jsonb_build_object('instructions', 'Cut it'),
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
+  -- Phase 12D: one editor milestone (100%) keeps one payment per assignment here; the deposit is
+  -- verified after confirmation and only to start work, so a confirmed payment stays not_due.
+  perform public.admin_save_terms_draft(v_project, '{"editor_milestone_shares": [100]}');
   perform public.admin_agree_terms(v_project, 1);
-  perform pg_temp.verify_deposit(v_project);
   v_id := public.admin_make_offer(v_project, p_editor, 10000, 'LKR');
   perform pg_temp.as_user(p_editor);
   perform public.editor_respond_offer(v_id, 'accept');
@@ -53,6 +55,8 @@ begin
     perform public.admin_confirm_assignment(v_id);
   end if;
   if p_start then
+    perform pg_temp.as_user('72000000-0000-0000-0000-00000000000a', 'aal2');
+    perform pg_temp.verify_deposit(v_project);
     perform pg_temp.as_user(p_editor);
     perform public.editor_confirm_brief(v_id, 1, '2026-12-31', 10000, 'LKR');
     perform public.editor_start_work(v_id);

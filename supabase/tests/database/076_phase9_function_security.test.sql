@@ -119,10 +119,11 @@ select is(pg_temp.state_as('76000000-0000-0000-0000-00000000000a', 'aal2',
 -- ---------------------------------------------------------------------------
 select is_empty($$ select column_name from information_schema.columns
   where table_schema = 'public' and table_name = 'payments'
-    and column_name ~ '(client|email|phone|company|contact|price|margin|note)' $$,
-  'payments holds no client, price, margin or note columns');
-select ok(pg_get_function_result('public.editor_list_payments()'::regprocedure)
-  !~ '(client|email|phone|company|contact|price|margin|note|_by )', 'the editor list returns no such fields or actor ids');
+    and column_name ~ '(client|email|phone|company|contact|price|margin|note)'
+    and column_name <> 'waiting_on_client' $$,
+  'payments holds no client, price, margin or note columns (12D waiting_on_client is a client-safe flag)');
+select ok(replace(pg_get_function_result('public.editor_list_payments()'::regprocedure), 'waiting_on_client', '')
+  !~ '(client|email|phone|company|contact|price|margin|note|on_hold_reason|payable_reason|_by )', 'the editor list returns no such fields or actor ids');
 select set_eq($$ select tablename::text || '.' || cmd from pg_policies
   where schemaname = 'public' and tablename in ('payments', 'payment_notes') $$,
   array['payments.SELECT', 'payment_notes.SELECT'], 'both tables have exactly one select-only policy');
@@ -130,6 +131,7 @@ select set_eq($$ select c.relname::text || '.' || t.tgname::text from pg_trigger
   where not t.tgisinternal and (c.relname in ('payments', 'payment_notes')
     or t.tgname in ('assignments_create_payment', 'assignments_hold_payments')) $$,
   array['payments.payments_set_updated_at', 'payments.payments_check_row', 'payments.payments_guard',
+        'payments.payments_clear_waiting', 'payments.payments_split_sum',
         'payments.payments_audit', 'payment_notes.payment_notes_append_only',
         'assignments.assignments_create_payment', 'assignments.assignments_hold_payments'],
   'payment triggers present by name');
@@ -144,6 +146,7 @@ insert into flow select 'project', public.admin_create_project(jsonb_build_objec
   'fully_instructed', 'deadline', '2026-12-31', 'brief', jsonb_build_object('instructions', 'Cut it'),
   'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
 select public.admin_set_project_status((select id from flow where kind = 'project'), 'open');
+select public.admin_save_terms_draft((select id from flow where kind = 'project'), '{"editor_milestone_shares": [100]}');
 select public.admin_agree_terms((select id from flow where kind = 'project'), 1);
 insert into flow select 'asg', public.admin_make_offer((select id from flow where kind = 'project'),
   '76000000-0000-0000-0000-000000000001', 10000, 'LKR');
@@ -153,7 +156,11 @@ select pg_temp.as_user('76000000-0000-0000-0000-00000000000a', 'aal2');
 select public.admin_confirm_assignment((select id from flow where kind = 'asg'));
 insert into flow select 'pay', id from public.payments where assignment_id = (select id from flow where kind = 'asg');
 select public.admin_set_payment_due_date((select id from flow where kind = 'pay'), '2027-01-15');
-select public.admin_set_payment_status((select id from flow where kind = 'pay'), 'pending_approval');
+-- Phase 12D: made payable as by the milestone rules (seeded as the table owner).
+reset role;
+update public.payments set status = 'pending_approval', payable_reason = 'client_deposit_verified', payable_at = now()
+where id = (select id from flow where kind = 'pay');
+select pg_temp.as_user('76000000-0000-0000-0000-00000000000a', 'aal2');
 select public.admin_set_payment_status((select id from flow where kind = 'pay'), 'approved');
 select public.admin_set_payment_status((select id from flow where kind = 'pay'), 'processing');
 select public.admin_set_payment_status((select id from flow where kind = 'pay'), 'on_hold', 'Hold reason zz');

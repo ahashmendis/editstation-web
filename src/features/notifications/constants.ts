@@ -38,6 +38,8 @@ export function notificationHref(n: Pick<NotificationRow, "kind" | "entity_id">)
       return `/editor/projects/${n.entity_id}`;
     case "payment_paid":
       return "/editor/earnings";
+    case "late_balance_payable":
+      return `/admin/earnings/${n.entity_id}`;
   }
 }
 

@@ -34,6 +34,8 @@ begin
     'deadline', '2026-12-31', 'brief', jsonb_build_object('instructions', 'Cut it'),
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
+  -- Phase 12D: one editor milestone (100%) keeps one payment per assignment in these tests.
+  perform public.admin_save_terms_draft(v_project, '{"editor_milestone_shares": [100]}');
   perform public.admin_agree_terms(v_project, 1);
   v_id := public.admin_make_offer(v_project, p_editor, 10000, 'LKR');
   perform pg_temp.as_user(p_editor);
@@ -70,11 +72,12 @@ create temp table a_payments as select id from public.payments where editor_id =
 grant select on a_payments to authenticated;
 
 select is(pg_get_function_result('public.editor_list_payments()'::regprocedure),
-  'TABLE(id uuid, project_id uuid, project_title text, kind payment_kind, amount numeric, currency character, '
-  || 'status payment_status, on_hold_reason text, reversal_reason text, reverses_payment_id uuid, due_date date, '
+  'TABLE(id uuid, project_id uuid, project_title text, kind payment_kind, milestone_seq smallint, amount numeric, '
+  || 'currency character, status payment_status, hold_label payment_hold_label, waiting_on_client boolean, '
+  || 'reverses_payment_id uuid, split_from_payment_id uuid, due_date date, '
   || 'transfer_date date, transaction_reference text, approved_at timestamp with time zone, '
   || 'marked_paid_at timestamp with time zone, created_at timestamp with time zone)',
-  'editor_list_payments returns exactly the declared columns (no actor ids)');
+  'editor_list_payments returns exactly the declared columns (12D: hold label, no hold/reversal reasons or actor ids)');
 
 select pg_temp.as_user('75000000-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.editor_list_payments()), 1, 'A lists one payment');
@@ -102,7 +105,7 @@ select pg_temp.as_user('75000000-0000-0000-0000-00000000000a', 'aal2');
 select public.admin_reassign(pg_temp.a('a1'));
 select pg_temp.as_user('75000000-0000-0000-0000-000000000001');
 select ok((select count(*) = 1 and bool_and(project_title = 'Alpha film' and status = 'on_hold'
-    and on_hold_reason like 'The assignment ended%') from public.editor_list_payments()),
+    and hold_label = 'assignment_ended') from public.editor_list_payments()),
   'after reassignment A still lists the held payment with its title');
 select is((select count(*)::int from public.projects where id = (select project_id from a_project)), 0,
   'A can no longer read the project');

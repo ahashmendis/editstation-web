@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
-import type { PaymentKind, PaymentStatus } from "./constants";
+import type { HoldLabel, PayableReason, PaymentKind, PaymentStatus } from "./constants";
 import type { AdminEarningsFilter } from "./schemas";
 import type { PaymentLike } from "./summary";
 
@@ -16,15 +16,21 @@ export type EditorPaymentRow = PaymentLike & {
   id: string;
   projectId: string;
   projectTitle: string;
-  onHoldReason: string | null;
-  reversalReason: string | null;
+  milestoneSeq: number;
+  /** A fixed label (Under review, Waiting for client payment, ...); never the admin's reason. */
+  holdLabel: HoldLabel | null;
+  waitingOnClient: boolean;
+  splitFromPaymentId: string | null;
   reversesPaymentId: string | null;
   transferDate: string | null;
   transactionReference: string | null;
   createdAt: string;
 };
 
-/** The signed-in editor's own payments (editor_list_payments: own rows, project title only). */
+/**
+ * The signed-in editor's own payments (editor_list_payments: own rows, project title, milestone,
+ * fixed hold label and the waiting flag; never hold/reversal reasons, payable reasons or client money).
+ */
 export async function listMyPayments(): Promise<EditorPaymentRow[]> {
   const supabase = await createClient();
   const rows = check(await supabase.rpc("editor_list_payments"));
@@ -38,8 +44,10 @@ export async function listMyPayments(): Promise<EditorPaymentRow[]> {
     currency: r.currency,
     dueDate: r.due_date,
     markedPaidAt: r.marked_paid_at,
-    onHoldReason: r.on_hold_reason,
-    reversalReason: r.reversal_reason,
+    milestoneSeq: r.milestone_seq,
+    holdLabel: r.hold_label,
+    waitingOnClient: r.waiting_on_client,
+    splitFromPaymentId: r.split_from_payment_id,
     reversesPaymentId: r.reverses_payment_id,
     transferDate: r.transfer_date,
     transactionReference: r.transaction_reference,
@@ -54,12 +62,15 @@ export type AdminPaymentRow = PaymentLike & {
   projectId: string;
   projectTitle: string;
   assignmentId: string;
+  milestoneSeq: number;
+  payableReason: PayableReason | null;
+  splitFromPaymentId: string | null;
   transferDate: string | null;
   createdAt: string;
 };
 
 const ADMIN_COLUMNS =
-  "id, assignment_id, project_id, editor_id, kind, amount, currency, status, due_date, transfer_date, marked_paid_at, created_at, projects(title)";
+  "id, assignment_id, project_id, editor_id, kind, milestone_seq, payable_reason, split_from_payment_id, amount, currency, status, due_date, transfer_date, marked_paid_at, created_at, projects(title)";
 
 /** Names for a set of accounts. Admin only (RLS on profiles). */
 async function namesFor(ids: string[]): Promise<Map<string, string>> {
@@ -78,6 +89,9 @@ type AdminSelectRow = {
   project_id: string;
   editor_id: string;
   kind: string;
+  milestone_seq: number;
+  payable_reason: PayableReason | null;
+  split_from_payment_id: string | null;
   amount: number;
   currency: string;
   status: string;
@@ -109,6 +123,9 @@ export async function listAdminPayments(filter?: AdminEarningsFilter): Promise<A
     editorId: r.editor_id,
     editorName: names.get(r.editor_id) ?? "Unknown editor",
     kind: r.kind as PaymentKind,
+    milestoneSeq: r.milestone_seq,
+    payableReason: r.payable_reason,
+    splitFromPaymentId: r.split_from_payment_id,
     status: r.status as PaymentStatus,
     amount: Number(r.amount),
     currency: r.currency,
@@ -166,6 +183,13 @@ export type AdminPaymentDetail = {
   currency: string;
   heldFromStatus: PaymentStatus | null;
   onHoldReason: string | null;
+  milestoneSeq: number;
+  payableReason: PayableReason | null;
+  payableAt: string | null;
+  waitingOnClient: boolean;
+  splitFromPaymentId: string | null;
+  amountBeforeSplit: number | null;
+  splitChildId: string | null;
   dueDate: string | null;
   transferDate: string | null;
   transactionReference: string | null;
@@ -187,15 +211,16 @@ export async function getAdminPayment(id: string): Promise<AdminPaymentDetail | 
   const { data: p, error } = await supabase
     .from("payments")
     .select(
-      "id, assignment_id, project_id, editor_id, kind, amount, currency, status, held_from_status, on_hold_reason, due_date, transfer_date, transaction_reference, reverses_payment_id, reversal_reason, approved_by, approved_at, marked_paid_by, marked_paid_at, created_at, projects(title)",
+      "id, assignment_id, project_id, editor_id, kind, milestone_seq, payable_reason, payable_at, waiting_on_client, split_from_payment_id, amount_before_split, amount, currency, status, held_from_status, on_hold_reason, due_date, transfer_date, transaction_reference, reverses_payment_id, reversal_reason, approved_by, approved_at, marked_paid_by, marked_paid_at, created_at, projects(title)",
     )
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
   if (!p) return null;
 
-  const [reversal, notes, activity] = await Promise.all([
+  const [reversal, splitChild, notes, activity] = await Promise.all([
     supabase.from("payments").select("id").eq("reverses_payment_id", id).maybeSingle(),
+    supabase.from("payments").select("id").eq("split_from_payment_id", id).maybeSingle(),
     supabase
       .from("payment_notes")
       .select("id, note, author_id, created_at")
@@ -211,6 +236,7 @@ export async function getAdminPayment(id: string): Promise<AdminPaymentDetail | 
       .limit(50),
   ]);
   if (reversal.error) throw reversal.error;
+  if (splitChild.error) throw splitChild.error;
   const noteRows = check(notes);
   const activityRows = check(activity);
   const names = await namesFor(
@@ -238,6 +264,13 @@ export async function getAdminPayment(id: string): Promise<AdminPaymentDetail | 
     currency: p.currency,
     heldFromStatus: p.held_from_status as PaymentStatus | null,
     onHoldReason: p.on_hold_reason,
+    milestoneSeq: p.milestone_seq,
+    payableReason: p.payable_reason,
+    payableAt: p.payable_at,
+    waitingOnClient: p.waiting_on_client,
+    splitFromPaymentId: p.split_from_payment_id,
+    amountBeforeSplit: p.amount_before_split === null ? null : Number(p.amount_before_split),
+    splitChildId: splitChild.data?.id ?? null,
     dueDate: p.due_date,
     transferDate: p.transfer_date,
     transactionReference: p.transaction_reference,

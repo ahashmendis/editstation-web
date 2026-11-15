@@ -70,6 +70,18 @@ export const reversePaymentSchema = z.object({
     .transform((value) => value === "on" || value === "true"),
 });
 
+/** Partial dispute (KB9a-4): the disputed part (whole cents) is split off and held. */
+export const splitDisputeSchema = z.object({
+  paymentId,
+  amount: z
+    .string({ error: "Enter the disputed amount." })
+    .trim()
+    .regex(/^\d{1,10}(\.\d{1,2})?$/, { error: "Enter an amount such as 1500 or 1500.50." })
+    .transform(Number)
+    .refine((value) => value > 0, { error: "The disputed amount must be more than 0." }),
+  reason: boundedText(500, "Give a reason for the dispute hold."),
+});
+
 export const paymentNoteSchema = z.object({
   paymentId,
   note: boundedText(4000, "Write a note."),

@@ -258,6 +258,62 @@ authorise in the body; lock the project row first):
   and `/admin/earnings` call it on load) and audits `timed_rules.run` only when it acted.
   `pg_cron` on hosted Supabase is not scheduled yet (hosted work needs owner approval).
 
+## Editor pay milestones and partial disputes _(Phase 12D part 1, implemented on branch, pending owner review)_
+
+Spec sections 4.2 (note), 4.3, 4.5, 5 and call 9; decisions KB9, KB9a-1, KB9a-4, KB9a-5, KB9b-3.
+Migrations `20261115071328_phase12d_notification_kind.sql` (`notification_kind.late_balance_payable`,
+alone), `20261115071331_phase12d_editor_pay_schema.sql`, `20261115071334_phase12d_editor_pay_functions.sql`.
+Enums `payment_payable_reason` (`client_deposit_verified`, `client_balance_verified`,
+`late_balance_protection`, `adjustment_accepted`, `cancellation_settlement`; the last two are used
+from 12D part 2) and `payment_hold_label` (`under_review`, `assignment_ended`,
+`waiting_for_client_payment`).
+
+- `payments` gains `milestone_seq` (1..10, default 1; existing rows backfilled to 1; reversals copy
+  it), `payable_reason` + `payable_at` (set together, fixed once set), `split_from_payment_id`
+  (disputed child row), `amount_before_split` (the parent's original amount) and
+  `waiting_on_client` (only while `not_due`; cleared by any move out of `not_due`).
+- `payments_open_key` is now one unpaid row per `(assignment_id, milestone_seq)` (split children
+  excluded); `payments_split_from_key`: one split per milestone row.
+- Insert guard: milestone rows (net of reversals) never add up to more than the agreed amount, in
+  the agreed currency; a split child matches its unpaid parent (same assignment, milestone and
+  currency) and starts `on_hold`. Update guard: milestone and split identity fixed; the amount
+  changes once, only inside the split function. Constraint trigger `payments_split_sum`
+  (deferrable, checked per statement): parent amount + child = `amount_before_split`.
+- Confirmation (`private.create_assignment_payment`, replaced): one `not_due` row per agreed terms
+  `editor_milestone_shares` (default 50/50) of the agreed amount; the last row takes the rounding
+  remainder (call 9).
+- `private.sync_editor_milestones(project, p_now)` (idempotent; locks project, assignments,
+  payments): for live assignments, milestone 1 becomes payable when the client deposit is
+  verified; milestones 2..n when the project is `approved`/`completed` and the client balance is
+  verified. Payable = `pending_approval`, `payable_at = p_now`, `due_date` = business date of
+  `p_now` + terms `editor_pay_days` (default 7). It also keeps `waiting_on_client` current. Run by
+  the confirmation trigger, triggers on `client_milestones` (verification change, refund insert)
+  and on `projects` (status -> `approved`), and by hold release. Phase 8 `review_submission` no
+  longer moves payments itself.
+- `private.client_deposit_verified` (replaced): a verified deposit counts only while its amount
+  plus its refund rows is above 0. `private.client_balance_verified`: the deposit counts and every
+  live balance row is verified (net of refunds); none means the deposit suffices (100% upfront).
+- `private.apply_timed_rules(p_now)` (replaced) adds late-balance protection (KB9a-1): project
+  approved/completed, every unverified balance row invoiced and past due + terms
+  `late_balance_days` (default 14, business calendar day), no payment row on hold on the assignment (any hold; conservative, owner to confirm) ->
+  the not_due later milestones become payable with `late_balance_protection`; audit
+  `payment.late_balance_payable` (ids and the enum reason) and notify admins
+  (`late_balance_payable`), once per milestone.
+- `admin_split_payment_for_dispute(payment, disputed_amount, reason)` returns the child id: an
+  unsplit, unpaid milestone not on hold; amount > 0, below the row, whole cents; reason required.
+  Parent keeps the rest and its status; the child is `on_hold` from the parent's status with the
+  reason (and the parent's approval/payable facts). Audit `payment.dispute_split` (ids, field
+  names). Release returns the child to that status (`admin_release_payment_hold`, which now locks
+  project, assignment, payment in order and re-runs the payable rules).
+- `admin_reverse_payment` (replaced): locks project, assignment, payment in order; reversal and
+  re-opened row keep the milestone; the open check is per milestone.
+- `admin_set_payment_status` (replaced): refuses `not_due -> pending_approval` by hand (ES409); a
+  milestone becomes payable only through the rules above.
+- `editor_list_payments()` (dropped and recreated, new return type): adds `milestone_seq`,
+  `hold_label` (enum), `waiting_on_client`, `split_from_payment_id`; drops `on_hold_reason` and `reversal_reason`;
+  never returns `payable_reason`, admin ids or client money.
+- Unchanged: the Phase 9 hold-on-close trigger (12D part 2 settlement replaces it).
+
 ## Delivery, money, audit
 
 | Table               | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Created |
@@ -393,15 +449,15 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
 1. _(Resolved in Phase 12C: `assigned -> on_hold` for the unpaid-deposit rule only.)_ Project `on_hold` is refused from `assigned`/`in_progress` (Phase 4 rule), but KB9a-2 puts a
    project on hold when the deposit does not clear, which can happen after an editor is assigned.
 2. _(Resolved in Phase 12C: deposit gate.)_ The start gate does not check client money; KB9b-4 requires a verified deposit.
-3. One open editor payment per assignment (`payments_open_key`), created whole at confirmation;
+3. _(Resolved in Phase 12D part 1 for milestones; adjustments and settlements are part 2.)_ One open editor payment per assignment (`payments_open_key`), created whole at confirmation;
    the decisions need milestones, adjustments and settlements as separate rows.
 4. Ending an assignment puts unpaid payments on hold automatically (Phase 9, flagged under F);
    F2/KB9a-3 say cancellation must settle completed work and kill fees instead of freezing pay.
-5. Holds are whole-row; KB9a-4 needs partial holds.
+5. _(Resolved in Phase 12D part 1: dispute split rows.)_ Holds are whole-row; KB9a-4 needs partial holds.
 6. `revision_allowance` is editable until cancel/archive and is not an agreement; F requires a
    locked, versioned agreement (default 3 kept on the form).
-7. `editor_list_payments` returns `on_hold_reason` text to editors; with client-payment waits,
+7. _(Resolved in Phase 12D part 1: enum `hold_label`.)_ `editor_list_payments` returns `on_hold_reason` text to editors; with client-payment waits,
    reasons must never contain client financial details (use the `waiting_on_client` flag).
 8. ~~The revoke checklist treats shares as something Lenscape revokes~~: resolved in Phase 12B
    (request/confirm states for client-owned folders).
-9. _(Resolved in Phase 12C for the deposit rule: `private.apply_timed_rules`; late-balance protection is 12D.)_ No scheduler exists for the 14-day rules.
+9. _(Resolved: `private.apply_timed_rules`, deposit rule in 12C, late-balance protection in 12D part 1.)_ No scheduler exists for the 14-day rules.

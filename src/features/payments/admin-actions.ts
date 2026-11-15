@@ -14,6 +14,7 @@ import {
   reversePaymentSchema,
   setDueDateSchema,
   setPaymentStatusSchema,
+  splitDisputeSchema,
 } from "./schemas";
 
 function refreshPayment(paymentId: string) {
@@ -123,6 +124,27 @@ export async function reversePaymentAction(_prev: FormState, formData: FormData)
   return {
     status: "success",
     message: v.reopen ? "Reversed and re-opened for approval." : "Payment reversed.",
+  } as FormState;
+}
+
+export async function splitPaymentForDisputeAction(_prev: FormState, formData: FormData) {
+  await requireAdmin();
+  const kept = { amount: text(formData, "amount", 20), reason: text(formData, "reason", 500) };
+  const parsed = splitDisputeSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error, kept);
+  const v = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_split_payment_for_dispute", {
+    p_payment_id: v.paymentId,
+    p_disputed_amount: v.amount,
+    p_reason: v.reason,
+  });
+  if (error)
+    return { status: "error", message: userMessageFromDbError(error), values: kept } as FormState;
+  refreshPayment(v.paymentId);
+  return {
+    status: "success",
+    message: "Split: the disputed part is on hold; the rest continues.",
   } as FormState;
 }
 

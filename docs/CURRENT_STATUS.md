@@ -9,13 +9,25 @@ mark paid cannot check verified payout details (unbuilt by design until E is bui
 suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
-KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built on branch (12C), editor side not yet.
+KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1).
 **Last updated:** 2026-11-15
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
 
 ## What exists
+
+- **Phase 12D part 1 editor pay (branch `phase12d-editor-pay`, uncommitted, pending owner review,
+  2026-11-15):** editor milestone rows from the agreed terms shares (default 50/50, last row takes
+  the rounding remainder), payable on client deposit verified (milestone 1) and on approval with
+  the client balance verified (later milestones), due = payable date + editor pay days (business
+  timezone); late-balance protection in `private.apply_timed_rules` (notifies admins,
+  `late_balance_payable`); deposit flag nets refund rows; partial-dispute split
+  (`admin_split_payment_for_dispute`, only the disputed part held); `editor_list_payments` returns
+  fixed hold labels ("Under review", "Waiting for client payment") instead of reasons. App:
+  milestones on `/editor/earnings`, `/admin/earnings` and `/admin/earnings/[id]` (payable reason,
+  split form). pgTAP `102`-`104`. Not yet: extra pay offers, scope quotes, cancellation settlement
+  (`cancelled` status) in part 2; payout details (12E).
 
 - **Phase 12C client billing (branch `phase12c-billing`, uncommitted, pending owner review,
   2026-11-15):** admin-only `client_milestones` (default 50/50 of the client price, per-project
@@ -209,9 +221,9 @@ tested locally; nothing has run on hosted infrastructure.
 
 ## Next task
 
-0. Owner review of Phase 12B and 12C (branches `phase12b-assets`, `phase12c-billing`; not
-   committed), incl. the 12C implementation calls in CHANGELOG. Then 12D (editor milestones,
-   adjustments, disputes, cancellation settlement, late-balance protection).
+0. Owner review of Phase 12D part 1 (branch `phase12d-editor-pay`, uncommitted), incl. its
+   implementation calls in CHANGELOG. Then 12D part 2 (extra pay offers, scope quotes,
+   cancellation settlement and the `cancelled` payment status), then 12E.
 
 1. Owner decisions of 2026-11-15 (KB7 client Drive/Dropbox links, F per-project revision policy,
    KB9 50/50 client and editor milestones) are recorded in docs only; **code still reflects the old

@@ -7,9 +7,19 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateTime } from "@/features/applications/components/status-badge";
-import { PAYMENT_STATUS_LABEL, nextAdminActions } from "@/features/payments/constants";
+import {
+  PAYABLE_REASON_LABEL,
+  PAYMENT_STATUS_LABEL,
+  canSplitForDispute,
+  milestoneLabel,
+  nextAdminActions,
+} from "@/features/payments/constants";
 import { Money } from "@/features/payments/components/money";
-import { PaymentActions, PaymentNoteForm } from "@/features/payments/components/payment-actions";
+import {
+  PaymentActions,
+  PaymentNoteForm,
+  SplitDisputeForm,
+} from "@/features/payments/components/payment-actions";
 import { PaymentHistory } from "@/features/payments/components/payment-history";
 import { PaymentNotes } from "@/features/payments/components/payment-notes";
 import { PaymentStatusPill } from "@/features/payments/components/payment-status-pill";
@@ -46,6 +56,7 @@ async function PaymentContent({ params }: { params: PageProps<"/admin/earnings/[
   if (!p) notFound();
 
   const actions = nextAdminActions(p.status, p.kind, p.reversedById !== null);
+  const splittable = canSplitForDispute(p);
 
   return (
     <AreaShell
@@ -76,7 +87,41 @@ async function PaymentContent({ params }: { params: PageProps<"/admin/earnings/[
               </Link>
             </Fact>
             <Fact label="Editor">{p.editorName}</Fact>
+            <Fact label="Milestone">
+              {milestoneLabel(p.milestoneSeq)}
+              {p.splitFromPaymentId ? " (disputed part)" : ""}
+            </Fact>
+            <Fact label="Payable">
+              {p.payableReason ? PAYABLE_REASON_LABEL[p.payableReason] : "Not yet"}
+              {p.payableAt ? (
+                <span className="text-muted-foreground block text-xs">
+                  {formatDateTime(p.payableAt)}
+                </span>
+              ) : null}
+              {p.waitingOnClient ? (
+                <span className="text-muted-foreground block text-xs">
+                  Waiting for client payment (the editor sees this label)
+                </span>
+              ) : null}
+            </Fact>
             <Fact label="Due date">{p.dueDate ?? "Not set"}</Fact>
+            {p.amountBeforeSplit !== null ? (
+              <Fact label="Split for a dispute">
+                Originally <Money amount={p.amountBeforeSplit} currency={p.currency} />
+                {p.splitChildId ? (
+                  <Link href={`/admin/earnings/${p.splitChildId}`} className="block underline">
+                    The disputed part
+                  </Link>
+                ) : null}
+              </Fact>
+            ) : null}
+            {p.splitFromPaymentId ? (
+              <Fact label="Split from">
+                <Link href={`/admin/earnings/${p.splitFromPaymentId}`} className="underline">
+                  The undisputed part
+                </Link>
+              </Fact>
+            ) : null}
             {p.status === "on_hold" ? (
               <Fact label="On hold">
                 {p.onHoldReason}
@@ -139,6 +184,23 @@ async function PaymentContent({ params }: { params: PageProps<"/admin/earnings/[
               dueDate={p.dueDate}
               today={colomboDay(new Date())}
             />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {splittable ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>Partial dispute</h2>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-2">
+            <p className="text-muted-foreground text-sm">
+              Hold only the disputed part of this milestone. The rest keeps its status and can be
+              approved and paid.
+            </p>
+            <SplitDisputeForm paymentId={p.id} amount={p.amount} />
           </CardContent>
         </Card>
       ) : null}

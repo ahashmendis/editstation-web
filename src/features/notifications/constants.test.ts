@@ -19,6 +19,7 @@ describe("notificationHref", () => {
     ["assignment_confirmed", `/editor/projects/${id}`],
     ["revision_requested", `/editor/projects/${id}`],
     ["payment_paid", "/editor/earnings"],
+    ["late_balance_payable", `/admin/earnings/${id}`],
   ])("%s links to %s", (kind, href) => {
     expect(notificationHref({ kind, entity_id: id })).toBe(href);
   });

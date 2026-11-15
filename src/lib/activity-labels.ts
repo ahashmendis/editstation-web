@@ -110,6 +110,8 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "payment.hold_released": "Hold released",
   "payment.due_date_set": "Due date set",
   "payment.reversed": "Payment reversed",
+  "payment.dispute_split": "Split for a dispute (disputed part on hold)",
+  "payment.late_balance_payable": "Payable by late-balance protection",
   "payment_note.added": "Note added",
 
   "client.merged": "Client merged",

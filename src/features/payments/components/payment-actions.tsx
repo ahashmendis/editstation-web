@@ -9,8 +9,9 @@ import {
   reversePaymentAction,
   setPaymentDueDateAction,
   setPaymentStatusAction,
+  splitPaymentForDisputeAction,
 } from "../admin-actions";
-import { HOLD_REASON_HINT, type AdminPaymentAction } from "../constants";
+import { HOLD_REASON_HINT, maxDisputedAmount, type AdminPaymentAction } from "../constants";
 
 /** Client form wrappers: render-prop children cannot cross the server/client boundary. */
 
@@ -129,7 +130,7 @@ function ReverseForm({ paymentId }: { paymentId: string }) {
             id="reverse-reason"
             name="reason"
             label="Reason for the reversal"
-            hint="The editor can see this reason."
+            hint="Admins only. The editor sees only that the payment was reversed."
             state={state}
             maxLength={500}
             rows={2}
@@ -177,6 +178,46 @@ export function PaymentActions({
         }
       })}
     </div>
+  );
+}
+
+/** Partial dispute (KB9a-4): only the disputed part goes on hold; the rest keeps its status. */
+export function SplitDisputeForm({ paymentId, amount }: { paymentId: string; amount: number }) {
+  const max = maxDisputedAmount(amount);
+  return (
+    <StayForm
+      action={splitPaymentForDisputeAction}
+      submitLabel="Split and hold the disputed part"
+      variant="outline"
+      confirm="The payment is split in two; a milestone can be split once."
+    >
+      {(state) => (
+        <>
+          <input type="hidden" name="paymentId" value={paymentId} />
+          <TextField
+            id="dispute-amount"
+            name="amount"
+            label="Disputed amount"
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            max={max}
+            step="0.01"
+            hint={`At most ${max}. The rest is not frozen.`}
+            state={state}
+          />
+          <AreaField
+            id="dispute-reason"
+            name="reason"
+            label="Reason for the dispute hold"
+            hint={HOLD_REASON_HINT}
+            state={state}
+            maxLength={500}
+            rows={2}
+          />
+        </>
+      )}
+    </StayForm>
   );
 }
 

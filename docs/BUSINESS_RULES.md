@@ -93,10 +93,16 @@ paid and tracked here: OPEN_QUESTIONS G.
 - **Editor compensation** is separate from client billing. The total is agreed before work
   starts. Default milestones: 50% at commencement (client deposit verified, assignment
   confirmed); 50% after final approval and receipt of the client balance. Lenscape pays each
-  editor milestone by default **within 7 calendar days** of it becoming payable.
+  editor milestone by default **within 7 calendar days** of it becoming payable. _(Phase 12D part
+  1: milestone shares come from the agreed terms; odd amounts put the rounding remainder on the
+  last milestone (call 9); the due date is the business-timezone date it became payable plus the
+  agreed editor pay days.)_
 - **Late client balance (KB9a-1):** if the balance is still unpaid **14 calendar days after it
   became due**, the editor's second milestone becomes payable anyway and Lenscape carries the
-  collection risk, unless there is a genuine delivery dispute or contractual issue.
+  collection risk, unless there is a genuine delivery dispute or contractual issue. _(Phase 12D
+  part 1: applies from the calendar day after due date + late-balance days, once every remaining
+  balance invoice is issued and overdue, and only while no disputed part of the editor's pay on
+  that assignment is on hold.)_
 - **Disputes (KB9a-4):** only the disputed portion of the editor's second payment goes on hold;
   undisputed amounts are not frozen.
 - **Cancellation after deposit (KB9a-3):** the client is refunded the unused portion after

@@ -41,7 +41,8 @@ select enum_has_labels('public', 'payment_kind', array['assignment', 'reversal']
 select columns_are('public', 'payments', array['id', 'assignment_id', 'project_id', 'editor_id', 'kind', 'amount',
   'currency', 'status', 'held_from_status', 'on_hold_reason', 'due_date', 'transfer_date', 'transaction_reference',
   'reverses_payment_id', 'reversal_reason', 'approved_by', 'approved_at', 'marked_paid_by', 'marked_paid_at',
-  'created_by', 'created_at', 'updated_at'], 'payments columns');
+  'created_by', 'created_at', 'updated_at', 'milestone_seq', 'payable_reason', 'payable_at', 'split_from_payment_id',
+  'amount_before_split', 'waiting_on_client'], 'payments columns (12D milestone columns included)');
 select columns_are('public', 'payment_notes', array['id', 'payment_id', 'author_id', 'note', 'created_at'],
   'payment_notes columns');
 select set_has($$ select conname::text from pg_constraint where conrelid = 'public.payments'::regclass $$,
@@ -59,7 +60,7 @@ select set_has($$ select indexname::text from pg_indexes where schemaname = 'pub
 -- ---------------------------------------------------------------------------
 select throws_ok($$ insert into public.payments (assignment_id, project_id, editor_id, amount, currency)
   values ('70000000-0000-0000-0000-0000000000a1', '70000000-0000-0000-0000-0000000000f1',
-          '70000000-0000-0000-0000-000000000001', 9000, 'LKR') $$, 'ES409', null, 'amount must equal the agreed amount');
+          '70000000-0000-0000-0000-000000000001', 10000.01, 'LKR') $$, 'ES409', null, 'amount cannot exceed the agreed amount (12D)');
 select throws_ok($$ insert into public.payments (assignment_id, project_id, editor_id, amount, currency)
   values ('70000000-0000-0000-0000-0000000000a1', '70000000-0000-0000-0000-0000000000f1',
           '70000000-0000-0000-0000-000000000001', 10000, 'USD') $$, 'ES409', null, 'currency must equal the agreed currency');
@@ -80,8 +81,8 @@ select is((select status::text || '/' || kind::text from public.payments where i
   'not_due/assignment', 'defaults are not_due and assignment');
 select throws_ok($$ insert into public.payments (assignment_id, project_id, editor_id, amount, currency)
   values ('70000000-0000-0000-0000-0000000000a1', '70000000-0000-0000-0000-0000000000f1',
-          '70000000-0000-0000-0000-000000000001', 10000, 'LKR') $$, '23505', null,
-  'a second unpaid payment for the assignment is refused');
+          '70000000-0000-0000-0000-000000000001', 10000, 'LKR') $$, 'ES409', null,
+  'a second payment beyond the agreed amount is refused (12D sum guard)');
 
 -- ---------------------------------------------------------------------------
 -- CHECK constraints (insert guard off so only the constraints decide)

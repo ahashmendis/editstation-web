@@ -27,6 +27,8 @@ begin
     'deadline', '2026-12-31', 'brief', jsonb_build_object('instructions', 'Cut it'),
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
+  -- Phase 12D: one editor milestone (100%) keeps one payment per assignment in these tests.
+  perform public.admin_save_terms_draft(v_project, '{"editor_milestone_shares": [100]}');
   perform public.admin_agree_terms(v_project, 1);
   v_id := public.admin_make_offer(v_project, p_editor, 10000, 'LKR');
   perform pg_temp.as_user(p_editor);
@@ -59,7 +61,14 @@ grant execute on function pg_temp.row(text) to authenticated;
 select pg_temp.as_user('73000000-0000-0000-0000-00000000000a', 'aal2');
 
 -- Happy path
-select lives_ok($$ select public.admin_set_payment_status(pg_temp.p('p1'), 'pending_approval') $$, 'not_due -> pending');
+-- Phase 12D: not_due -> pending_approval happens only through the milestone rules (seeded here).
+select throws_ok($$ select public.admin_set_payment_status(pg_temp.p('p1'), 'pending_approval') $$, 'ES409',
+  'This milestone becomes payable automatically once its client payment is verified.',
+  'not_due -> pending by hand is refused (12D)');
+reset role;
+update public.payments set status = 'pending_approval', payable_reason = 'client_deposit_verified', payable_at = now()
+where id = pg_temp.p('p1');
+select pg_temp.as_user('73000000-0000-0000-0000-00000000000a', 'aal2');
 select is((pg_temp.row('p1')).status::text, 'pending_approval', 'status is pending approval');
 select lives_ok($$ select public.admin_set_payment_status(pg_temp.p('p1'), 'approved') $$, 'pending -> approved');
 select ok((select status = 'approved' and approved_by = '73000000-0000-0000-0000-00000000000a' and approved_at is not null
@@ -79,7 +88,10 @@ select ok((select status = 'processing' and held_from_status is null and on_hold
 select public.admin_set_payment_status(pg_temp.p('p2'), 'on_hold', 'Waiting');
 select public.admin_release_payment_hold(pg_temp.p('p2'));
 select is((pg_temp.row('p2')).status::text, 'not_due', 'hold/release from not_due');
-select public.admin_set_payment_status(pg_temp.p('p2'), 'pending_approval');
+reset role;
+update public.payments set status = 'pending_approval', payable_reason = 'client_deposit_verified', payable_at = now()
+where id = pg_temp.p('p2');
+select pg_temp.as_user('73000000-0000-0000-0000-00000000000a', 'aal2');
 select public.admin_set_payment_status(pg_temp.p('p2'), 'on_hold', 'Waiting');
 select public.admin_release_payment_hold(pg_temp.p('p2'));
 select is((pg_temp.row('p2')).status::text, 'pending_approval', 'hold/release from pending approval');

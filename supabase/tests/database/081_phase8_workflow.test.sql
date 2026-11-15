@@ -266,15 +266,19 @@ select is((select confirmed_deadline::text from public.submissions where id = pg
 -- ---------------------------------------------------------------------------
 -- Approve, payment, complete
 -- ---------------------------------------------------------------------------
-select is((select status::text from public.payments where assignment_id = pg_temp.a('p')), 'not_due',
-  'the payment is not due before approval');
+-- Phase 12D: default 50/50 editor milestones; the 100% client deposit is verified, so milestone 1
+-- became payable at confirmation and milestone 2 waits for approval.
+select is((select string_agg(milestone_seq || ':' || status || ':' || coalesce(payable_reason::text, '-'), ',' order by milestone_seq)
+  from public.payments where assignment_id = pg_temp.a('p')), '1:pending_approval:client_deposit_verified,2:not_due:-',
+  'before approval only milestone 1 is payable');
 select pg_temp.review('s8', 'approved', null, 'none');
 select is((select (outcome, feedback)::text from public.submissions where id = pg_temp.a('s8')), '(approved,)',
   'approved without feedback');
 select is(pg_temp.rstatus('r7'), 'approved', 'the answered request is approved');
 select is(pg_temp.pstatus('p'), 'approved', 'the project is approved');
-select is((select status::text from public.payments where assignment_id = pg_temp.a('p')), 'pending_approval',
-  'approval moves the payment to pending_approval (amount unchanged)');
+select is((select status::text || ':' || payable_reason::text || ':' || amount::text from public.payments
+  where assignment_id = pg_temp.a('p') and milestone_seq = 2), 'pending_approval:client_balance_verified:5000.00',
+  'approval moves milestone 2 to pending_approval (the client balance is in; amount unchanged)');
 select pg_temp.as_user('81000000-0000-0000-0000-000000000001');
 select throws_ok($$ select public.editor_submit_work(pg_temp.a('p'), 'https://drive.example/s9') $$, 'ES409',
   'This project is not accepting submissions.', 'no submissions after approval');

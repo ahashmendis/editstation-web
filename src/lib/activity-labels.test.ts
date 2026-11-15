@@ -31,6 +31,15 @@ describe("activityLabel", () => {
     expect(activityLabel("payment_note.added")).toBe("Note added");
   });
 
+  it("maps Phase 12D editor pay codes", () => {
+    expect(activityLabel("payment.dispute_split")).toBe(
+      "Split for a dispute (disputed part on hold)",
+    );
+    expect(activityLabel("payment.late_balance_payable")).toBe(
+      "Payable by late-balance protection",
+    );
+  });
+
   it("maps Phase 12A terms codes", () => {
     expect(activityLabel("project_terms.draft_saved")).toBe("Terms draft saved");
     expect(activityLabel("project_terms.agreed")).toBe("Terms agreed");

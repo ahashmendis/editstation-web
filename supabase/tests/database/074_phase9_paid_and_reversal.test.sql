@@ -28,6 +28,8 @@ begin
     'deadline', '2026-12-31', 'brief', jsonb_build_object('instructions', 'Cut it'),
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
+  -- Phase 12D: one editor milestone (100%) keeps one payment per assignment in these tests.
+  perform public.admin_save_terms_draft(v_project, '{"editor_milestone_shares": [100]}');
   perform public.admin_agree_terms(v_project, 1);
   v_id := public.admin_make_offer(v_project, '74000000-0000-0000-0000-000000000001', 10000, 'LKR');
   perform pg_temp.as_user('74000000-0000-0000-0000-000000000001');
@@ -36,7 +38,11 @@ begin
   perform public.admin_confirm_assignment(v_id);
   select id into v_pay from public.payments where assignment_id = v_id;
   if p_status in ('pending_approval', 'approved', 'processing', 'paid') then
-    perform public.admin_set_payment_status(v_pay, 'pending_approval');
+    -- Phase 12D: made payable as by the milestone rules (seeded as the table owner).
+    reset role;
+    update public.payments set status = 'pending_approval', payable_reason = 'client_deposit_verified',
+      payable_at = now() where id = v_pay;
+    perform pg_temp.as_user('74000000-0000-0000-0000-00000000000a', 'aal2');
   end if;
   if p_status in ('approved', 'processing', 'paid') then
     perform public.admin_set_payment_status(v_pay, 'approved');
@@ -143,9 +149,12 @@ select ok((select count(*) = 1 and bool_and(status = 'pending_approval' and amou
   're-open adds one pending approval payment for the agreed amount');
 
 -- Re-open refused while an unpaid payment exists (seeded as the table owner)
+-- (12D: the sum guard would refuse this impossible row, so it is paused for the seed only.)
 reset role;
+set local session_replication_role = replica;
 insert into public.payments (assignment_id, project_id, editor_id, amount, currency)
 select assignment_id, project_id, editor_id, amount, currency from public.payments where id = (select id from ids where kind = 'm7');
+set local session_replication_role = origin;
 select pg_temp.as_user('74000000-0000-0000-0000-00000000000a', 'aal2');
 select throws_ok($$ select public.admin_reverse_payment(pg_temp.p('m7'), 'Why', true) $$, 'ES409', null,
   're-open while an unpaid payment exists is refused');

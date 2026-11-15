@@ -20,15 +20,19 @@ import {
 
 async function signIn(page: Page, user: Pick<TestUser, "email" | "password">) {
   await page.goto("/sign-in");
+  // Wait for hydration so the click submits through the form action, not a bare GET.
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Email").fill(user.email);
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).not.toHaveURL(/\/sign-in/);
+  // The redirect target may still be compiling under `next dev` when the suite runs in parallel.
+  await expect(page).not.toHaveURL(/\/sign-in/, { timeout: 30_000 });
 }
 
 test("client inquiry submits without an account", async ({ page }) => {
   resetInquiryThrottle();
   await page.goto("/inquire");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Your name").fill("E2E Client");
   await page.getByLabel("Email").fill(uniqueEmail("client"));
   const service = page.getByLabel("Type of editing");
@@ -37,7 +41,9 @@ test("client inquiry submits without an account", async ({ page }) => {
   await page.getByLabel("Project description").fill("A short promo edit for an e2e test run.");
   await page.locator('input[name="acceptPrivacy"]').check();
   await page.getByRole("button", { name: "Send inquiry" }).click();
-  await expect(page.getByText("We've received your project details")).toBeVisible();
+  await expect(page.getByText("We've received your project details")).toBeVisible({
+    timeout: 30_000,
+  });
 });
 
 test.describe("pending applicant", () => {
@@ -110,12 +116,14 @@ test.describe("admin with MFA", () => {
     await expect(page).toHaveURL(/\/mfa/);
 
     await page.goto("/mfa");
+    await page.waitForLoadState("networkidle");
     await expect(page.getByText("Enter your verification code")).toBeVisible();
     await page
       .getByLabel("6-digit code")
       .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
     await page.getByRole("button", { name: "Verify", exact: true }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    // /admin may still be compiling under `next dev` while tests run in parallel.
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
 
     await page.goto("/admin/activity");
     await expect(page).toHaveURL(/\/admin\/activity$/);
@@ -138,11 +146,13 @@ test.describe("project terms (Phase 12A)", () => {
     const page = await adminContext.newPage();
     await signIn(page, admin);
     await page.goto("/mfa");
+    await page.waitForLoadState("networkidle");
     await page
       .getByLabel("6-digit code")
       .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
     await page.getByRole("button", { name: "Verify", exact: true }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    // /admin may still be compiling under `next dev` while tests run in parallel.
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
 
     await page.goto(`/admin/projects/${projectId}`);
     await expect(page.getByRole("heading", { name: "No terms agreed yet" })).toBeVisible();
@@ -199,11 +209,13 @@ test.describe("client billing (Phase 12C)", () => {
     const page = await adminContext.newPage();
     await signIn(page, admin);
     await page.goto("/mfa");
+    await page.waitForLoadState("networkidle");
     await page
       .getByLabel("6-digit code")
       .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
     await page.getByRole("button", { name: "Verify", exact: true }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    // /admin may still be compiling under `next dev` while tests run in parallel.
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
 
     await page.goto(`/admin/projects/${projectId}`);
     await expect(page.getByText("No client milestones yet")).toBeVisible();

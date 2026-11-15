@@ -3,6 +3,36 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-15: Phase 12D part 1 editor pay milestones, late-balance protection, dispute splits
+
+- Branch `phase12d-editor-pay`, **uncommitted, pending owner review**. Spec 4.2 note, 4.3, 4.5, 5
+  (late-balance protection), call 9; decisions KB9, KB9a-1, KB9a-4, KB9a-5, KB9b-3.
+- Migrations `20261115071328`-`20261115071334` (see DATABASE_SCHEMA "Editor pay milestones").
+  Replaced in place: `private.check_payment_row`, `private.guard_payments`,
+  `private.create_assignment_payment`, `private.review_submission` (no direct payments update),
+  `private.client_deposit_verified`, `private.apply_timed_rules`, `admin_release_payment_hold`,
+  `admin_reverse_payment`. `editor_list_payments` dropped and recreated (only the app calls it).
+- Implementation calls (flag for owner): milestones 2..n are all "after approval" rows and
+  late-balance protection makes all of them payable; protection starts only once every unverified
+  balance row has an invoice, and skips an assignment while any of its rows is on hold (review
+  fix, owner to confirm); "client
+  balance verified" also requires the (net) deposit; a later client correction or refund does not
+  un-pay a milestone already payable (no `pending_approval -> not_due` move exists; the admin can
+  hold it); one dispute split per milestone row.
+- Review fixes: `admin_set_payment_status` refuses `not_due -> pending_approval` by hand (the
+  "Send for approval" button is gone for not-due rows); editors no longer receive
+  `reversal_reason` (a reversal shows "Reversed"); `late_balance_due` also requires an issued
+  invoice; `admin_reverse_payment` locks project, assignment, payment; the editor may infer the
+  balance-verification day from a due date (accepted, documented); split form caps the amount in
+  the browser; e2e sign-in waits longer and pages are warmed in global setup.
+  milestone rows (net of reversals) may never exceed the agreed amount (replaces "equals").
+- Tests: pgTAP `102`-`104`; older payment tests (070, 072-076, 081) updated for milestones (100%
+  editor share where one row per assignment is assumed; 081 now checks only milestone 2 moves on
+  approval). Unit tests for labels, split schema, notification link, activity labels.
+- App: `/editor/earnings` shows each milestone with fixed labels; `/admin/earnings` adds milestone
+  and payable reason; `/admin/earnings/[id]` adds milestone, payable reason/time, split links and
+  the "Partial dispute" form. The hold-reason hint now says editors never see it.
+
 ## 2026-11-15: Phase 12C client billing, deposit gate, timed rules
 
 - Branch `phase12c-billing`, **uncommitted, pending owner review**. Spec 4.2, 5 (start gate,
