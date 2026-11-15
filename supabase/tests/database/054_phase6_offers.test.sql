@@ -53,6 +53,8 @@ insert into public.projects (id, title, brief_type, status, status_before_hold, 
   ('54000000-0000-0000-0000-0000000000e2', 'Cancelled', 'fully_instructed', 'cancelled', null, now(), null, null, 'LKR'),
   ('54000000-0000-0000-0000-0000000000e3', 'Archived', 'fully_instructed', 'open', null, now(), now(), null, 'LKR'),
   ('54000000-0000-0000-0000-0000000000f3', 'Assigned', 'fully_instructed', 'assigned', null, now(), null, null, 'LKR');
+-- Phase 12A: an editor is confirmed only after the project terms are agreed.
+update public.project_terms set status = 'agreed', agreed_at = now() where status = 'draft';
 insert into public.assignments (id, project_id, editor_id, status, proposed_amount, agreed_amount, agreed_currency,
   confirmed_at) values
   ('54000000-0000-0000-0000-0000000000b3', '54000000-0000-0000-0000-0000000000f3',

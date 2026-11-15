@@ -51,6 +51,8 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "project.completed": "Completed",
   "project.on_hold": "Put on hold",
   "project.cancelled": "Cancelled",
+  "project_terms.draft_saved": "Terms draft saved",
+  "project_terms.agreed": "Terms agreed",
 
   "project.assets_changed": "Assets changed",
   "project.early_access_changed": "Early-access setting changed",

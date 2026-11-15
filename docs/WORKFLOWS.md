@@ -160,7 +160,9 @@ changes is in `docs/DATABASE_SCHEMA.md` ("Planned changes from the 2026-11-15 de
    requests removal from the client and records `removal_requested` then `removal_confirmed`;
    ending the assignment never marks access as removed.
 
-**Revision policy (F).**
+**Revision policy (F).** _Built in Phase 12A (branch, pending owner review): steps 1-2 via
+`project_terms` (Terms card on the admin project page; an editor cannot be confirmed until terms
+are agreed). Steps 3-4 remain planned (12D)._
 
 1. Before the project opens to editors, the admin sets the policy (the form pre-fills 3 included rounds): included rounds (0..n) or
    chargeable from round 1 (0 included rounds; F3 confirmed these are the same), plus the client charge per additional round when known.
@@ -176,7 +178,9 @@ changes is in `docs/DATABASE_SCHEMA.md` ("Planned changes from the 2026-11-15 de
 
 **Payments (KB9).**
 
-0. Before production the admin records the project's agreed terms as one auditable agreement:
+0. _(Phase 12A builds the terms record: revision policy, editor milestone shares, cancellation
+   schedule and day counts; client milestones arrive in 12C.)_ Before production the admin records
+   the project's agreed terms as one auditable agreement:
    client milestones (default 50/50), revision policy, cancellation/kill-fee schedule, and the day
    counts (defaults: deposit 14 days, balance 7 days after completion, editor payment within 7
    days, late-balance protection 14 days). Later changes are new agreement versions.

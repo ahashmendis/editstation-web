@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { activityLabel, allowedStatusActions } from "./constants";
 import {
+  agreeTermsSchema,
+  termsDraftSchema,
+  termsPayload,
   archiveProjectSchema,
   briefPayload,
   briefSchema,
@@ -58,23 +61,20 @@ describe("projectDetailsSchema", () => {
     expect(r.summary).toBeNull();
     expect(r.proposedAmount).toBeNull();
     expect(r.proposedCurrency).toBe("LKR");
-    expect(r.revisionAllowance).toBeNull();
+    expect(r).not.toHaveProperty("revisionAllowance");
     expect(r.requiresInterpretation).toBeNull();
     expect(r.clientId).toBeNull();
   });
 
-  it("omits an empty revision allowance on create and update", () => {
-    const create = createProjectSchema.parse({
-      ...details,
-      ...briefText,
-      deliverables: [],
-      references: [],
-    });
-    expect(detailsPayload(create)).not.toHaveProperty("revision_allowance");
-    const update = updateProjectSchema.parse({ ...details, projectId: ID });
-    expect(detailsPayload(update)).not.toHaveProperty("revision_allowance");
-    const set = projectDetailsSchema.parse({ ...details, revisionAllowance: "0" });
+  it("sends included rounds only on create; update never sends them (terms own them)", () => {
+    const base = { ...details, ...briefText, deliverables: [], references: [] };
+    expect(detailsPayload(createProjectSchema.parse(base))).not.toHaveProperty(
+      "revision_allowance",
+    );
+    const set = createProjectSchema.parse({ ...base, revisionAllowance: "0" });
     expect(detailsPayload(set).revision_allowance).toBe(0);
+    const update = updateProjectSchema.parse({ ...details, revisionAllowance: "5", projectId: ID });
+    expect(detailsPayload(update)).not.toHaveProperty("revision_allowance");
   });
 
   it("maps activity actions to plain labels", () => {
@@ -92,10 +92,9 @@ describe("projectDetailsSchema", () => {
     expect(projectDetailsSchema.safeParse({ ...details, deadline: "2026-13-40" }).success).toBe(
       false,
     );
-    expect(projectDetailsSchema.safeParse({ ...details, revisionAllowance: "21" }).success).toBe(
-      false,
-    );
-    expect(projectDetailsSchema.safeParse({ ...details, revisionAllowance: "2.5" }).success).toBe(
+    const base = { ...details, ...briefText, deliverables: [], references: [] };
+    expect(createProjectSchema.safeParse({ ...base, revisionAllowance: "21" }).success).toBe(false);
+    expect(createProjectSchema.safeParse({ ...base, revisionAllowance: "2.5" }).success).toBe(
       false,
     );
     expect(projectDetailsSchema.safeParse({ ...details, proposedCurrency: "lk" }).success).toBe(
@@ -389,5 +388,68 @@ describe("convertInquirySchema", () => {
         clientId: "",
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("project terms (Phase 12A)", () => {
+  const blankStage = { editor: "", client: "" };
+  const terms = {
+    projectId: ID,
+    includedRounds: "3",
+    extraRoundCharge: "",
+    chargeCurrency: "",
+    depositDays: "14",
+    balanceDays: "7",
+    editorPayDays: "7",
+    lateBalanceDays: "14",
+    editorShares: "50, 50",
+    changeReason: "",
+    stages: {
+      assigned: { editor: "10", client: "20.5" },
+      in_progress: blankStage,
+      in_review: blankStage,
+      revision_requested: blankStage,
+    },
+  };
+
+  it("maps a draft to the database payload without inventing a charge or stages", () => {
+    const p = termsPayload(termsDraftSchema.parse(terms));
+    expect(p.included_rounds).toBe(3);
+    expect(p.extra_round_charge).toBeNull();
+    expect(p.charge_currency).toBeNull();
+    expect(p.editor_milestone_shares).toEqual([50, 50]);
+    expect(p.stages).toEqual([
+      { stage: "assigned", editor_earned_percent: 10, client_charge_percent: 20.5 },
+    ]);
+    expect(p.change_reason).toBeNull();
+  });
+
+  it("allows 0 included rounds and requires a value", () => {
+    expect(termsDraftSchema.parse({ ...terms, includedRounds: "0" }).includedRounds).toBe(0);
+    expect(termsDraftSchema.safeParse({ ...terms, includedRounds: "" }).success).toBe(false);
+    expect(termsDraftSchema.safeParse({ ...terms, includedRounds: "21" }).success).toBe(false);
+  });
+
+  it("requires editor shares adding up to 100", () => {
+    expect(termsDraftSchema.safeParse({ ...terms, editorShares: "60, 30" }).success).toBe(false);
+    expect(termsDraftSchema.safeParse({ ...terms, editorShares: "0, 100" }).success).toBe(false);
+    expect(termsDraftSchema.parse({ ...terms, editorShares: "100" }).editorShares).toEqual([100]);
+  });
+
+  it("needs both stage percentages or neither, each at most 100", () => {
+    const one = { ...terms, stages: { ...terms.stages, in_review: { editor: "5", client: "" } } };
+    expect(termsDraftSchema.safeParse(one).success).toBe(false);
+    const big = {
+      ...terms,
+      stages: { ...terms.stages, in_review: { editor: "101", client: "0" } },
+    };
+    expect(termsDraftSchema.safeParse(big).success).toBe(false);
+  });
+
+  it("validates day counts and the agree form", () => {
+    expect(termsDraftSchema.safeParse({ ...terms, depositDays: "400" }).success).toBe(false);
+    expect(termsDraftSchema.safeParse({ ...terms, depositDays: "" }).success).toBe(false);
+    const agree = agreeTermsSchema.parse({ projectId: ID, version: "2", changeReason: " " });
+    expect(agree).toEqual({ projectId: ID, version: 2, changeReason: null });
   });
 });

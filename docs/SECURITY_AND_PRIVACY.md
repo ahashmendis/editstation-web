@@ -166,6 +166,22 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   `private.require_admin()` / `activity_logs` RLS). The activity view is read-only and accepts
   only known filter values. pgTAP `090`-`092`.
 
+## Project terms controls (Phase 12A, implemented on branch, pending owner review)
+
+- `project_terms` and `project_terms_stages` hold client pricing (extra-round charge, client
+  cancellation percentages): RLS on, `select` for MFA admins only, no write grants for any API
+  role. Editors, applicants and anon read nothing from them.
+- Editors reach terms only through `editor_get_terms` (active editor, opportunity or assigned stage,
+  otherwise ES422 not found): included rounds, editor milestone shares and editor kill-fee shares.
+  pgTAP checks its result columns and values carry no client data.
+- Immutability is enforced by triggers for every caller: agreed terms cannot be edited or deleted,
+  only superseded; stage rows change only on drafts; `projects.revision_allowance` can only follow
+  the agreed terms.
+- `admin_agree_terms` locks the project row and accepts only the current draft, so concurrent
+  agreements cannot both succeed. Editor pay terms cannot change while an editor is confirmed.
+- Audit rows hold ids, version and field names only (no amounts, percentages or reasons). pgTAP
+  `093`-`095` (admin, editor A, editor B, applicant, anon, suspended).
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |

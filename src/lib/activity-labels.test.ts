@@ -31,6 +31,11 @@ describe("activityLabel", () => {
     expect(activityLabel("payment_note.added")).toBe("Note added");
   });
 
+  it("maps Phase 12A terms codes", () => {
+    expect(activityLabel("project_terms.draft_saved")).toBe("Terms draft saved");
+    expect(activityLabel("project_terms.agreed")).toBe("Terms agreed");
+  });
+
   it("falls back to Updated", () => {
     expect(activityLabel("something.else")).toBe("Updated");
   });

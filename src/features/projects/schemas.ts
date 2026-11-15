@@ -121,8 +121,6 @@ export const projectDetailsSchema = z.object({
     .transform((value) => (value === "" ? null : value === "yes")),
   proposedAmount: money,
   proposedCurrency: currencyCode,
-  /** null = field left empty: omitted from the payload (create uses the DB default, update keeps the value). */
-  revisionAllowance: wholeNumber(0, 20, "Use a whole number from 0 to 20."),
   clientId: optionalUuid,
   clientPrice: money,
   clientPriceCurrency: currencyCode,
@@ -191,7 +189,14 @@ export const saveBriefSchema = briefSchema.extend({
   requiresReacknowledgement: checkbox,
 });
 
-export const createProjectSchema = projectDetailsSchema.extend(briefSchema.shape);
+/**
+ * Create only: included revision rounds for terms v1 (the form pre-fills 3). Afterwards the rounds
+ * change only by agreeing new project terms. null = left empty: the database default (3) applies.
+ */
+export const createProjectSchema = projectDetailsSchema.extend({
+  ...briefSchema.shape,
+  revisionAllowance: wholeNumber(0, 20, "Use a whole number from 0 to 20."),
+});
 
 export const updateProjectSchema = projectDetailsSchema.extend({ projectId: z.uuid() });
 
@@ -376,7 +381,7 @@ export function briefPayload(b: Brief) {
   };
 }
 
-export function detailsPayload(d: ProjectDetails) {
+export function detailsPayload(d: ProjectDetails & { revisionAllowance?: number | null }) {
   return {
     title: d.title,
     brief_type: d.briefType,
@@ -388,10 +393,158 @@ export function detailsPayload(d: ProjectDetails) {
       : { requires_interpretation: d.requiresInterpretation }),
     proposed_amount: d.proposedAmount,
     proposed_currency: d.proposedCurrency,
-    ...(d.revisionAllowance === null ? {} : { revision_allowance: d.revisionAllowance }),
+    ...(d.revisionAllowance == null ? {} : { revision_allowance: d.revisionAllowance }),
     client_id: d.clientId,
     client_price: d.clientPrice,
     client_price_currency: d.clientPriceCurrency,
     internal_notes: d.internalNotes,
   };
 }
+
+// --- Project terms (Phase 12A) ---------------------------------------------------------------
+
+export const TERMS_STAGES = ["assigned", "in_progress", "in_review", "revision_requested"] as const;
+export type TermsStage = (typeof TERMS_STAGES)[number];
+
+/** Percentage 0..100 with at most two decimals; empty = not set. */
+const percent = z
+  .string()
+  .trim()
+  .transform((value, ctx) => {
+    if (value === "") return null;
+    const n = Number(value);
+    if (!/^\d{1,3}(\.\d{1,2})?$/.test(value) || n > 100) {
+      ctx.addIssue({ code: "custom", message: "Use a percentage from 0 to 100." });
+      return z.NEVER;
+    }
+    return n;
+  });
+
+const days = z
+  .string()
+  .trim()
+  .transform((value, ctx) => {
+    const n = Number(value);
+    if (!/^\d{1,3}$/.test(value) || n > 365) {
+      ctx.addIssue({ code: "custom", message: "Use a whole number of days from 0 to 365." });
+      return z.NEVER;
+    }
+    return n;
+  });
+
+/** "50, 50" -> [50, 50]: 1 to 10 whole percentages from 1 to 100 that add up to 100. */
+const editorShares = z
+  .string()
+  .trim()
+  .transform((value, ctx) => {
+    const parts = value.split(/[\s,/]+/).filter(Boolean);
+    const nums = parts.map(Number);
+    if (
+      parts.length < 1 ||
+      parts.length > 10 ||
+      parts.some((p) => !/^\d{1,3}$/.test(p)) ||
+      nums.some((n) => n < 1 || n > 100)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "List 1 to 10 whole percentages, e.g. 50, 50.",
+      });
+      return z.NEVER;
+    }
+    if (nums.reduce((a, b) => a + b, 0) !== 100) {
+      ctx.addIssue({ code: "custom", message: "The editor pay milestones must add up to 100%." });
+      return z.NEVER;
+    }
+    return nums;
+  });
+
+const stagePair = z
+  .object({ editor: percent, client: percent })
+  .refine((s) => (s.editor === null) === (s.client === null), {
+    error: "Enter both percentages for a cancellation stage, or leave both empty.",
+  });
+
+export const termsDraftSchema = z.object({
+  projectId: z.uuid(),
+  includedRounds: wholeNumber(0, 20, "Use a whole number from 0 to 20.").pipe(
+    z.number({ error: "Enter the included revision rounds (0 to 20)." }),
+  ),
+  extraRoundCharge: money,
+  chargeCurrency: currencyCode,
+  depositDays: days,
+  balanceDays: days,
+  editorPayDays: days,
+  lateBalanceDays: days,
+  editorShares,
+  stages: z.object(
+    Object.fromEntries(TERMS_STAGES.map((s) => [s, stagePair])) as Record<
+      TermsStage,
+      typeof stagePair
+    >,
+  ),
+  changeReason: optionalText(2000),
+});
+export type TermsDraft = z.infer<typeof termsDraftSchema>;
+
+export const TERMS_FIELDS = [
+  "includedRounds",
+  "extraRoundCharge",
+  "chargeCurrency",
+  "depositDays",
+  "balanceDays",
+  "editorPayDays",
+  "lateBalanceDays",
+  "editorShares",
+  "changeReason",
+] as const;
+
+export function termsFormInput(formData: FormData) {
+  return {
+    projectId: text(formData, "projectId"),
+    ...Object.fromEntries(TERMS_FIELDS.map((f) => [f, text(formData, f)])),
+    stages: Object.fromEntries(
+      TERMS_STAGES.map((s) => [
+        s,
+        {
+          editor: text(formData, `stage.${s}.editor`),
+          client: text(formData, `stage.${s}.client`),
+        },
+      ]),
+    ),
+  };
+}
+
+/** Flat values to refill the terms form after a failed submit. */
+export function termsKeptValues(formData: FormData): Record<string, string> {
+  const names = [
+    ...TERMS_FIELDS,
+    ...TERMS_STAGES.flatMap((s) => [`stage.${s}.editor`, `stage.${s}.client`]),
+  ];
+  return Object.fromEntries(names.map((f) => [f, text(formData, f).slice(0, 2000)]));
+}
+
+export function termsPayload(t: TermsDraft) {
+  return {
+    included_rounds: t.includedRounds,
+    extra_round_charge: t.extraRoundCharge,
+    charge_currency: t.extraRoundCharge === null ? null : t.chargeCurrency,
+    deposit_days: t.depositDays,
+    balance_days: t.balanceDays,
+    editor_pay_days: t.editorPayDays,
+    late_balance_days: t.lateBalanceDays,
+    editor_milestone_shares: t.editorShares,
+    stages: TERMS_STAGES.flatMap((s) => {
+      const v = t.stages[s];
+      return v.editor === null || v.client === null
+        ? []
+        : [{ stage: s, editor_earned_percent: v.editor, client_charge_percent: v.client }];
+    }),
+    change_reason: t.changeReason,
+  };
+}
+
+export const agreeTermsSchema = z.object({
+  projectId: z.uuid(),
+  version: z.coerce.number().int().min(1),
+  changeReason: optionalText(2000),
+});

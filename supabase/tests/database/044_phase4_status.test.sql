@@ -179,10 +179,10 @@ select is((select count(*)::int from public.activity_logs where details::text li
 -- ---------------------------------------------------------------------------
 select lives_ok($$ select public.admin_update_project((select id from p where kind = 'ready'), '{
   "title": "Ready (renamed)", "summary": "New summary", "deadline": "2027-01-15", "proposed_amount": 20000,
-  "revision_allowance": 5, "client_id": "44000000-0000-0000-0000-0000000000c1", "client_price": 90000,
+  "client_id": "44000000-0000-0000-0000-0000000000c1", "client_price": 90000,
   "internal_notes": "Rush job"}') $$, 'admin updates project details');
 select ok((select title = 'Ready (renamed)' and summary = 'New summary' and deadline = '2027-01-15'
-  and proposed_amount = 20000 and revision_allowance = 5
+  and proposed_amount = 20000 and revision_allowance = 3
   from public.projects where id = (select id from p where kind = 'ready')), 'project details are updated');
 select ok((select client_id = '44000000-0000-0000-0000-0000000000c1' and client_price = 90000 and internal_notes = 'Rush job'
   from public.project_internal where project_id = (select id from p where kind = 'ready')), 'internal details are updated');

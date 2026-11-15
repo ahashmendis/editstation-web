@@ -121,3 +121,55 @@ test.describe("admin with MFA", () => {
     await expect(page.getByRole("heading").first()).toBeVisible();
   });
 });
+
+test.describe("project terms (Phase 12A)", () => {
+  test("admin saves and agrees terms; the editor sees only the editor-safe summary", async ({
+    browser,
+  }) => {
+    test.setTimeout(120_000);
+    const admin = await createAdminWithTotp();
+    const editor = await createConfirmedUser("editor-terms");
+    activateEditor(editor.id);
+    const title = `E2E project terms ${Date.now()}`;
+    const projectId = createProjectWithOffer(admin.id, editor.id, title);
+
+    const adminContext = await browser.newContext();
+    const page = await adminContext.newPage();
+    await signIn(page, admin);
+    await page.goto("/mfa");
+    await page
+      .getByLabel("6-digit code")
+      .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+
+    await page.goto(`/admin/projects/${projectId}`);
+    await expect(page.getByRole("heading", { name: "No terms agreed yet" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Client charge per extra round").fill("7777");
+    // Retried: under a parallel run the click can land before the form has hydrated. Saving the
+    // same draft twice is harmless.
+    await expect(async () => {
+      await page.getByRole("button", { name: "Save draft" }).click();
+      await expect(page.getByText("Terms draft saved.")).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
+    // The refreshed draft summary shows the saved charge before agreeing.
+    await expect(page.getByText("7777 LKR").first()).toBeVisible();
+    await page.getByRole("button", { name: "Agree version 1" }).click();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByRole("heading", { name: "In force: version 1" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await adminContext.close();
+
+    const editorContext = await browser.newContext();
+    const editorPage = await editorContext.newPage();
+    await signIn(editorPage, editor);
+    await editorPage.goto(`/editor/projects/${projectId}`);
+    await expect(editorPage.getByText("Agreed terms, version 1.")).toBeVisible();
+    await expect(editorPage.getByText("Included client revision rounds")).toBeVisible();
+    await expect(editorPage.getByText("50% / 50% of your agreed pay")).toBeVisible();
+    await expect(editorPage.getByText("7777")).toHaveCount(0);
+    await editorContext.close();
+  });
+});

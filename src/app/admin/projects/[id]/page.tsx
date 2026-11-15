@@ -21,6 +21,7 @@ import {
   type DetailsDefaults,
 } from "@/features/projects/components/project-forms";
 import { ProjectStatusPill } from "@/features/projects/components/project-status-pill";
+import { TermsCard } from "@/features/projects/components/terms-card";
 import {
   BRIEF_TYPE_LABEL,
   allowedStatusActions,
@@ -32,6 +33,7 @@ import {
   getClientOption,
   getProjectDetail,
   getProjectFormOptions,
+  getProjectTerms,
 } from "@/features/projects/queries";
 import { AdminReviewPanel } from "@/features/submissions/components/panels";
 import { getSubmissionData } from "@/features/submissions/queries";
@@ -54,11 +56,12 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
   await requireAdmin();
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [detail, options, access, submissionData] = await Promise.all([
+  const [detail, options, access, submissionData, terms] = await Promise.all([
     getProjectDetail(id),
     getProjectFormOptions(),
     getProjectAccessData(id),
     getSubmissionData(id),
+    getProjectTerms(id),
   ]);
   if (!detail) notFound();
   const working = access.assignments.filter(
@@ -190,6 +193,8 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
           />
         </CardContent>
       </Card>
+
+      <TermsCard projectId={p.id} terms={terms} locked={locked} />
 
       <Card>
         <CardHeader>

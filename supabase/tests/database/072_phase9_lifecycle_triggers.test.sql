@@ -29,6 +29,7 @@ begin
     'deadline', '2026-12-31', 'requires_interpretation', false, 'brief', jsonb_build_object('instructions', 'Cut it'),
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
+  perform public.admin_agree_terms(v_project, 1);
   v_id := public.admin_make_offer(v_project, p_editor, 10000, 'LKR');
   perform pg_temp.as_user(p_editor);
   perform public.editor_respond_offer(v_id, 'accept');
@@ -96,6 +97,8 @@ reset role;
 
 insert into public.projects (id, title, brief_type, status, first_opened_at, proposed_currency) values
   ('72000000-0000-0000-0000-0000000000f9', 'Seeded', 'fully_instructed', 'assigned', now(), 'LKR');
+-- Phase 12A: an editor is confirmed only after the project terms are agreed.
+update public.project_terms set status = 'agreed', agreed_at = now() where status = 'draft';
 insert into public.assignments (id, project_id, editor_id, status, proposed_amount, agreed_amount, agreed_currency,
   confirmed_at) values
   ('72000000-0000-0000-0000-0000000000b9', '72000000-0000-0000-0000-0000000000f9',

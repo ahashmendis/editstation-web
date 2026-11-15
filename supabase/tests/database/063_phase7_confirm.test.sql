@@ -35,6 +35,7 @@ begin
     'deadline', '2026-12-31', 'requires_interpretation', p_interp, 'brief', jsonb_build_object('instructions', 'Cut it'),
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
+  perform public.admin_agree_terms(v_project, 1);
   v_id := public.admin_make_offer(v_project, p_editor, 10000, 'LKR');
   perform pg_temp.as_user(p_editor);
   perform public.editor_respond_offer(v_id, 'accept');

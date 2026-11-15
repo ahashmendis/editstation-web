@@ -36,6 +36,8 @@ update public.editor_profiles set access_status = 'active'
 where user_id in ('56000000-0000-0000-0000-000000000001', '56000000-0000-0000-0000-000000000002');
 insert into public.projects (id, title, brief_type, status, first_opened_at) values
   ('56000000-0000-0000-0000-0000000000f1', 'Main', 'fully_instructed', 'open', now());
+-- Phase 12A: an editor is confirmed only after the project terms are agreed.
+update public.project_terms set status = 'agreed', agreed_at = now() where status = 'draft';
 
 create temp table ids (kind text primary key, id uuid not null);
 grant select, insert on ids to authenticated, anon;

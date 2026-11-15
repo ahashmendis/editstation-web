@@ -3,6 +3,30 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-15: Phase 12A project terms
+
+- Branch `phase12a-terms`, **uncommitted, pending owner review**. Spec
+  `docs/superpowers/specs/2026-11-15-phase12-commercial-terms-design.md` section 4.1, the confirm
+  gate (section 5), calls 6, 9 and 10.
+- Migrations: `20261115032846_phase12a_terms_schema.sql` (enums `project_terms_status`,
+  `terms_stage`; tables `project_terms`, `project_terms_stages`; guards
+  `private.guard_project_terms`, `guard_project_terms_stages`, `guard_revision_allowance`;
+  `private.create_initial_terms` trigger; backfill) and `20261115032849_phase12a_terms_functions.sql`
+  (`admin_save_terms_draft`, `admin_agree_terms`, `editor_get_terms`; replaced
+  `admin_confirm_assignment` and `admin_update_project`).
+- Implementation calls (flag for owner): backfilled projects with a confirmed editor got agreed v1
+  (others draft); once an editor is confirmed, editor milestone shares and editor kill-fee shares
+  cannot change (until 12D adjustments); day counts are fixed once work has begun ("work begun" =
+  an assignment is or was `in_progress`, or a submission exists); the change reason may be stored
+  on the draft or given when agreeing; agreeing terms does not require a cancellation schedule.
+- Tests: pgTAP `093_phase12a_terms_schema`, `094_phase12a_terms_functions`,
+  `095_phase12a_function_security`; existing tests 044 (no `revision_allowance` on update) and the
+  confirm helpers in 054-082 now agree terms before confirming. Unit tests for the terms schemas and
+  activity labels; signed-in e2e "project terms (Phase 12A)".
+- App: `src/features/projects` (`saveTermsDraftAction`, `agreeTermsAction`, `termsDraftSchema`,
+  `agreeTermsSchema`, `getProjectTerms`, `getEditorTerms`, `TermsCard`, `TermsDraftForm`,
+  `EditorTermsSummary`); activity labels `project_terms.draft_saved`, `project_terms.agreed`.
+
 ## 2026-11-15: Phase 11 hardening
 
 - Branch `phase11-hardening` from `main` (`94f68b3`), **uncommitted, pending owner review**. No

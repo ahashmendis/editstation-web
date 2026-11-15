@@ -103,6 +103,7 @@ insert into ids select 'p', public.admin_create_project('{"title": "Flow project
   "deadline": "2026-12-28", "requires_interpretation": true, "brief": {"instructions": "Cut it"},
   "deliverables": [{"name": "Deliverable Flowname"}]}');
 select public.admin_set_project_status(pg_temp.a('p'), 'open');
+select public.admin_agree_terms(pg_temp.a('p'), 1);
 insert into ids select 'a', public.admin_make_offer(pg_temp.a('p'), '66000000-0000-0000-0000-000000000001', 31337);
 reset role;
 select pg_temp.as_user('66000000-0000-0000-0000-000000000001');

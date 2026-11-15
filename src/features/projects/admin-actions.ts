@@ -9,6 +9,7 @@ import { requireAdmin } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
 import {
+  agreeTermsSchema,
   archiveProjectSchema,
   briefPayload,
   convertInquirySchema,
@@ -20,6 +21,10 @@ import {
   projectKeptValues,
   projectStatusChangeSchema,
   saveBriefSchema,
+  termsDraftSchema,
+  termsFormInput,
+  termsKeptValues,
+  termsPayload,
   updateClientSchema,
   updateProjectSchema,
 } from "./schemas";
@@ -124,6 +129,40 @@ export async function archiveProjectAction(_prev: FormState, formData: FormData)
   if (error) return failed(error);
   projectPaths(parsed.data.projectId);
   return done(parsed.data.archive ? "Project archived." : "Project restored.");
+}
+
+// --- Project terms (Phase 12A) ----------------------------------------------------------------
+
+/** Save the terms draft (starts the next version when the latest one is agreed). */
+export async function saveTermsDraftAction(_prev: FormState, formData: FormData) {
+  await requireAdmin();
+  const parsed = termsDraftSchema.safeParse(termsFormInput(formData));
+  if (!parsed.success) return validationError(parsed.error, termsKeptValues(formData));
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_save_terms_draft", {
+    p_project_id: parsed.data.projectId,
+    p_input: termsPayload(parsed.data),
+  });
+  if (error) return failed(error, termsKeptValues(formData));
+  projectPaths(parsed.data.projectId);
+  return done("Terms draft saved. Agree it to make it the project's terms.");
+}
+
+/** Agree a draft version. The database refuses a version that is no longer the draft. */
+export async function agreeTermsAction(_prev: FormState, formData: FormData) {
+  await requireAdmin();
+  // The reason box exists only for version 2 and later.
+  const parsed = agreeTermsSchema.safeParse({ changeReason: "", ...Object.fromEntries(formData) });
+  if (!parsed.success) return validationError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_agree_terms", {
+    p_project_id: parsed.data.projectId,
+    p_version: parsed.data.version,
+    ...(parsed.data.changeReason ? { p_change_reason: parsed.data.changeReason } : {}),
+  });
+  if (error) return failed(error);
+  projectPaths(parsed.data.projectId);
+  return done(`Terms version ${parsed.data.version} agreed.`);
 }
 
 // --- Clients -------------------------------------------------------------------------------

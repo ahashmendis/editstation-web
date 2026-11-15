@@ -130,6 +130,7 @@ function DetailsFields({
   clients,
   briefType,
   onBriefType,
+  showRevisionRounds = false,
 }: {
   state: FormState;
   d: DetailsDefaults;
@@ -137,6 +138,8 @@ function DetailsFields({
   clients: ClientOption[];
   briefType: BriefType;
   onBriefType: (value: BriefType) => void;
+  /** Create only: afterwards the rounds change by agreeing new project terms. */
+  showRevisionRounds?: boolean;
 }) {
   const v = (name: keyof DetailsDefaults) => state.values?.[name] ?? d[name];
   return (
@@ -221,13 +224,16 @@ function DetailsFields({
           defaultValue={v("proposedCurrency")}
           state={state}
         />
-        <Field
-          name="revisionAllowance"
-          label="Free revision rounds"
-          inputMode="numeric"
-          defaultValue={v("revisionAllowance")}
-          state={state}
-        />
+        {showRevisionRounds ? (
+          <Field
+            name="revisionAllowance"
+            label="Included revision rounds"
+            inputMode="numeric"
+            hint="0 to 20. Use 0 if every client revision is chargeable. Saved as draft project terms; agree the terms on the project page."
+            defaultValue={v("revisionAllowance")}
+            state={state}
+          />
+        ) : null}
       </div>
 
       <fieldset className="grid gap-4 rounded-lg border p-3">
@@ -391,6 +397,7 @@ export function CreateProjectForm({
         clients={clients}
         briefType={briefType}
         onBriefType={setBriefType}
+        showRevisionRounds
       />
       <BriefTextFields state={state} b={brief} briefType={briefType} />
       <DeliverablesEditor initial={[]} />

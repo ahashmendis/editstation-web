@@ -38,6 +38,8 @@ insert into public.projects (id, title, brief_type, status, first_opened_at) val
   ('55000000-0000-0000-0000-0000000000f4', 'P4', 'fully_instructed', 'open', now()),
   ('55000000-0000-0000-0000-0000000000f5', 'P5', 'fully_instructed', 'open', now()),
   ('55000000-0000-0000-0000-0000000000f6', 'P6', 'fully_instructed', 'open', now());
+-- Phase 12A: an editor is confirmed only after the project terms are agreed.
+update public.project_terms set status = 'agreed', agreed_at = now() where status = 'draft';
 
 create temp table ids (kind text primary key, id uuid not null);
 grant select, insert on ids to authenticated;

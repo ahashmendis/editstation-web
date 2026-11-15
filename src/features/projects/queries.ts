@@ -135,3 +135,45 @@ export async function getClientOption(clientId: string) {
   if (error) throw error;
   return data;
 }
+
+/** Every terms version of a project, newest first, with its cancellation stages (admin RLS). */
+export async function getProjectTerms(projectId: string) {
+  const supabase = await createClient();
+  return check(
+    await supabase
+      .from("project_terms")
+      .select(
+        "id, version, status, included_rounds, extra_round_charge, charge_currency, deposit_days, balance_days, editor_pay_days, late_balance_days, editor_milestone_shares, change_reason, agreed_at, superseded_at, created_at, project_terms_stages (stage, editor_earned_percent, client_charge_percent)",
+      )
+      .eq("project_id", projectId)
+      .order("version", { ascending: false }),
+  );
+}
+export type ProjectTermsRow = Awaited<ReturnType<typeof getProjectTerms>>[number];
+
+/**
+ * Editor-safe agreed terms (included rounds, editor pay shares, editor kill-fee shares) for an
+ * editor who can see the project. Null when nothing is agreed yet or the editor has no access.
+ */
+export async function getEditorTerms(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("editor_get_terms", { p_project_id: projectId });
+  if (error) {
+    // ES4xx: no access or not active; the page itself is already gated by RLS.
+    if (/^ES4\d\d$/.test(error.code ?? "")) return null;
+    throw error;
+  }
+  const row = data?.[0];
+  if (!row) return null;
+  const killFee = Array.isArray(row.editor_kill_fee)
+    ? (row.editor_kill_fee as { stage: string; editor_earned_percent: number }[])
+    : [];
+  return {
+    version: row.version,
+    agreedAt: row.agreed_at,
+    includedRounds: row.included_rounds,
+    editorShares: row.editor_milestone_shares,
+    killFee,
+  };
+}
+export type EditorTerms = NonNullable<Awaited<ReturnType<typeof getEditorTerms>>>;

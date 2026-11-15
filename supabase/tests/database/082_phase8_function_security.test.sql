@@ -119,6 +119,7 @@ insert into flow select 'project', public.admin_create_project(jsonb_build_objec
   'fully_instructed', 'deadline', '2099-12-31', 'brief', jsonb_build_object('instructions', 'Cut it'),
   'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
 select public.admin_set_project_status((select id from flow where kind = 'project'), 'open');
+select public.admin_agree_terms((select id from flow where kind = 'project'), 1);
 insert into flow select 'asg', public.admin_make_offer((select id from flow where kind = 'project'),
   '82000000-0000-0000-0000-000000000001', 10000, 'LKR');
 select pg_temp.as_user('82000000-0000-0000-0000-000000000001');

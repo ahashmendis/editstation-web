@@ -33,6 +33,8 @@ insert into public.projects (id, title, brief_type, status, first_opened_at) val
   ('57000000-0000-0000-0000-0000000000a1', 'To cancel when assigned', 'fully_instructed', 'open', now()),
   ('57000000-0000-0000-0000-0000000000a2', 'To cancel when open', 'fully_instructed', 'open', now()),
   ('57000000-0000-0000-0000-0000000000a3', 'Assigned', 'fully_instructed', 'assigned', now());
+-- Phase 12A: an editor is confirmed only after the project terms are agreed.
+update public.project_terms set status = 'agreed', agreed_at = now() where status = 'draft';
 insert into public.project_access (project_id, editor_id, reason, revoked_at) values
   ('57000000-0000-0000-0000-0000000000d1', '57000000-0000-0000-0000-000000000001', 'invited', null),
   ('57000000-0000-0000-0000-0000000000d2', '57000000-0000-0000-0000-000000000001', 'invited', now());

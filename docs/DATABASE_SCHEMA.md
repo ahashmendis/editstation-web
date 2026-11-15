@@ -66,6 +66,14 @@ grants. Every write goes through a `public.admin_*` function (`admin_create_proj
 Phase 6 adds editor `select` policies to `projects`, `project_deliverables`, `project_references`
 (plus `early_access boolean`, Phase 5) and `brief_versions`; see below.
 
+**Phase 12A (2026-11-15, branch `phase12a-terms`, uncommitted, pending owner review):**
+`projects.revision_allowance` is now a **cache** of the agreed terms' `included_rounds`. The
+`projects_guard_revision_allowance` trigger refuses any change that does not match the project's
+agreed terms; only `admin_agree_terms` writes it. `admin_update_project` refuses the
+`revision_allowance` key (ES422). `admin_create_project` / `admin_convert_inquiry` still accept it
+on create (form pre-fills 3); the `projects_create_initial_terms` trigger then creates draft terms
+v1 from it. See "Project terms" below.
+
 Constraints worth knowing: `projects_hold_state_chk` (`status_before_hold` set iff `on_hold`);
 `first_opened_at` guarded by `private.guard_first_opened_at`; `brief_versions` guarded by
 `private.guard_brief_versions`; project changes audited by `private.audit_projects`.
@@ -119,6 +127,46 @@ latest confirmation is for the previous version. Interpretations stay valid unti
 `requires_reacknowledgement = true` (`private.material_brief_version`). Editor stage `assigned`
 covers `confirmed` and `in_progress`. Read-only `public.get_assignment_gate` for admin or the owning
 editor.
+
+## Project terms _(Phase 12A, implemented on branch, pending owner review)_
+
+Spec `docs/superpowers/specs/2026-11-15-phase12-commercial-terms-design.md` section 4.1, section 5
+(confirm gate), calls 6, 9, 10. Migrations `20261115032846_phase12a_terms_schema.sql`,
+`20261115032849_phase12a_terms_functions.sql`. Both tables: RLS on, `select` for admins only, no
+write grants; writes only through the functions below.
+
+| Table                  | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Created   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `project_terms`        | **admin-only, versioned, append-only**: project, `version` (unique per project, next version only), `status` (`project_terms_status`: `draft`/`agreed`/`superseded`; at most one draft and one agreed per project), `included_rounds` (0..20; 0 = chargeable from round 1), `extra_round_charge` + `charge_currency` (nullable together, never defaulted), `deposit_days` 14, `balance_days` 7, `editor_pay_days` 7, `late_balance_days` 14 (0..365), `editor_milestone_shares smallint[]` (default `{50,50}`; agreed rows must hold 1..10 shares of 1..100 summing to 100), `change_reason` (max 2000), created_by, agreed_by/at, superseded_at. Guard: never deleted (except by cascade when the project itself is deleted); an agreed row may only become superseded; superseded rows are frozen | Phase 12A |
+| `project_terms_stages` | **admin-only** cancellation schedule per terms version: `stage` (`terms_stage`: `assigned`/`in_progress`/`in_review`/`revision_requested`, the project status at cancellation; unique per terms), `editor_earned_percent`, `client_charge_percent` (0..100, 2 decimals). **No defaults.** Rows change only while their terms are a draft                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Phase 12A |
+
+Functions (all security definer, empty `search_path`, executable by `anon` and `authenticated`,
+authorise in the body; ES401/ES403/ES409/ES422):
+
+- `admin_save_terms_draft(project_id, input jsonb)` returns the draft id: edits the draft, or
+  starts version n+1 as a copy of the latest version (stages included). Keys: `included_rounds`,
+  `extra_round_charge`, `charge_currency`, the four `*_days`, `editor_milestone_shares`, `stages`
+  (replaces the schedule), `change_reason`. Refused on cancelled/archived projects.
+- `admin_agree_terms(project_id, version, change_reason default null)`: locks the project row;
+  only the current draft can be agreed (a second agree of the same version is ES409, so two racing
+  admins cannot both agree). Shares must sum to 100. Once work has begun (an assignment is or was
+  `in_progress`, or work was submitted), version 2+ needs a reason (argument or stored on the
+  draft) and the day counts cannot change. While an editor is confirmed or working, editor pay
+  terms (milestone shares, editor kill-fee shares) cannot change (call 6: that needs the editor's
+  acceptance through adjustments, 12D). Supersedes the previous version, writes
+  `projects.revision_allowance` and re-runs `private.renumber_client_rounds`.
+- `editor_get_terms(project_id)`: for an active editor at the `opportunity` or `assigned` stage
+  (otherwise ES422 not found): version, agreed_at, `included_rounds`, `editor_milestone_shares`
+  and `editor_kill_fee` (stage + editor percent). Never client charges, client percentages,
+  currency or reasons. No row until terms are agreed.
+- `admin_confirm_assignment` (replaced): additionally requires agreed terms with a valid editor
+  milestone split (ES409).
+
+Audit (`activity_logs`, entity `project`): `project_terms.draft_saved` and
+`project_terms.agreed` with project/terms ids, version, superseded id and **field names only**.
+Backfill (call 10, local data only): every existing project got terms v1 from its
+`revision_allowance`, agreed (no `agreed_by`) where an editor had been confirmed, otherwise draft;
+no stages.
 
 ## Delivery, money, audit
 
@@ -184,7 +232,9 @@ other`, kind, notes, early_access); `asset_access_grants` records shares made by
   `removal_requested_at` step for the revoke checklist (KB7a).
 - New notification event (extends KB10, needs owner OK): "asset reported inaccessible" to admins.
 
-**Revision policy (F).** Today: `projects.revision_allowance smallint default 3` (0..20),
+**Revision policy (F).** _Phase 12A builds the versioned agreement as `project_terms` (see
+"Project terms"); the `revision_requests.chargeable` link, scope quotes and adjustments below are
+still planned (12C/12D)._ Before 12A: `projects.revision_allowance smallint default 3` (0..20),
 editable by `admin_update_project` in any status except cancelled/archived, audited only as a
 field name; `revision_requests.beyond_allowance` flags client rounds past it; no charges; not part
 of `brief_confirmations`.

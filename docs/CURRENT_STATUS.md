@@ -17,6 +17,17 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 
 ## What exists
 
+- **Phase 12A terms (branch `phase12a-terms`, uncommitted, pending owner review, 2026-11-15):**
+  migrations `20261115032846_phase12a_terms_schema.sql` and
+  `20261115032849_phase12a_terms_functions.sql`: admin-only versioned `project_terms` +
+  `project_terms_stages`, guard triggers (agreed rows immutable, revision allowance is a cache),
+  `admin_save_terms_draft`, `admin_agree_terms`, `editor_get_terms`, confirm gate in
+  `admin_confirm_assignment`, `admin_update_project` no longer takes `revision_allowance`, draft
+  terms v1 for every new project, local backfill. App: Terms card on `/admin/projects/[id]`,
+  editor-safe Terms summary on `/editor/projects/[id]`, create form "Included revision rounds"
+  (pre-filled 3, create only). pgTAP `093`-`095`; existing confirm tests now agree terms first.
+  Signed-in e2e covers save draft, agree and the editor summary. Details: `CHANGELOG.md`.
+
 - **Phase 0-3:** tooling and CI; auth and access gating (`private.is_admin()` needs MFA `aal2`);
   editor applications and vetting (`/apply`, `/admin/applications`); public site, `/inquire`
   (anon, rate-limited, honeypot), `/admin/inquiries`, `/admin/settings`.
@@ -175,6 +186,9 @@ tested locally; nothing has run on hosted infrastructure.
   inquiry's budget label; deadline and pay changes do not bump the brief version.
 
 ## Next task
+
+0. Owner review of Phase 12A (branch `phase12a-terms`; not committed). Then 12B (assets) in
+   parallel and 12C (client milestones, deposit gate, timed rules).
 
 1. Owner decisions of 2026-11-15 (KB7 client Drive/Dropbox links, F per-project revision policy,
    KB9 50/50 client and editor milestones) are recorded in docs only; **code still reflects the old

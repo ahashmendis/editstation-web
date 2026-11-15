@@ -108,6 +108,8 @@ update public.editor_profiles set access_status = 'active'
 where user_id in ('58000000-0000-0000-0000-000000000001', '58000000-0000-0000-0000-000000000002');
 insert into public.projects (id, title, brief_type, status, first_opened_at) values
   ('58000000-0000-0000-0000-0000000000f1', 'Secret Title Flow', 'fully_instructed', 'open', now());
+-- Phase 12A: an editor is confirmed only after the project terms are agreed.
+update public.project_terms set status = 'agreed', agreed_at = now() where status = 'draft';
 insert into public.project_references (id, project_id, url, title)
 values ('58000000-0000-0000-0000-0000000000b1', '58000000-0000-0000-0000-0000000000f1',
         'https://ref.example.com/flow', 'Ref Label Flow');

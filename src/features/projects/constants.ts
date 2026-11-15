@@ -109,3 +109,14 @@ export function allowedStatusActions(
 }
 
 export { activityLabel } from "@/lib/activity-labels";
+
+/** Project status at cancellation, for the terms cancellation schedule (Phase 12A). */
+export const TERMS_STAGE_LABEL: Record<
+  "assigned" | "in_progress" | "in_review" | "revision_requested",
+  string
+> = {
+  assigned: "Editor assigned",
+  in_progress: "In progress",
+  in_review: "In review",
+  revision_requested: "Revision requested",
+};

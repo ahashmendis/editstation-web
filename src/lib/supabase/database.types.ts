@@ -1781,6 +1781,131 @@ export type Database = {
           },
         ];
       };
+      project_terms: {
+        Row: {
+          agreed_at: string | null;
+          agreed_by: string | null;
+          balance_days: number;
+          change_reason: string | null;
+          charge_currency: string | null;
+          created_at: string;
+          created_by: string | null;
+          deposit_days: number;
+          editor_milestone_shares: number[];
+          editor_pay_days: number;
+          extra_round_charge: number | null;
+          id: string;
+          included_rounds: number;
+          late_balance_days: number;
+          project_id: string;
+          status: Database["public"]["Enums"]["project_terms_status"];
+          superseded_at: string | null;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          agreed_at?: string | null;
+          agreed_by?: string | null;
+          balance_days?: number;
+          change_reason?: string | null;
+          charge_currency?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          deposit_days?: number;
+          editor_milestone_shares?: number[];
+          editor_pay_days?: number;
+          extra_round_charge?: number | null;
+          id?: string;
+          included_rounds?: number;
+          late_balance_days?: number;
+          project_id: string;
+          status?: Database["public"]["Enums"]["project_terms_status"];
+          superseded_at?: string | null;
+          updated_at?: string;
+          version: number;
+        };
+        Update: {
+          agreed_at?: string | null;
+          agreed_by?: string | null;
+          balance_days?: number;
+          change_reason?: string | null;
+          charge_currency?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          deposit_days?: number;
+          editor_milestone_shares?: number[];
+          editor_pay_days?: number;
+          extra_round_charge?: number | null;
+          id?: string;
+          included_rounds?: number;
+          late_balance_days?: number;
+          project_id?: string;
+          status?: Database["public"]["Enums"]["project_terms_status"];
+          superseded_at?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_terms_agreed_by_fkey";
+            columns: ["agreed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_terms_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_terms_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_terms_stages: {
+        Row: {
+          client_charge_percent: number;
+          created_at: string;
+          editor_earned_percent: number;
+          id: string;
+          stage: Database["public"]["Enums"]["terms_stage"];
+          terms_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_charge_percent: number;
+          created_at?: string;
+          editor_earned_percent: number;
+          id?: string;
+          stage: Database["public"]["Enums"]["terms_stage"];
+          terms_id: string;
+        };
+        Update: {
+          client_charge_percent?: number;
+          created_at?: string;
+          editor_earned_percent?: number;
+          id?: string;
+          stage?: Database["public"]["Enums"]["terms_stage"];
+          terms_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_terms_stages_terms_id_fkey";
+            columns: ["terms_id"];
+            isOneToOne: false;
+            referencedRelation: "project_terms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       projects: {
         Row: {
           archived_at: string | null;
@@ -2102,6 +2227,10 @@ export type Database = {
     Functions: {
       admin_add_payment_note: { Args: { p_note: string; p_payment_id: string }; Returns: string };
       admin_add_project_note: { Args: { p_note: string; p_project_id: string }; Returns: string };
+      admin_agree_terms: {
+        Args: { p_change_reason?: string; p_project_id: string; p_version: number };
+        Returns: undefined;
+      };
       admin_approve_application: {
         Args: {
           p_application_id: string;
@@ -2235,6 +2364,7 @@ export type Database = {
       };
       admin_save_assets: { Args: { p_items: Json; p_project_id: string }; Returns: undefined };
       admin_save_brief: { Args: { p_input: Json; p_project_id: string }; Returns: number };
+      admin_save_terms_draft: { Args: { p_input: Json; p_project_id: string }; Returns: string };
       admin_set_asset_early_access: {
         Args: { p_asset_id: string; p_value: boolean };
         Returns: undefined;
@@ -2296,6 +2426,16 @@ export type Database = {
           p_deadline: string;
         };
         Returns: string;
+      };
+      editor_get_terms: {
+        Args: { p_project_id: string };
+        Returns: {
+          agreed_at: string;
+          editor_kill_fee: Json;
+          editor_milestone_shares: number[];
+          included_rounds: number;
+          version: number;
+        }[];
       };
       editor_list_payments: {
         Args: Record<PropertyKey, never>;
@@ -2480,12 +2620,14 @@ export type Database = {
         | "completed"
         | "on_hold"
         | "cancelled";
+      project_terms_status: "draft" | "agreed" | "superseded";
       reference_priority: "essential" | "optional";
       revision_status:
         "requested" | "acknowledged" | "in_progress" | "resubmitted" | "approved" | "disputed";
       revision_type: "client_revision" | "editor_correction" | "scope_change";
       submission_outcome:
         "approved" | "revision_requested" | "rejected_needs_discussion" | "scope_change_required";
+      terms_stage: "assigned" | "in_progress" | "in_review" | "revision_requested";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2670,6 +2812,7 @@ export const Constants = {
         "on_hold",
         "cancelled",
       ],
+      project_terms_status: ["draft", "agreed", "superseded"],
       reference_priority: ["essential", "optional"],
       revision_status: [
         "requested",
@@ -2686,6 +2829,7 @@ export const Constants = {
         "rejected_needs_discussion",
         "scope_change_required",
       ],
+      terms_stage: ["assigned", "in_progress", "in_review", "revision_requested"],
     },
   },
 } as const;

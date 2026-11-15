@@ -16,7 +16,9 @@ import { ASSET_PROVIDER_LABEL, formatMoney, type AssetProvider } from "@/feature
 import { getEditorProject } from "@/features/access/queries";
 import { EditorConfirmationPanel } from "@/features/confirmation/components/editor-panel";
 import { getConfirmationData } from "@/features/confirmation/queries";
+import { EditorTermsSummary } from "@/features/projects/components/editor-terms";
 import { BRIEF_TYPE_LABEL, type BriefType } from "@/features/projects/constants";
+import { getEditorTerms } from "@/features/projects/queries";
 import { EditorSubmissionsPanel } from "@/features/submissions/components/panels";
 import { getSubmissionData } from "@/features/submissions/queries";
 import { requireActiveEditor } from "@/lib/auth/access";
@@ -73,9 +75,12 @@ async function EditorProjectContent({
   const { project: p, current, assignments, negotiations, brief } = detail;
   const working = assignments.find((a) => a.status === "confirmed" || a.status === "in_progress");
   const confirmed = Boolean(working);
-  const [confirmations, submissionData] = working
-    ? await Promise.all([getConfirmationData([working.id]), getSubmissionData(detail.project.id)])
-    : [null, null];
+  const [[confirmations, submissionData], terms] = await Promise.all([
+    working
+      ? Promise.all([getConfirmationData([working.id]), getSubmissionData(detail.project.id)])
+      : Promise.resolve([null, null] as const),
+    getEditorTerms(p.id),
+  ]);
   const confirmation = working ? (confirmations?.get(working.id) ?? null) : null;
   const briefType = p.brief_type as BriefType;
   const live =
@@ -181,6 +186,8 @@ async function EditorProjectContent({
         </CardContent>
       </Card>
 
+      <EditorTermsSummary terms={terms} />
+
       {working && confirmation ? (
         <EditorConfirmationPanel
           projectId={p.id}
@@ -229,7 +236,7 @@ async function EditorProjectContent({
             </div>
             {confirmed ? (
               <div>
-                <dt className="text-muted-foreground">Free revision rounds</dt>
+                <dt className="text-muted-foreground">Included revision rounds</dt>
                 <dd>{p.revision_allowance}</dd>
               </div>
             ) : null}
