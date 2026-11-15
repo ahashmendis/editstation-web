@@ -1,0 +1,732 @@
+<title>EditStation System Report</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+/>
+<style>
+  /* Layout: one reading column; status encoded as pills; decisions grouped by what they block. */
+  :root {
+    --bg: #f7f6fa;
+    --surface: #ffffff;
+    --fg: #17151f;
+    --muted: #5e5a6b;
+    --line: #e3e0ea;
+    --accent: #7a2fcb;
+    --accent-soft: #f0e7fb;
+    --ok: #1f7a4d;
+    --ok-soft: #e3f4ea;
+    --warn: #8a5a00;
+    --warn-soft: #fbf0d9;
+    --bad: #a12a2a;
+    --bad-soft: #fbe6e6;
+    --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0a10;
+      --surface: #14121c;
+      --fg: #f5f3fa;
+      --muted: #a7a2b6;
+      --line: #2a2636;
+      --accent: #b57cf2;
+      --accent-soft: #2a1a40;
+      --ok: #6fd39e;
+      --ok-soft: #12291d;
+      --warn: #f0c36a;
+      --warn-soft: #2e2410;
+      --bad: #f08a8a;
+      --bad-soft: #321616;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0a10;
+    --surface: #14121c;
+    --fg: #f5f3fa;
+    --muted: #a7a2b6;
+    --line: #2a2636;
+    --accent: #b57cf2;
+    --accent-soft: #2a1a40;
+    --ok: #6fd39e;
+    --ok-soft: #12291d;
+    --warn: #f0c36a;
+    --warn-soft: #2e2410;
+    --bad: #f08a8a;
+    --bad-soft: #321616;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding-block: 48px 80px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 14px;
+  }
+  .mark i {
+    width: 2px;
+    height: 18px;
+    background: var(--accent);
+    display: block;
+  }
+  .mark span:last-child {
+    color: var(--accent);
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 42px);
+    line-height: 1.15;
+    margin: 0;
+    text-wrap: balance;
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 24px;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 17px;
+    margin: 0;
+  }
+  p {
+    margin: 0;
+    max-width: 68ch;
+  }
+  .lede {
+    font-size: 18px;
+    color: var(--muted);
+  }
+  .meta {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--accent-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  .fact {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .fact b {
+    font-size: 26px;
+    font-variant-numeric: tabular-nums;
+  }
+  .fact span {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  ul.plain {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 72ch;
+  }
+  .tablebox {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 15px;
+  }
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+  td.id {
+    font-family: var(--mono);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pill {
+    display: inline-block;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .ok {
+    color: var(--ok);
+    background: var(--ok-soft);
+  }
+  .warn {
+    color: var(--warn);
+    background: var(--warn-soft);
+  }
+  .bad {
+    color: var(--bad);
+    background: var(--bad-soft);
+  }
+  .acc {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .group > p.meta {
+    margin-top: -4px;
+  }
+  .phases {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .phase {
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .phase:last-child {
+    border-bottom: 0;
+  }
+  .phase b {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+  .phase div {
+    min-width: 0;
+  }
+  .phase p {
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .phase h3 {
+    margin-bottom: 2px;
+  }
+  ol.next {
+    margin: 0;
+    padding-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 72ch;
+  }
+  footer {
+    font-size: 13px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="mark"><span>EDIT</span><i></i><span>STATION</span></div>
+    <h1>System report and open decisions</h1>
+    <p class="lede">
+      Where the Lenscape Studios editing operations platform stands after phases 0 to 11, what has
+      been tested, and what is waiting on an owner decision before real client work.
+    </p>
+    <p class="meta">
+      As of 15 November 2026 · <code>main</code> at the latest commit on GitHub
+      (ahashmendis/editstation-web) · CI passing
+    </p>
+  </header>
+
+  <section>
+    <h2>Summary</h2>
+    <p>
+      All eleven roadmap phases are built and merged. The whole editing workflow works end to end in
+      the local environment: inquiry, project and brief, editor vetting, offers and pay agreement,
+      brief confirmation, submissions and revisions, payments, notifications and admin metrics. It
+      has not run on hosted infrastructure yet. No hosted Supabase project or Vercel deployment
+      exists, so the system is not live.
+    </p>
+    <div class="facts">
+      <div class="fact"><b>11 / 11</b><span>roadmap phases built</span></div>
+      <div class="fact"><b>1,545</b><span>database tests passing</span></div>
+      <div class="fact"><b>250</b><span>unit tests passing</span></div>
+      <div class="fact"><b>24</b><span>browser tests passing</span></div>
+      <div class="fact"><b>13</b><span>owner decisions open</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What the system does</h2>
+    <p>
+      Three kinds of account: admin (MFA required), applicant and active editor. Clients never get
+      an account; they reach the studio through a public inquiry form.
+    </p>
+    <div class="phases">
+      <div class="phase">
+        <b>0–3</b>
+        <div>
+          <h3>Foundation, access and public site</h3>
+          <p>
+            Sign-up and sign-in, admin MFA enforced in the database, editor applications and
+            vetting, public landing page, rate-limited client inquiry form, admin inquiry inbox and
+            settings.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>4</b>
+        <div>
+          <h3>Projects and briefs</h3>
+          <p>
+            Clients, projects, three brief types, versioned briefs that lock after first opening,
+            deliverables and timestamped references. Only an admin can turn an inquiry into a
+            project.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>5–6</b>
+        <div>
+          <h3>Assets, editor access and offers</h3>
+          <p>
+            Asset records (links, never files), tiered editor visibility, invitations, offers and
+            counteroffers, confirmed assignments, reassignment and internal notes.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>7</b>
+        <div>
+          <h3>Confirmation gate</h3>
+          <p>
+            Editor interpretation, brief confirmation, and a database gate that blocks editing until
+            pay is agreed, the brief is confirmed and both project and editor are active.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>8</b>
+        <div>
+          <h3>Submissions and review</h3>
+          <p>
+            Versioned submissions, admin approval or revision requests, and classification of each
+            revision as a client round, editor correction or scope change. The 3 free client rounds
+            are tracked.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>9</b>
+        <div>
+          <h3>Earnings</h3>
+          <p>
+            Payments created from assignments, admin approve, hold and mark-paid with transfer
+            reference, and an earnings screen for each editor showing only their own payments.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>10</b>
+        <div>
+          <h3>Notifications and metrics</h3>
+          <p>
+            In-app notifications for 11 events with a bell and <code>/notifications</code>, an email
+            queue (nothing is sent yet), metric cards on the admin dashboard and an activity log at
+            <code>/admin/activity</code>.
+          </p>
+        </div>
+      </div>
+      <div class="phase">
+        <b>11</b>
+        <div>
+          <h3>Hardening</h3>
+          <p>
+            Signed-in browser tests, security headers, a local backup-and-restore drill, runbooks
+            and an acceptance check against section 16 of the knowledge base.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Security and quality</h2>
+    <ul class="plain">
+      <li>
+        Every database table has row-level security, with access denied by default. Each rule is
+        tested as admin, editor A, editor B, pending applicant and signed-out visitor.
+      </li>
+      <li>
+        Editors cannot see client data, client prices, other editors' work or other editors'
+        payments. Money and status changes go only through database functions.
+      </li>
+      <li>
+        Admin rights require an MFA session, checked inside the database, not only in the app.
+      </li>
+      <li>Users only ever see safe error messages. No secret keys reach the browser.</li>
+      <li>Security headers block the site being framed by other pages.</li>
+      <li>
+        CI on GitHub runs lint, typecheck, unit tests, the production build, all database tests and
+        the browser tests on every push. All three jobs pass.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Acceptance check (knowledge base §16)</h2>
+    <p>
+      Twenty of the twenty-two criteria are met locally. Every result below comes from local tests;
+      nothing has run on hosted infrastructure.
+    </p>
+    <div class="tablebox">
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Roles, access gates and editor isolation</td>
+            <td><span class="pill ok">Met</span></td>
+            <td>Database tests plus browser tests for applicant gates and editor A/B isolation.</td>
+          </tr>
+          <tr>
+            <td>Briefs, references, versions and confirmations</td>
+            <td><span class="pill ok">Met</span></td>
+            <td>Admin brief forms are covered by database tests, not yet by a browser run.</td>
+          </tr>
+          <tr>
+            <td>Invitations, offers, counteroffers, agreed pay before work</td>
+            <td><span class="pill ok">Met</span></td>
+            <td>Enforced by the confirmation gate.</td>
+          </tr>
+          <tr>
+            <td>Submissions, revisions, 3 free rounds</td>
+            <td><span class="pill ok">Met</span></td>
+            <td>Pay for extra rounds is decision F.</td>
+          </tr>
+          <tr>
+            <td>Payments, transfer references and audit trail</td>
+            <td><span class="pill ok">Met</span></td>
+            <td>Payout details (E) and a narrower mark-paid permission (A2) are still open.</td>
+          </tr>
+          <tr>
+            <td>Assets accessible only to authorised users</td>
+            <td><span class="pill warn">Partly met</span></td>
+            <td>
+              App records are protected. Sharing folders at the storage provider is manual until KB7
+              is decided.
+            </td>
+          </tr>
+          <tr>
+            <td>Backups and recovery tested</td>
+            <td><span class="pill warn">Partly met</span></td>
+            <td>
+              Local restore drill passes. A hosted backup and restore can only be tested once a
+              hosted project exists.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisions waiting on the owner</h2>
+    <p>
+      From <code>docs/OPEN_QUESTIONS.md</code>. They're grouped by what each one holds up, most
+      urgent first. None of these was decided during development.
+    </p>
+
+    <div class="group">
+      <h3>Before real client work (pilot)</h3>
+      <div class="tablebox">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Status</th>
+              <th>What it affects</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="id">KB7</td>
+              <td>Which storage provider holds project media?</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>
+                Asset sharing stays manual until decided. Recommended: whichever provider Lenscape
+                already uses that has business-grade sharing controls.
+              </td>
+            </tr>
+            <tr>
+              <td class="id">F</td>
+              <td>Pay for extra client rounds, scope changes, cancellations and kill fees</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>
+                Commercial decision with no recommendation. Today, ended assignments put unpaid
+                payments on hold automatically.
+              </td>
+            </tr>
+            <tr>
+              <td class="id">KB9</td>
+              <td>Payment schedule (per project, monthly, on approval?)</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>The data model supports any schedule through a due date on each payment.</td>
+            </tr>
+            <tr>
+              <td class="id">KB4</td>
+              <td>Client prices and editor pay ranges</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>No code depends on it beyond optional pay ranges.</td>
+            </tr>
+            <tr>
+              <td class="id">KB5</td>
+              <td>Turnaround times and late-delivery rules</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>Deadlines are stored. A policy is needed before the pilot.</td>
+            </tr>
+            <tr>
+              <td class="id">G</td>
+              <td>Are practical tests paid, and tracked in the app?</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>Tests are tracked; payment for them isn't built.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Before public launch</h3>
+      <div class="tablebox">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Status</th>
+              <th>What it affects</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="id">KB1</td>
+              <td>Legal registration and entity</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>Owner and legal decision.</td>
+            </tr>
+            <tr>
+              <td class="id">KB2</td>
+              <td>Final brand, trademark and domain</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>Needed for the production domain and email sender.</td>
+            </tr>
+            <tr>
+              <td class="id">P</td>
+              <td>Data retention periods and privacy notice for public forms</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>Owner and legal decision; the legal pages are placeholders.</td>
+            </tr>
+            <tr>
+              <td class="id">KB8</td>
+              <td>Editor contract and portfolio permission</td>
+              <td><span class="pill bad">Open</span></td>
+              <td>A versioned placeholder is used for now.</td>
+            </tr>
+            <tr>
+              <td class="id">KB3</td>
+              <td>Services and deliverables offered at launch</td>
+              <td><span class="pill warn">Partly</span></td>
+              <td>Placeholder list, editable by an admin on the Settings screen.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Can wait</h3>
+      <div class="tablebox">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Status</th>
+              <th>What it affects</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="id">A2</td>
+              <td>Should only some admins be able to mark payments paid?</td>
+              <td><span class="pill acc">Deferred</span></td>
+              <td>Changes nothing while there is one admin.</td>
+            </tr>
+            <tr>
+              <td class="id">W</td>
+              <td>
+                Can an applicant who withdrew re-apply alone, or only after an admin reopens the
+                application?
+              </td>
+              <td><span class="pill acc">Default in place</span></td>
+              <td>Currently treated like a rejection (admin reopens). Confirm any time.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Decided, still to confirm on built behaviour</h3>
+      <ul class="plain">
+        <li>
+          <b>E, payout details:</b> decided (editors enter bank details in the app after approval;
+          held as unverified until an admin confirms by phone). <b>Not built yet.</b> It holds
+          sensitive data and the decision asks for PDPA handling to be confirmed with counsel, so it
+          needs an explicit go-ahead. Until then, mark-paid cannot check verified details.
+        </li>
+        <li>
+          <b>Phase 7:</b> should an admin confirm before the editor's interpretation is reviewed?
+          Should changes to deadline or pay require the editor to confirm again (they do today)?
+        </li>
+        <li>
+          <b>Phase 9:</b> suspended or revoked editors lose the earnings screen. Confirm that's
+          intended.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Going live</h2>
+    <p>These steps need the owner's own accounts and keys.</p>
+    <ol class="next">
+      <li>
+        Create the hosted Supabase project and choose a plan with backups. Apply the migrations,
+        then enrol the first admin in MFA.
+      </li>
+      <li>Connect Vercel to the GitHub repository and add the public Supabase settings.</li>
+      <li>
+        Set up production email (SMTP) so confirmations and the queued notification emails can be
+        sent.
+      </li>
+      <li>Turn on bot protection on the inquiry form (Turnstile, decision O).</li>
+      <li>
+        Run the backup and restore drill against the hosted database, and fill in the TODO items in
+        <code>docs/RUNBOOKS.md</code>.
+      </li>
+      <li>
+        Re-check the known Postgres crash on a function permission error against the hosted image.
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Engineering work left</h2>
+    <ul class="plain">
+      <li>
+        Browser tests for the offer, confirmation, submission, review and payment screens. Database
+        tests cover them; a browser run does not yet.
+      </li>
+      <li>Browser check of the notification bell and mark-as-read as an admin.</li>
+      <li>An email sender for the notification queue, once production email exists.</li>
+      <li>
+        A follow-up migration to remove default public execute rights from some Phase 1–3 functions
+        (needs owner approval).
+      </li>
+      <li>A full script Content Security Policy. Only anti-framing is set today.</li>
+      <li>
+        Three metrics can't be worked out from stored data yet: gross contribution, admin time per
+        project and editor drop-off.
+      </li>
+      <li>
+        Small items: the seeded applicant account doesn't sign in, editors can't edit their profile
+        after approval, and the CI actions need updating off Node 20.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Recommended order</h2>
+    <ol class="next">
+      <li>Decide KB7, F and KB9. Each one can change what still needs building.</li>
+      <li>
+        Give the go-ahead (with counsel's view on PDPA) to build E, payout details, before any real
+        transfer.
+      </li>
+      <li>Set up the hosted environment and run the hosted restore drill.</li>
+      <li>
+        Settle KB4 and KB5 for the pilot, then the legal and brand items before public launch.
+      </li>
+    </ol>
+  </section>
+
+  <footer>
+    Sources: <code>docs/CURRENT_STATUS.md</code>, <code>docs/OPEN_QUESTIONS.md</code>,
+    <code>docs/DEVELOPMENT_ROADMAP.md</code> and the latest CI run. This report was written by the
+    development assistant and does not replace the owner's decisions log.
+  </footer>
+</div>

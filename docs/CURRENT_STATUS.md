@@ -1,9 +1,9 @@
 # Current Status
 
-**Phase:** Phase 11 **hardening** on branch `phase11-hardening` (from `main` at `94f68b3`;
-uncommitted, pending owner review): signed-in Playwright e2e, security review pass (security
-headers), local backup/restore drill, `docs/RUNBOOKS.md`, KB §16 evidence table (below). Phases
-4-10 are committed on `main` (`8428036` to `94f68b3`); nothing pushed. Owner flags still open from
+**Phase:** Phases 0-11 are built and on `main`, pushed to GitHub with CI green (2026-11-15).
+Phase 11 added signed-in Playwright e2e, security headers, a local backup/restore drill,
+`docs/RUNBOOKS.md` and the KB §16 evidence table (below). Full report:
+`docs/reports/editstation-system-report.html`. Owner flags still open from
 earlier phases: Phase 9 (a) F: ended assignments put unpaid payments on hold automatically, (b) E:
 mark paid cannot check verified payout details (unbuilt by design until E is built), (c)
 suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
@@ -75,7 +75,8 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 
 - **Phase 4 admin screens have not been checked in a signed-in browser session** (pgTAP and unit
   tests only). The app shell likewise has only been seen on a temporary page.
-- Nothing pushed. No GitHub remote, Vercel or hosted Supabase project; CI has never run.
+- `main` is pushed to GitHub (`ahashmendis/editstation-web`, 2026-11-15) and CI is green (app,
+  pgTAP, e2e). No Vercel or hosted Supabase project yet.
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens
