@@ -2,7 +2,7 @@
 
 Status: **approved by the owner on 2026-11-15, including the recommended answer to each of the 11 calls in section 9. Nothing here is built yet.** Written 2026-11-15 from the owner
 decisions KB7, F, F2, F3, KB9, KB9a, KB9b, KB7a and E (`docs/OPEN_QUESTIONS.md` decisions log).
-No code, migration or commit follows until this design is approved.
+Implementation proceeds slice by slice with its own plan, tests and reviews.
 
 ## 1. Goal
 
