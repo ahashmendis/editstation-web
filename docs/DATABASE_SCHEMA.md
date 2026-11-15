@@ -128,10 +128,19 @@ editor.
 | `revision_requests` | **Built (Phase 8).** project, assignment, `submission_id`, `type` (`client_revision`/`editor_correction`/`scope_change`), `counts_against_allowance` (generated), `round_number` (client revisions only, 1..n per project), `beyond_allowance` (round > `projects.revision_allowance`; no pay computed, F), `reason` (for the editor), `status` (`requested`/`acknowledged`/`in_progress`/`resubmitted`/`approved`/`disputed`), acknowledged/resubmitted/resolved at, created_by, classified_by/at. One open per assignment; no deletes                                     | Phase 8 |
 | `payments`          | **Built (Phase 9).** assignment (not null; G may relax), project, editor, `kind` (`assignment`/`reversal`), amount (negative for reversals), currency, `payment_status` (I: `not_due`→`pending_approval`→`approved`→`processing`→`paid`, `on_hold` + reason + `held_from_status`), due date, transfer date, transaction reference, reversal link/reason, approved_by/at, marked_paid_by/at. Created by trigger at assignment confirmation; held by trigger when the assignment is reassigned/withdrawn. Paid rows immutable; corrections are reversal rows. No notes column | Phase 9 |
 | `payment_notes`     | **Built (Phase 9).** Admin-only, append-only internal notes per payment (author, note 1..4000)                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Phase 9 |
-| `activity_logs`     | actor, entity type/id, action, before/after, timestamp. No update/delete for anyone                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Phase 1 |
+| `activity_logs`     | actor, entity type/id, action, details, timestamp. No update/delete for anyone. Phase 10: an insert trigger writes notifications                                                                                                                                                                                                                                                                                                                                                                                                                                            | Phase 1 |
+
+**Notifications (Phase 10, implemented on branch, pending owner review).** `notifications`:
+recipient (profile), `kind` (`notification_kind`: 5 admin, 2 applicant, 4 editor kinds; KB10),
+`entity_type` (`client_inquiry`/`editor_application`/`project`/`payment`) + `entity_id`, `title`,
+`body` (no client data), `created_at`, `read_at`. Written only by `private.notify_from_activity()`
+(after insert on `activity_logs`); admin kinds fan out to every non-revoked admin.
+`private.notification_outbox`: one `queued` email row per notification (not sent until production
+SMTP). Functions: `mark_notification_read(uuid)`, `mark_all_notifications_read()`,
+`admin_dashboard_metrics()` (jsonb, KB §14, computed live).
 
 Possible later additions, pending decisions: compensation adjustments (F), project communication
-log (KB §17.6), notification outbox (KB §17.10).
+log (KB §17.6).
 
 ## Key relationships
 

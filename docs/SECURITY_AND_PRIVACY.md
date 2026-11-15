@@ -150,6 +150,22 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 - Audit details: ids, version, `is_late`, outcome/type/status names and round number only (no
   links, notes, export details, feedback, reasons or dates).
 
+## Notification and metrics controls (Phase 10, implemented on branch, pending owner review)
+
+- `notifications`: RLS on; `select` only where `recipient_id = auth.uid()`; no insert/update/delete
+  grants. Read state changes only through `mark_notification_read` (ES401 signed out, ES422 not
+  the caller's) and `mark_all_notifications_read` (own rows only).
+- The notification trigger swallows its own errors (warning only), so a malformed log entry can
+  never roll back the audited action. Accepted: a revoked admin keeps read access to notifications
+  already received (content is ids-free fixed text and project titles only).
+- Rows are written by a security-definer trigger on `activity_logs`; text is generic and uses at most
+  the project title (already editor-visible). No client names, contacts, prices or inquiry content.
+- `private.notification_outbox`: no API access (private schema, all privileges revoked). Nothing
+  sends email yet; production SMTP is a launch gate.
+- `admin_dashboard_metrics()` and `/admin/activity` are admin-only (MFA `aal2` via
+  `private.require_admin()` / `activity_logs` RLS). The activity view is read-only and accepts
+  only known filter values. pgTAP `090`-`092`.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |

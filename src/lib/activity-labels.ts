@@ -101,3 +101,57 @@ const ACTIVITY_LABEL: Record<string, string> = {
 export function activityLabel(action: string): string {
   return ACTIVITY_LABEL[action] ?? "Updated";
 }
+
+/** Every known action code with its label, sorted by label (for the activity filter). */
+export function activityActions(): { code: string; label: string }[] {
+  return Object.entries(ACTIVITY_LABEL)
+    .map(([code, label]) => ({ code, label }))
+    .sort((a, b) => a.label.localeCompare(b.label) || a.code.localeCompare(b.code));
+}
+
+export function isKnownActivityAction(code: string): boolean {
+  return Object.hasOwn(ACTIVITY_LABEL, code);
+}
+
+/** Plain names for `activity_logs.entity_type`. */
+export const ENTITY_TYPE_LABEL: Record<string, string> = {
+  admin_user: "Admin",
+  profile: "Account",
+  editor_profile: "Editor access",
+  editor_application: "Application",
+  application_request: "Application request",
+  client_inquiry: "Client inquiry",
+  client: "Client",
+  project: "Project",
+  project_access: "Project access",
+  asset_grant: "Folder share",
+  assignment: "Assignment",
+  interpretation: "Interpretation",
+  brief_confirmation: "Brief confirmation",
+  submission: "Submission",
+  revision_request: "Change request",
+  payment: "Payment",
+};
+
+export function entityTypeLabel(entityType: string): string {
+  return ENTITY_TYPE_LABEL[entityType] ?? entityType.replaceAll("_", " ");
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Admin page for an audit row's entity, when one exists. */
+export function activityEntityHref(entityType: string, entityId: string): string | null {
+  if (!UUID.test(entityId)) return null;
+  switch (entityType) {
+    case "project":
+      return `/admin/projects/${entityId}`;
+    case "client_inquiry":
+      return `/admin/inquiries/${entityId}`;
+    case "editor_application":
+      return `/admin/applications/${entityId}`;
+    case "payment":
+      return `/admin/earnings/${entityId}`;
+    default:
+      return null;
+  }
+}

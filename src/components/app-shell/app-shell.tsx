@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Wordmark } from "@/components/wordmark";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 
 import { MobileNav } from "./mobile-nav";
 import { NavLinks, type NavItem } from "./nav-links";
@@ -29,6 +30,7 @@ export function AppShell({
             <p className="text-muted-foreground text-sm">{area}</p>
           </div>
           <NavLinks items={items} label={area} />
+          <NotificationBell withLabel />
           <Link
             href="/"
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mt-auto rounded-md px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
@@ -38,7 +40,7 @@ export function AppShell({
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileNav area={area} items={items} />
+        <MobileNav area={area} items={items} bell={<NotificationBell />} />
         {children}
       </div>
     </div>

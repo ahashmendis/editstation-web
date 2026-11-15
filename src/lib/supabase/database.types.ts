@@ -1190,6 +1190,51 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          body: string;
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          read_at: string | null;
+          recipient_id: string;
+          title: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          created_at?: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          read_at?: string | null;
+          recipient_id: string;
+          title: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["notification_kind"];
+          read_at?: string | null;
+          recipient_id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payment_notes: {
         Row: {
           author_id: string | null;
@@ -2090,6 +2135,7 @@ export type Database = {
       };
       admin_create_client: { Args: { p_input: Json }; Returns: string };
       admin_create_project: { Args: { p_input: Json }; Returns: string };
+      admin_dashboard_metrics: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_grant_project_access: {
         Args: {
           p_editor_ids: string[];
@@ -2320,6 +2366,8 @@ export type Database = {
           ready: boolean;
         }[];
       };
+      mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
+      mark_notification_read: { Args: { p_id: string }; Returns: undefined };
       respond_to_application_request: {
         Args: { p_request_id: string; p_response: string; p_response_link?: string };
         Returns: undefined;
@@ -2404,6 +2452,18 @@ export type Database = {
       interpretation_status: "submitted" | "accepted" | "changes_requested";
       negotiation_action: "offer" | "counter" | "accept" | "decline" | "withdraw";
       negotiation_role: "admin" | "editor";
+      notification_kind:
+        | "inquiry_new"
+        | "application_new"
+        | "applicant_response"
+        | "counteroffer"
+        | "submission"
+        | "application_decision"
+        | "application_request"
+        | "invitation"
+        | "assignment_confirmed"
+        | "revision_requested"
+        | "payment_paid";
       payment_kind: "assignment" | "reversal";
       payment_status:
         "not_due" | "pending_approval" | "approved" | "processing" | "paid" | "on_hold";
@@ -2581,6 +2641,19 @@ export const Constants = {
       interpretation_status: ["submitted", "accepted", "changes_requested"],
       negotiation_action: ["offer", "counter", "accept", "decline", "withdraw"],
       negotiation_role: ["admin", "editor"],
+      notification_kind: [
+        "inquiry_new",
+        "application_new",
+        "applicant_response",
+        "counteroffer",
+        "submission",
+        "application_decision",
+        "application_request",
+        "invitation",
+        "assignment_confirmed",
+        "revision_requested",
+        "payment_paid",
+      ],
       payment_kind: ["assignment", "reversal"],
       payment_status: ["not_due", "pending_approval", "approved", "processing", "paid", "on_hold"],
       profile_option_kind: ["specialisation", "software"],

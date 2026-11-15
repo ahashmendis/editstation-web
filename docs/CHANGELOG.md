@@ -3,6 +3,25 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-14: Phase 10 notifications, metrics and audit view
+
+- Branch `phase10-notifications`, **uncommitted, pending owner review**. KB10 adopted (owner:
+  "accept recommended"). Spec `docs/superpowers/specs/2026-11-14-phase10-notifications-design.md`.
+  Migrations `20261114192322_phase10_notifications`, `20261114192400_phase10_metrics`.
+- DB: `notifications` (recipient-only RLS), `private.notification_outbox` (queued, unsent),
+  trigger `activity_logs_notify` mapping 11 audited events to notifications (admin fan-out to all
+  non-revoked admins), `mark_notification_read`, `mark_all_notifications_read`,
+  `admin_dashboard_metrics` (inquiries/applications/projects by status, conversion, acceptance and
+  counteroffer rates, median time to assignment and to first submission, on-time and
+  first-submission approval rates, average client rounds, editor corrections, payments by currency).
+  Not computable from stored data: gross contribution, admin time, editor abandonment.
+- UI: notification bell with unread count in the admin/editor shell and on `/apply`;
+  `/notifications` (list, mark read, mark all, entity links); `/admin` metric cards and CSS bar
+  charts (no new dependencies); `/admin/activity` (filter by record type and action, plain labels).
+- Verification: pgTAP 1543/1543 (`090`-`092` new), Vitest 245/245, `npm run check` green,
+  db:advisors clean, Playwright smoke 19/19 (signed-out gates for `/admin/activity`,
+  `/notifications`). Signed-in screens not yet checked in a browser.
+
 ## 2026-11-14: Phase 8 submissions, review and revision classification
 
 - Branch `phase8-submissions`, **uncommitted, pending owner review**. Spec

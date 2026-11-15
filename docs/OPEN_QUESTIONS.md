@@ -34,7 +34,7 @@ Open items first. Read a question's full section only when it becomes relevant.
 | KB6  | Project communication                         | Resolved 2026-11-14 (pilot) | —                         |
 | KB7  | Storage provider                              | Open (not blocking schema)  | Phase 5 go-live           |
 | KB9  | Payment schedule                              | Open                        | Phase 9                   |
-| KB10 | Notification events for release 1             | Open                        | Phase 10                  |
+| KB10 | Notification events for release 1             | Resolved 2026-11-14         | Phase 10                  |
 
 Resolved (see decisions log): A, B, C, D, E, H, I, J, K, KB6, L, M, N, O, R, S, T, U, V.
 
@@ -64,6 +64,7 @@ Format: date, question: decision.
 - 2026-11-14, **KB6** Project communication: Adopt the recommendation for the pilot. Email or the existing channel, plus an admin-only notes log per project; no in-app chat.
 - 2026-11-14, **KB7** Storage provider: still open (needs the owner's actual provider). Phase 5 stores a provider value per asset (Google Drive, Dropbox, other), so the schema does not wait on it.
 - 2026-11-14, **I** Payment statuses: Adopt the recommendation (owner instruction: accept recommended). `not_due` → `pending_approval` → `approved` → `processing` → `paid`, plus `on_hold` (reachable from any state before paid, with a required reason; a dispute is a reason). The record is created at assignment confirmation so committed-but-unpaid costs show. `paid` is final; corrections happen through an audited reversal entry. No `cancelled` status (depends on F, still open). Design: `docs/superpowers/specs/2026-11-14-phase9-earnings-design.md`.
+- 2026-11-14, **KB10** Notification events: Adopt the recommendation (owner instruction "accept recommended"). To admin: new inquiry, new application, applicant response, counteroffer, submission. To applicant: application decision, information or test request. To editor: invitation, rate confirmed (assignment confirmed), revision requested, payment marked paid. Delivery: in-app now; email rows are queued in an outbox but not sent until production SMTP exists (launch gate). No external services.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 ---
@@ -385,7 +386,7 @@ Kept for the reasoning behind each decision. The decisions log above is authorit
 - **Recommendation:** Owner decision. The data model supports both (due date per payment).
 - **Blocks:** Phase 9.
 
-### KB10. Notification events for release 1
+### KB10. Notification events for release 1: RESOLVED 2026-11-14 (recommendation adopted; in-app, email queued)
 
 - **Recommendation:** A minimal set:
   - **To admin:** new inquiry, new application, applicant response, counteroffer, submission.

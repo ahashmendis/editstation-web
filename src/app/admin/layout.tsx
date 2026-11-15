@@ -13,6 +13,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin/clients", label: "Clients", icon: "clients" },
   { href: "/admin/access-review", label: "Access review", icon: "access" },
   { href: "/admin/applications", label: "Applications", icon: "applications" },
+  { href: "/admin/activity", label: "Activity", icon: "activity" },
   { href: "/admin/settings", label: "Settings", icon: "settings" },
 ];
 

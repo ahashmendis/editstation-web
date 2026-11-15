@@ -16,6 +16,7 @@ import { SafeLink, SnapshotView } from "@/features/applications/components/snaps
 import { formatDateTime, StatusBadge } from "@/features/applications/components/status-badge";
 import { OPEN_STATUSES } from "@/features/applications/constants";
 import { getApplicantView } from "@/features/applications/queries";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { requireApplicant } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Your application · EDITSTATION" };
@@ -46,7 +47,12 @@ async function ApplyContent() {
     <AreaShell
       title="Your editor application"
       subtitle={access.email ?? undefined}
-      actions={<SignOutButton />}
+      actions={
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <SignOutButton />
+        </div>
+      }
     >
       {children}
     </AreaShell>

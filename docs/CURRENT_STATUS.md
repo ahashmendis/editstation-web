@@ -1,6 +1,8 @@
 # Current Status
 
-**Phase:** Phase 8 **submissions, review and revision classification done** (database +
+**Phase:** Phase 10 **notifications, admin metrics and audit view done** (database + screens) on
+branch `phase10-notifications` (uncommitted, pending owner review; KB10 adopted 2026-11-14, email
+queued in a private outbox but not sent until production SMTP). Before that: Phase 8 **submissions, review and revision classification done** (database +
 screens) on branch `phase8-submissions` (uncommitted, pending owner review; spec calls §7 in
 `docs/superpowers/specs/2026-11-14-phase8-submissions-design.md`: per-project versions, payment
 moves to `pending_approval` on work approval, assignment stays `in_progress` after completion,
@@ -60,7 +62,11 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   `20261114154448` (`submissions`, `revision_requests`, six functions, review-status guard on
   `projects`, cancel/reassign/confirmation allowed in review); Submissions card on
   `/editor/projects/[id]`, Review card on `/admin/projects/[id]`. Not yet checked signed in.
-- **Tests (2026-11-14):** pgTAP 1482/1482 after Phase 8, Vitest 223/223, Playwright 17/17;
+- **Phase 10 (uncommitted, pending owner review):** `notifications` + private outbox, trigger on
+  `activity_logs`, mark-read functions, `admin_dashboard_metrics`; bell in the shells,
+  `/notifications`, metrics on `/admin`, `/admin/activity`. Not yet checked signed in.
+- **Tests (2026-11-14):** pgTAP 1543/1543 after Phase 10, Vitest 245/245, Playwright 19/19;
+  pgTAP 1482/1482 after Phase 8, Vitest 223/223, Playwright 17/17;
   pgTAP 1357/1357 after Phase 9 (1133 after Phase 7), Vitest 212/212
   (`npm run check` green), Playwright smoke 17/17 (incl. signed-out gates for the earnings routes).
 - **Claude Code guardrails:** `.claude/settings.json` + `.claude/hooks/` (env-file and committed-
@@ -120,7 +126,9 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
    review recommended), then commit (needs owner approval).
 2. Phase 7 screens (editor steps panel, admin gate panel and interpretation review) after review;
    Phase 5-6 screens. Phase 8 screens and flow need a signed-in browser check.
-3. Signed-in browser check of `/admin/projects`, `/admin/clients` and the conversion form.
+3. Signed-in browser check of `/admin/projects`, `/admin/clients` and the conversion form, and of
+   the Phase 10 screens (bell, `/notifications`, `/admin` metrics, `/admin/activity`).
+4. Wire an email sender to `private.notification_outbox` once production SMTP exists.
 
 Before public launch: KB1, KB2, KB8, P, Turnstile (O), production SMTP, real service list and
 budget ranges (Settings screen).

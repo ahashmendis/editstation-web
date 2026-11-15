@@ -4,7 +4,14 @@ import { redirectPreservingSession, updateSession } from "@/lib/supabase/proxy";
 
 // Areas that need a signed-in user. Which kind of user is checked server-side in
 // each area's layout and enforced by RLS; this is only an early redirect.
-const SIGNED_IN_PREFIXES = ["/apply", "/editor", "/admin", "/mfa", "/reset-password"];
+const SIGNED_IN_PREFIXES = [
+  "/apply",
+  "/editor",
+  "/admin",
+  "/mfa",
+  "/reset-password",
+  "/notifications",
+];
 
 export async function proxy(request: NextRequest) {
   const { response, isSignedIn } = await updateSession(request);

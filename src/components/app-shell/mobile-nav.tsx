@@ -2,7 +2,7 @@
 
 import { Menu } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,16 @@ import { Wordmark } from "@/components/wordmark";
 import { NavLinks, type NavItem } from "./nav-links";
 
 // Phone and tablet navigation: a top bar with a menu button that opens the same links in a sheet.
-export function MobileNav({ area, items }: { area: string; items: NavItem[] }) {
+export function MobileNav({
+  area,
+  items,
+  bell,
+}: {
+  area: string;
+  items: NavItem[];
+  /** Server-rendered notification link (an element, not a function). */
+  bell?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,15 +34,18 @@ export function MobileNav({ area, items }: { area: string; items: NavItem[] }) {
       <Link href="/" aria-label="EDITSTATION home">
         <Wordmark />
       </Link>
-      <Button
-        variant="outline"
-        className="min-h-11"
-        onClick={() => setOpen(true)}
-        aria-label={`Open ${area} menu`}
-      >
-        <Menu aria-hidden />
-        Menu
-      </Button>
+      <div className="flex items-center gap-1">
+        {bell}
+        <Button
+          variant="outline"
+          className="min-h-11"
+          onClick={() => setOpen(true)}
+          aria-label={`Open ${area} menu`}
+        >
+          <Menu aria-hidden />
+          Menu
+        </Button>
+      </div>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" showCloseButton>
           <SheetHeader>

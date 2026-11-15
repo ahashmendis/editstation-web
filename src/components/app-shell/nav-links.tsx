@@ -3,6 +3,7 @@
 import {
   ClipboardCheck,
   FolderKanban,
+  History,
   Inbox,
   LayoutDashboard,
   Settings,
@@ -28,6 +29,7 @@ const ICONS = {
   access: ShieldCheck,
   settings: Settings,
   earnings: Wallet,
+  activity: History,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;
