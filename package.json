@@ -20,6 +20,7 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
+    "db:restore-test": "node scripts/db-restore-test.mjs",
     "db:advisors": "supabase db advisors --local --fail-on warn",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts && prettier --write src/lib/supabase/database.types.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test",

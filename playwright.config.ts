@@ -7,6 +7,9 @@ const port = 3000;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  // Signed-in tests create e2e-only accounts and projects; remove them before and after a run.
+  globalSetup: "./tests/e2e/support/cleanup.ts",
+  globalTeardown: "./tests/e2e/support/cleanup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

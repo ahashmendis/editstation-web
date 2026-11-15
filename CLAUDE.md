@@ -15,10 +15,11 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
 
 - `npm run dev` / `npm run build`
 - `npm run check`: format check, lint, typecheck and unit tests (run before saying work is done)
-- `npm run test:e2e`: Playwright smoke tests (public site, signed-out gates); needs local Supabase
-  running; reuses a dev server on :3000
+- `npm run test:e2e`: Playwright smoke + signed-in tests (create and clean up their own e2e users);
+  needs local Supabase running; reuses a dev server on :3000
 - `npm run db:start` / `db:stop` / `db:reset`: local Supabase (needs Docker; `db:start:full` adds Studio)
 - `npm run db:test`: pgTAP tests in `supabase/tests/database/`
+- `npm run db:restore-test`: local backup/restore drill (dump, restore to scratch DB, compare)
 - `npm run db:advisors`: Supabase security/performance lints; `npm run db:types` after schema changes
 - New migration: `supabase migration new <name>`; never edit an applied migration
 - Local email (confirmations, resets): Mailpit at http://127.0.0.1:54324
@@ -49,18 +50,19 @@ Next.js 16 (App Router, `src/`), TypeScript strict, Tailwind v4, shadcn/ui (base
 
 ## Read only what the task needs
 
-| Task touches                         | Read                                                      |
-| ------------------------------------ | --------------------------------------------------------- |
-| Where things stand / what's next     | `docs/CURRENT_STATUS.md` (always start here)              |
-| Features, access areas, exclusions   | `docs/PRODUCT_SPEC.md`                                    |
-| Statuses and lifecycles              | `docs/WORKFLOWS.md`                                       |
-| Rates, revisions, approvals          | `docs/BUSINESS_RULES.md`                                  |
-| Tables, RLS, migrations              | `docs/DATABASE_SCHEMA.md`, `docs/SECURITY_AND_PRIVACY.md` |
-| Stack, boundaries, code organisation | `docs/SYSTEM_ARCHITECTURE.md`                             |
-| Phase plan                           | `docs/DEVELOPMENT_ROADMAP.md`                             |
-| Unresolved decisions                 | `docs/OPEN_QUESTIONS.md` (Index first; one section only)  |
-| Details of earlier phases            | `docs/CHANGELOG.md`                                       |
-| Business context (rarely needed)     | `docs/BUSINESS_PLAN.md`                                   |
+| Task touches                          | Read                                                      |
+| ------------------------------------- | --------------------------------------------------------- |
+| Where things stand / what's next      | `docs/CURRENT_STATUS.md` (always start here)              |
+| Features, access areas, exclusions    | `docs/PRODUCT_SPEC.md`                                    |
+| Statuses and lifecycles               | `docs/WORKFLOWS.md`                                       |
+| Rates, revisions, approvals           | `docs/BUSINESS_RULES.md`                                  |
+| Tables, RLS, migrations               | `docs/DATABASE_SCHEMA.md`, `docs/SECURITY_AND_PRIVACY.md` |
+| Stack, boundaries, code organisation  | `docs/SYSTEM_ARCHITECTURE.md`                             |
+| Phase plan                            | `docs/DEVELOPMENT_ROADMAP.md`                             |
+| Unresolved decisions                  | `docs/OPEN_QUESTIONS.md` (Index first; one section only)  |
+| Details of earlier phases             | `docs/CHANGELOG.md`                                       |
+| Backups, MFA reset, incidents, deploy | `docs/RUNBOOKS.md`                                        |
+| Business context (rarely needed)      | `docs/BUSINESS_PLAN.md`                                   |
 
 `docs/EDITSTATION_MASTER_KNOWLEDGE_BASE.md` is the owner's original source of truth; never edit it.
 Precedence: owner decisions in the `OPEN_QUESTIONS.md` decisions log > the knowledge base > derived

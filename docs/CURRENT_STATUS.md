@@ -1,26 +1,16 @@
 # Current Status
 
-**Phase:** Phase 10 **notifications, admin metrics and audit view done** (database + screens) on
-branch `phase10-notifications` (uncommitted, pending owner review; KB10 adopted 2026-11-14, email
-queued in a private outbox but not sent until production SMTP). Before that: Phase 8 **submissions, review and revision classification done** (database +
-screens) on branch `phase8-submissions` (uncommitted, pending owner review; spec calls §7 in
-`docs/superpowers/specs/2026-11-14-phase8-submissions-design.md`: per-project versions, payment
-moves to `pending_approval` on work approval, assignment stays `in_progress` after completion,
-needs-discussion opens a disputed request). F and KB5 untouched (facts only: rounds,
-beyond-allowance flag, late flag). Earlier: Phase 9 **payments and earnings done** (database + screens) on branch
-`phase4-followups` (uncommitted, pending owner review). **Phase 9 flags:** (a) F: ended
-assignments put unpaid payments on hold automatically with a fixed editor-visible reason (spec call
-2); (b) E: mark paid cannot check verified payout details yet (call 11) — resolve before recording
-real transfers; (c) suspended/revoked editors lose the earnings screen (call 9). Spec/plan calls
-(`docs/superpowers/specs|plans/2026-11-14-phase9-earnings*`) await owner review.
-Phase 7 **database layer done** (uncommitted, pending owner review), on top of the
-uncommitted-review Phases 5-6 database. **Flagged for the owner:**
-(1) order: admin confirmation stays first (decision B), then interpretation, brief confirmation and
-a gated start (spec call 1); (2) drift: any deadline or agreed-pay change after confirmation
-requires re-confirmation (spec call 6). Phase 4 committed. Nothing pushed.
-Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V; KB3
-placeholder list (OPEN_QUESTIONS).
-**Last updated:** 2026-11-14
+**Phase:** Phase 11 **hardening** on branch `phase11-hardening` (from `main` at `94f68b3`;
+uncommitted, pending owner review): signed-in Playwright e2e, security review pass (security
+headers), local backup/restore drill, `docs/RUNBOOKS.md`, KB §16 evidence table (below). Phases
+4-10 are committed on `main` (`8428036` to `94f68b3`); nothing pushed. Owner flags still open from
+earlier phases: Phase 9 (a) F: ended assignments put unpaid payments on hold automatically, (b) E:
+mark paid cannot check verified payout details (unbuilt by design until E is built), (c)
+suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
+interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
+Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
+KB10; KB3 placeholder list (OPEN_QUESTIONS).
+**Last updated:** 2026-11-15
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
@@ -65,6 +55,14 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 - **Phase 10 (uncommitted, pending owner review):** `notifications` + private outbox, trigger on
   `activity_logs`, mark-read functions, `admin_dashboard_metrics`; bell in the shells,
   `/notifications`, metrics on `/admin`, `/admin/activity`. Not yet checked signed in.
+- **Phase 11 (uncommitted, pending owner review):** signed-in e2e `tests/e2e/signed-in.spec.ts`
+  with seed-free helpers `tests/e2e/support/local-stack.ts` (local service key read from
+  `supabase status` at runtime, SQL via `docker exec`, Mailpit for the sign-up email, built-in RFC
+  6238 TOTP for admin MFA; global setup/teardown removes all e2e data so pgTAP still sees a clean
+  database); security headers in `next.config.ts`; restore drill `npm run db:restore-test`
+  (`scripts/db-restore-test.mjs`); `docs/RUNBOOKS.md`.
+- **Tests (2026-11-15, Phase 11):** `npm run check` green (Vitest 250/250), pgTAP 1545/1545,
+  Playwright 24/24 (19 smoke + security headers + 4 signed-in), restore drill passed.
 - **Tests (2026-11-14):** pgTAP 1543/1543 after Phase 10, Vitest 245/245, Playwright 19/19;
   pgTAP 1482/1482 after Phase 8, Vitest 223/223, Playwright 17/17;
   pgTAP 1357/1357 after Phase 9 (1133 after Phase 7), Vitest 212/212
@@ -78,15 +76,19 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 - **Phase 4 admin screens have not been checked in a signed-in browser session** (pgTAP and unit
   tests only). The app shell likewise has only been seen on a temporary page.
 - Nothing pushed. No GitHub remote, Vercel or hosted Supabase project; CI has never run.
-- Not tested: hosted Supabase (MFA plan, SMTP), signed-in e2e flows (smoke tests cover public pages
-  and signed-out gates; not in CI), mobile layouts in depth.
+- Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
+  covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
+  into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens
+  are covered by pgTAP and unit tests only, not by a browser run.
 - Not exercised in the browser: application reject, reopen, withdraw, practical-test results.
 - Suspended users keep their session (they lose access on the next request).
 - Suspending or revoking an editor does not close their assignments automatically (WORKFLOWS §6:
   the admin decides per assignment). The admin project page's Editors panel shows a "Suspended" /
   "Access revoked" badge next to such an editor while they hold a live or confirmed assignment.
 - No admin UI for `profile_options`; editors cannot edit their profile after approval.
-- Notifications (KB §17.10) not built. Placeholder legal pages only (`placeholder-2026-11-11`).
+- Placeholder legal pages only (`placeholder-2026-11-11`).
+- Only `frame-ancestors` is set in the CSP; a full script CSP (nonces) is a follow-up, as it
+  changes rendering under `cacheComponents`.
 
 ## Known issues
 
@@ -109,6 +111,57 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 - **After editing `supabase/templates/*.html`, restart local Supabase** (`db:stop`, `db:start`).
 - Inquiry rate limits are a first line of defence only; Turnstile (decision O) is a launch gate.
 
+## Phase 11 security review (2026-11-15)
+
+Swept every server action (15 files), page gate, route handler and error path. Findings:
+
+- All admin/editor/applicant pages call a `require*` gate; every admin action calls
+  `requireAdmin()` and every database function authorises in its body (pgTAP guardrails).
+- Database errors reach users only through `userMessageFromDbError` (ES4xx messages); auth errors
+  through `authErrorMessage`; the error boundary shows only a digest. No secret key or
+  non-`NEXT_PUBLIC_*` env var in `src/`; no `dangerouslySetInnerHTML`; `?next=` is
+  same-site only (`safeNextPath`).
+- **Fixed:** no security headers were sent. Added `X-Frame-Options: DENY`, CSP
+  `frame-ancestors 'none'` (clickjacking on admin forms), `nosniff`, `Referrer-Policy`,
+  `Permissions-Policy`; covered by an e2e smoke test.
+- Still open (known): Phase 1-3 functions with PUBLIC execute (needs an owner-approved migration);
+  suspended users keep their session until the next request.
+
+## KB §16 acceptance criteria: evidence
+
+pgTAP files are in `supabase/tests/database/`; e2e in `tests/e2e/`. "Met" means implemented and
+tested locally; nothing has run on hosted infrastructure.
+
+| KB §16 criterion                                                               | Evidence                                                                                                              | Status                                                                                   |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Roles enforced server-side                                                     | `require*` gates on every page/action; `private.is_admin()` (aal2); e2e gates in `smoke.spec.ts`, `signed-in.spec.ts` | Met                                                                                      |
+| Unapproved editors cannot access restricted projects                           | 053 visibility; e2e applicant redirected from `/editor`, `/admin`                                                     | Met                                                                                      |
+| Editors cannot see other editors' records or payments                          | 053, 071, 075; e2e editor A vs B (404 on B's project)                                                                 | Met                                                                                      |
+| Admin-only actions not invocable by editors                                    | `private.require_admin()` in every `admin_*`; 046, 058, 066, 076, 082                                                 | Met                                                                                      |
+| RLS tested with separate identities                                            | admin, editor A, editor B, applicant, anon in every RLS test                                                          | Met                                                                                      |
+| Admin can create all three brief types                                         | 042                                                                                                                   | Met (DB; admin form not run in e2e)                                                      |
+| Multiple references per project                                                | 050, 051                                                                                                              | Met                                                                                      |
+| Reference timestamps, notes, categories, priorities visible to assigned editor | `project_references` columns; 053 tiered reads                                                                        | Met                                                                                      |
+| Brief versions and confirmations retained                                      | 043, 063 (immutable)                                                                                                  | Met                                                                                      |
+| Assets accessible only to authorised users                                     | 051, 053 (app records); folder shares at the storage provider are manual (K, KB7 open)                                | Partly met                                                                               |
+| Admin can invite a particular editor                                           | 054; e2e uses `admin_grant_project_access` + offer                                                                    | Met                                                                                      |
+| Eligible editors accept or counter                                             | 056                                                                                                                   | Met                                                                                      |
+| Final rate explicit and approved before work                                   | 055, 063, 064                                                                                                         | Met                                                                                      |
+| No active editing with unresolved compensation                                 | 061 gate triggers                                                                                                     | Met                                                                                      |
+| Editors submit versions; admin approves or requests revisions; history kept    | 081                                                                                                                   | Met (DB; screens not run in e2e)                                                         |
+| Client rounds vs corrections vs scope; 3 free rounds tracked                   | 081                                                                                                                   | Met (tracking; pay for extra rounds is F, open)                                          |
+| Admin records/updates payment status                                           | 073                                                                                                                   | Met                                                                                      |
+| Editors see only their own payments                                            | 071, 075                                                                                                              | Met                                                                                      |
+| Only authorised admins mark paid                                               | 074 (MFA admin); narrower permission A2 and payout check E open                                                       | Met with open items                                                                      |
+| Transfer references and timestamps auditable                                   | 074, `activity_logs`, `/admin/activity` (e2e)                                                                         | Met                                                                                      |
+| Useful error states and activity history                                       | error boundary, `userMessageFromDbError`, empty/loading states, `/admin/activity`                                     | Met                                                                                      |
+| Backups and recovery considered and tested                                     | `npm run db:restore-test` (local), `docs/RUNBOOKS.md` §1                                                              | **Partly met:** hosted backup tier and a hosted restore are untested (no hosted project) |
+| Documented cancellation, withdrawal, reassignment                              | WORKFLOWS §6, RUNBOOKS §4                                                                                             | Met (pay consequences: F open)                                                           |
+
+**Unmet before real client work:** hosted backup/restore test; storage-provider access control
+(K, KB7); payout details (E) before real transfers; F (extra rounds, kill fees); CI has never run
+(no remote); browser e2e for the offer, submission, review and payment screens.
+
 ## Decisions made (implementation)
 
 - npm, Node >= 24; `typecheck` runs `next typegen`; `proxy.ts` (Next 16).
@@ -122,12 +175,10 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 
 ## Next task
 
-1. Owner review of the Phases 5-6 and Phase 7 database diffs, spec and plan calls (db-security
-   review recommended), then commit (needs owner approval).
-2. Phase 7 screens (editor steps panel, admin gate panel and interpretation review) after review;
-   Phase 5-6 screens. Phase 8 screens and flow need a signed-in browser check.
-3. Signed-in browser check of `/admin/projects`, `/admin/clients` and the conversion form, and of
-   the Phase 10 screens (bell, `/notifications`, `/admin` metrics, `/admin/activity`).
+1. Owner review of Phase 11 (`phase11-hardening`), then commit (needs owner approval).
+2. Extend signed-in e2e to the offer → confirmation → submission → review → payment path
+   (helpers in `tests/e2e/support/local-stack.ts` already create admins with MFA and offers).
+3. Owner: hosted Supabase plan and backup tier, then a hosted restore drill (RUNBOOKS §1).
 4. Wire an email sender to `private.notification_outbox` once production SMTP exists.
 
 Before public launch: KB1, KB2, KB8, P, Turnstile (O), production SMTP, real service list and

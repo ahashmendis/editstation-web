@@ -36,6 +36,17 @@ test.describe("public site", () => {
   });
 });
 
+test("responses carry the baseline security headers", async ({ request }) => {
+  for (const path of ["/", "/sign-in"]) {
+    const response = await request.get(path);
+    const headers = response.headers();
+    expect(headers["x-frame-options"]).toBe("DENY");
+    expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  }
+});
+
 test("unknown pages show the not-found page with a 404 status", async ({ page }) => {
   const response = await page.goto("/definitely-not-a-page");
   expect(response?.status()).toBe(404);

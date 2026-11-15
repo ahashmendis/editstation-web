@@ -3,6 +3,28 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-15: Phase 11 hardening
+
+- Branch `phase11-hardening` from `main` (`94f68b3`), **uncommitted, pending owner review**. No
+  migrations.
+- E2E: `tests/e2e/signed-in.spec.ts` (inquiry submit; applicant sign-up via Mailpit link, gated
+  `/apply`, redirected from `/editor` and `/admin`; editors A/B each see only their own offered
+  project, 404 UI on the other's; admin password-only lands on `/mfa`, TOTP opens `/admin` and
+  `/admin/activity`). Helpers `tests/e2e/support/local-stack.ts` refuse non-local URLs, read keys
+  from `supabase status -o env` at runtime, run SQL via `docker exec`; `totp.ts` (RFC 6238, unit
+  test `tests/unit/totp.test.ts`, no new dependency). Global setup/teardown (`cleanup.ts`) deletes
+  e2e data by walking foreign keys as the local superuser in replica mode, because pgTAP counts
+  rows in a clean database. CI e2e job renamed; no new secrets.
+- Security review: added baseline headers in `next.config.ts` (frame denial, nosniff,
+  referrer and permissions policy) with a smoke test. No missing server-side gates or raw error
+  leaks found (details in `CURRENT_STATUS.md`).
+- Restore drill: `npm run db:restore-test` (`scripts/db-restore-test.mjs`): dump, restore into
+  scratch `restore_check`, compare row counts, migrations, functions, RLS. Passed (63 tables).
+- Docs: `docs/RUNBOOKS.md` (backup/restore, admin MFA reset, revoking editors/admins,
+  cancellation/withdrawal/reassignment, incident response, deploy checklist; owner items TODO);
+  KB §16 evidence table in `CURRENT_STATUS.md`; roadmap rows 4-10 marked committed.
+- Verification: `npm run check` (Vitest 250/250), pgTAP 1545/1545, Playwright 24/24.
+
 ## 2026-11-14: Phase 10 notifications, metrics and audit view
 
 - Branch `phase10-notifications`, **uncommitted, pending owner review**. KB10 adopted (owner:
