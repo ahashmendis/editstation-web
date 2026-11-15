@@ -24,7 +24,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      # The app requires the public Supabase settings at build time. CI builds against
+      # placeholders (not secrets; nothing connects during the build).
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-build-placeholder
 
   database:
     name: Database tests (pgTAP)
