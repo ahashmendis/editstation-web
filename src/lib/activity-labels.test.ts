@@ -36,6 +36,17 @@ describe("activityLabel", () => {
     expect(activityLabel("project_terms.agreed")).toBe("Terms agreed");
   });
 
+  it("maps Phase 12B asset codes", () => {
+    expect(activityLabel("asset.reported_inaccessible")).toBe("Asset reported inaccessible");
+    expect(activityLabel("asset.editor_can_open")).toBe("Editor can open asset");
+    expect(activityLabel("asset.verified")).toBe("Asset access verified");
+    expect(activityLabel("asset_report.resolved")).toBe("Asset report resolved");
+    expect(activityLabel("asset_grant.removal_requested")).toBe(
+      "Access removal requested from client",
+    );
+    expect(activityLabel("asset_grant.removal_confirmed")).toBe("Access removal confirmed");
+  });
+
   it("falls back to Updated", () => {
     expect(activityLabel("something.else")).toBe("Updated");
   });

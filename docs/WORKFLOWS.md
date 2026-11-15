@@ -145,7 +145,10 @@ assignment back; the gate turns not ready and Phase 8 submissions must require `
 These describe the agreed target. The built behaviour above differs where noted; the list of
 changes is in `docs/DATABASE_SCHEMA.md` ("Planned changes from the 2026-11-15 decisions").
 
-**Assets (KB7).**
+**Assets (KB7).** _Built in Phase 12B (branch, pending owner review). Implementation notes: the
+admin verifies only when no report is open; resolving the last open report returns an
+`inaccessible` asset to `awaiting_access`; an editor's "I can open this" is shown to the admin as a
+hint and never verifies; confirming removal closes the share._
 
 1. The admin records each client-provided Google Drive or Dropbox link: name, description,
    provider, access instructions. Status starts `awaiting_access`.

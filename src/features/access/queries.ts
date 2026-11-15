@@ -52,10 +52,12 @@ export type AdminNegotiation = {
 /** Everything the admin project page needs for assets, editors, folder shares and notes. */
 export async function getProjectAccessData(projectId: string) {
   const supabase = await createClient();
-  const [assets, access, assignments, grants, notes, activeEditors] = await Promise.all([
+  const [assets, access, assignments, grants, notes, activeEditors, reports] = await Promise.all([
     supabase
       .from("project_assets")
-      .select("id, label, url, provider, kind, notes, early_access")
+      .select(
+        "id, label, url, provider, kind, notes, early_access, description, access_instructions, access_status, verified_by, verified_at, editor_confirmed_at",
+      )
       .eq("project_id", projectId)
       .order("sort_order")
       .order("id"),
@@ -73,7 +75,7 @@ export async function getProjectAccessData(projectId: string) {
     supabase
       .from("asset_access_grants")
       .select(
-        "id, editor_id, shared_with_email, provider, folder_url, shared_at, revoked_at, revoke_reason",
+        "id, editor_id, shared_with_email, provider, folder_url, shared_at, revoked_at, revoke_reason, access_type, removal_requested_at, removal_confirmed_at",
       )
       .eq("project_id", projectId)
       .order("shared_at", { ascending: false }),
@@ -84,6 +86,12 @@ export async function getProjectAccessData(projectId: string) {
       .order("created_at", { ascending: false })
       .limit(200),
     supabase.from("editor_profiles").select("user_id").eq("access_status", "active"),
+    supabase
+      .from("asset_access_reports")
+      .select("id, asset_id, editor_id, note, created_at, resolved_at")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false })
+      .limit(500),
   ]);
 
   const assignmentRows = check(assignments);
@@ -114,6 +122,8 @@ export async function getProjectAccessData(projectId: string) {
   const grantRows = check(grants);
   const noteRows = check(notes);
   const activeIds = check(activeEditors).map((e) => e.user_id);
+  const reportRows = check(reports);
+  const assetRows = check(assets);
 
   const names = await namesFor([
     ...activeIds,
@@ -121,12 +131,23 @@ export async function getProjectAccessData(projectId: string) {
     ...assignmentRows.map((a) => a.editor_id),
     ...grantRows.map((g) => g.editor_id),
     ...noteRows.map((n) => n.author_id).filter((id): id is string => id !== null),
+    ...reportRows.map((r) => r.editor_id),
+    ...assetRows.map((a) => a.verified_by).filter((id): id is string => id !== null),
   ]);
   const nameOf = (id: string | null) =>
     id ? (names.get(id)?.name ?? "Unknown editor") : "Removed account";
 
   return {
-    assets: check(assets),
+    assets: assetRows,
+    /** Inaccessible reports, newest first. Notes are the editor's own words. */
+    reports: reportRows.map((r) => ({
+      id: r.id,
+      assetId: r.asset_id,
+      editorName: nameOf(r.editor_id),
+      note: r.note,
+      createdAt: r.created_at,
+      resolvedAt: r.resolved_at,
+    })),
     access: accessRows.map((a) => ({
       editorId: a.editor_id,
       reason: a.reason,
@@ -164,6 +185,9 @@ export async function getProjectAccessData(projectId: string) {
       sharedAt: g.shared_at,
       revokedAt: g.revoked_at,
       revokeReason: g.revoke_reason,
+      accessType: g.access_type,
+      removalRequestedAt: g.removal_requested_at,
+      removalConfirmedAt: g.removal_confirmed_at,
     })),
     notes: noteRows.map((n) => ({
       id: n.id,
@@ -191,6 +215,8 @@ export type PendingRevocation = {
   folderUrl: string | null;
   sharedAt: string;
   reason: string;
+  accessType: "editor_account" | "anyone_with_link";
+  removalRequestedAt: string | null;
 };
 
 /** The revoke checklist: live folder shares that should be taken back. */
@@ -216,6 +242,8 @@ export async function listPendingRevocations(): Promise<PendingRevocation[]> {
     folderUrl: r.folder_url,
     sharedAt: r.shared_at,
     reason: r.reason,
+    accessType: r.access_type,
+    removalRequestedAt: r.removal_requested_at,
   }));
 }
 
@@ -228,6 +256,7 @@ export type EditorAssignment = {
   currency: string;
   agreedAmount: number | null;
   agreedCurrency: string | null;
+  confirmedAt: string | null;
   createdAt: string;
 };
 
@@ -317,48 +346,59 @@ export async function getEditorProject(projectId: string) {
   if (error) throw error;
   if (!project) return null;
 
-  const [service, deliverables, references, assets, assignments, brief] = await Promise.all([
-    project.service_type_code
-      ? supabase
-          .from("service_types")
-          .select("label")
-          .eq("code", project.service_type_code)
-          .maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    supabase
-      .from("project_deliverables")
-      .select("id, name, format, resolution, aspect_ratio, duration_seconds, notes")
-      .eq("project_id", projectId)
-      .order("sort_order")
-      .order("id"),
-    supabase
-      .from("project_references")
-      .select(
-        "id, title, url, start_seconds, end_seconds, observation_notes, priority, category, access_notes, early_access",
-      )
-      .eq("project_id", projectId)
-      .order("sort_order")
-      .order("id"),
-    supabase
-      .from("project_assets")
-      .select("id, label, url, provider, kind, notes, early_access")
-      .eq("project_id", projectId)
-      .order("sort_order")
-      .order("id"),
-    supabase
-      .from("assignments")
-      .select("id, status, proposed_amount, currency, agreed_amount, agreed_currency, created_at")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("brief_versions")
-      .select(
-        "version, instructions, desired_outcome, audience, core_message, brand_constraints, mandatory_content, prohibited_content",
-      )
-      .eq("project_id", projectId)
-      .eq("version", project.current_brief_version)
-      .maybeSingle(),
-  ]);
+  const [service, deliverables, references, assets, assignments, brief, reports] =
+    await Promise.all([
+      project.service_type_code
+        ? supabase
+            .from("service_types")
+            .select("label")
+            .eq("code", project.service_type_code)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      supabase
+        .from("project_deliverables")
+        .select("id, name, format, resolution, aspect_ratio, duration_seconds, notes")
+        .eq("project_id", projectId)
+        .order("sort_order")
+        .order("id"),
+      supabase
+        .from("project_references")
+        .select(
+          "id, title, url, start_seconds, end_seconds, observation_notes, priority, category, access_notes, early_access",
+        )
+        .eq("project_id", projectId)
+        .order("sort_order")
+        .order("id"),
+      supabase
+        .from("project_assets")
+        .select(
+          "id, label, url, provider, kind, notes, early_access, description, access_instructions, access_status, editor_confirmed_at",
+        )
+        .eq("project_id", projectId)
+        .order("sort_order")
+        .order("id"),
+      supabase
+        .from("assignments")
+        .select(
+          "id, status, proposed_amount, currency, agreed_amount, agreed_currency, confirmed_at, created_at",
+        )
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("brief_versions")
+        .select(
+          "version, instructions, desired_outcome, audience, core_message, brand_constraints, mandatory_content, prohibited_content",
+        )
+        .eq("project_id", projectId)
+        .eq("version", project.current_brief_version)
+        .maybeSingle(),
+      // RLS: only this editor's own reports.
+      supabase
+        .from("asset_access_reports")
+        .select("asset_id")
+        .eq("project_id", projectId)
+        .is("resolved_at", null),
+    ]);
   if (service.error) throw service.error;
   if (brief.error) throw brief.error;
 
@@ -383,6 +423,7 @@ export async function getEditorProject(projectId: string) {
     currency: a.currency,
     agreedAmount: a.agreed_amount === null ? null : Number(a.agreed_amount),
     agreedCurrency: a.agreed_currency,
+    confirmedAt: a.confirmed_at,
     createdAt: a.created_at,
   }));
 
@@ -392,6 +433,10 @@ export async function getEditorProject(projectId: string) {
     deliverables: check(deliverables),
     references: check(references),
     assets: check(assets),
+    /** Assets this editor reported and the studio has not resolved yet. */
+    openReportAssetIds: check(reports)
+      .map((r) => r.asset_id)
+      .filter((id): id is string => id !== null),
     brief: brief.data,
     assignments: mine,
     /** The assignment to act on: a live one if any, else the newest. */

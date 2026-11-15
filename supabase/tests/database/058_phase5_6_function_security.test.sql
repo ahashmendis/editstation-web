@@ -20,7 +20,8 @@ create temp table pub (sig text primary key);
 insert into pub values
   ('public.admin_save_assets(uuid, jsonb)'), ('public.admin_set_reference_early_access(uuid, boolean)'),
   ('public.admin_set_asset_early_access(uuid, boolean)'),
-  ('public.admin_record_asset_grant(uuid, uuid, text, public.asset_provider, text)'),
+  -- Phase 12B added p_access_type (default editor_account).
+  ('public.admin_record_asset_grant(uuid, uuid, text, public.asset_provider, text, public.asset_access_type)'),
   ('public.admin_revoke_asset_grant(uuid, text)'), ('public.admin_pending_revocations()'),
   ('public.admin_grant_project_access(uuid, uuid[], public.project_access_reason)'),
   ('public.admin_revoke_project_access(uuid, uuid)'), ('public.admin_make_offer(uuid, uuid, numeric, text, text)'),

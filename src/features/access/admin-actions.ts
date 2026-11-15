@@ -9,18 +9,20 @@ import { createClient } from "@/lib/supabase/server";
 
 import {
   addNoteSchema,
+  assetActionSchema,
   assetRowsFromForm,
   assetsPayload,
   confirmAssignmentSchema,
   earlyAccessSchema,
   grantAccessInput,
   grantAccessSchema,
+  grantRemovalSchema,
   makeOfferSchema,
   reassignSchema,
   recordGrantSchema,
+  resolveReportSchema,
   respondSchema,
   revokeAccessSchema,
-  revokeGrantSchema,
   saveAssetsSchema,
   withdrawOfferSchema,
 } from "./schemas";
@@ -224,6 +226,7 @@ export async function recordGrantAction(_prev: FormState, formData: FormData) {
   const kept = () => ({
     email: String(formData.get("email") ?? "").slice(0, 254),
     folderUrl: String(formData.get("folderUrl") ?? "").slice(0, 2048),
+    accessType: String(formData.get("accessType") ?? "").slice(0, 40),
   });
   if (!parsed.success) return validationError(parsed.error, kept());
   const v = parsed.data;
@@ -233,6 +236,7 @@ export async function recordGrantAction(_prev: FormState, formData: FormData) {
     p_editor_id: v.editorId,
     p_email: v.email,
     p_provider: v.provider,
+    p_access_type: v.accessType,
     ...opt("p_folder_url", v.folderUrl),
   });
   if (error) return failed(error, kept());
@@ -240,19 +244,60 @@ export async function recordGrantAction(_prev: FormState, formData: FormData) {
   return done("Share recorded.");
 }
 
-export async function revokeGrantAction(_prev: FormState, formData: FormData) {
+/** KB7a-2: the client removes the editor's access; the admin records the request... */
+export async function requestRemovalAction(_prev: FormState, formData: FormData) {
   await requireAdmin();
-  const parsed = revokeGrantSchema.safeParse(Object.fromEntries(formData));
+  const parsed = grantRemovalSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationError(parsed.error);
   const supabase = await createClient();
-  const { error } = await supabase.rpc("admin_revoke_asset_grant", {
+  const { error } = await supabase.rpc("admin_request_access_removal", {
     p_grant_id: parsed.data.grantId,
-    ...opt("p_reason", parsed.data.reason),
   });
   if (error) return failed(error);
   if (parsed.data.projectId) projectPaths(parsed.data.projectId);
   else revalidatePath("/admin/access-review");
-  return done("Share marked as removed.");
+  return done("Removal request recorded.");
+}
+
+/** ...and then the client's confirmation that the access is gone. */
+export async function confirmRemovalAction(_prev: FormState, formData: FormData) {
+  await requireAdmin();
+  const parsed = grantRemovalSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_confirm_access_removal", {
+    p_grant_id: parsed.data.grantId,
+  });
+  if (error) return failed(error);
+  if (parsed.data.projectId) projectPaths(parsed.data.projectId);
+  else revalidatePath("/admin/access-review");
+  return done("Removal confirmed. The share is closed.");
+}
+
+// --- Asset access (KB7, KB7a) ------------------------------------------------------------------
+
+export async function verifyAssetAction(_prev: FormState, formData: FormData) {
+  await requireAdmin();
+  const parsed = assetActionSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_verify_asset", { p_asset_id: parsed.data.assetId });
+  if (error) return failed(error);
+  projectPaths(parsed.data.projectId);
+  return done("Asset access verified.");
+}
+
+export async function resolveReportAction(_prev: FormState, formData: FormData) {
+  await requireAdmin();
+  const parsed = resolveReportSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_resolve_asset_report", {
+    p_report_id: parsed.data.reportId,
+  });
+  if (error) return failed(error);
+  projectPaths(parsed.data.projectId);
+  return done("Report resolved.");
 }
 
 // --- Notes -------------------------------------------------------------------------------------

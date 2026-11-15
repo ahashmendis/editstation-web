@@ -4,6 +4,7 @@ import { httpsUrl } from "@/features/applications/schemas";
 
 import {
   ACCESS_REASONS,
+  ASSET_ACCESS_TYPES,
   ASSET_PROVIDERS,
   MAX_ASSETS,
   MAX_INVITES,
@@ -78,6 +79,8 @@ export const assetRowSchema = z.object({
   provider: assetProviderSchema,
   kind: optionalText(40),
   notes: optionalText(2000),
+  description: optionalText(2000),
+  accessInstructions: optionalText(2000),
 });
 
 export const assetsSchema = z
@@ -86,7 +89,16 @@ export const assetsSchema = z
 
 export const saveAssetsSchema = z.object({ projectId: z.uuid(), assets: assetsSchema });
 
-export const ASSET_FIELDS = ["id", "label", "url", "provider", "kind", "notes"] as const;
+export const ASSET_FIELDS = [
+  "id",
+  "label",
+  "url",
+  "provider",
+  "kind",
+  "notes",
+  "description",
+  "accessInstructions",
+] as const;
 
 /**
  * Rows are submitted as parallel lists named `asset.<field>`. Rows with nothing typed in them
@@ -116,6 +128,8 @@ export function assetsPayload(assets: z.infer<typeof assetsSchema>) {
     provider: a.provider,
     kind: a.kind,
     notes: a.notes,
+    description: a.description,
+    access_instructions: a.accessInstructions,
     sort_order: i,
   }));
 }
@@ -201,6 +215,7 @@ export const recordGrantSchema = z.object({
     .toLowerCase()
     .pipe(z.email({ error: "Enter the email the folder was shared with." }).max(254)),
   provider: assetProviderSchema,
+  accessType: z.enum(ASSET_ACCESS_TYPES, { error: "Choose how the folder is shared." }),
   folderUrl: z
     .string()
     .trim()
@@ -208,12 +223,23 @@ export const recordGrantSchema = z.object({
     .pipe(httpsUrl.nullable()),
 });
 
-export const revokeGrantSchema = z.object({
+/** Request or confirm removal of a share; projectId is empty on the access review page. */
+export const grantRemovalSchema = z.object({
   grantId: z.uuid(),
-  /** Where to refresh afterwards; empty when revoking from the access review page. */
   projectId: optionalUuid,
-  reason: optionalText(500),
 });
+
+// --- Asset access (KB7, KB7a) ------------------------------------------------------------------
+
+export const assetActionSchema = z.object({ projectId: z.uuid(), assetId: z.uuid() });
+
+export const reportAssetSchema = z.object({
+  projectId: z.uuid(),
+  assetId: z.uuid(),
+  note: requiredText(1000, "Say what happens when you try to open it."),
+});
+
+export const resolveReportSchema = z.object({ projectId: z.uuid(), reportId: z.uuid() });
 
 // --- Notes -------------------------------------------------------------------------------------
 

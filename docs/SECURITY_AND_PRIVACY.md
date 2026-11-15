@@ -182,6 +182,26 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 - Audit rows hold ids, version and field names only (no amounts, percentages or reasons). pgTAP
   `093`-`095` (admin, editor A, editor B, applicant, anon, suspended).
 
+## Asset access controls (Phase 12B, implemented on branch, pending owner review)
+
+- A working URL is never proof of access (KB7a-1): only `admin_verify_asset` (MFA admin) sets
+  `verified`; an editor's "I can open this" is stored separately and never changes the status. A
+  changed link or provider resets verification.
+- `asset_access_reports` is append-only for every caller (trigger: no delete, no edits except
+  resolving once and foreign keys going null). No write grants; reports are inserted only by
+  `editor_report_asset_inaccessible`, which requires the active editor at the `assigned` stage of
+  the asset's project (unknown and foreign assets both ES403, so asset ids are not confirmed).
+  RLS: an active editor reads only their own reports; a suspended editor reads none.
+- Editor-readable `project_assets` columns hold no client identity or pricing (pgTAP); the asset
+  form warns admins not to put passwords in access instructions. Folder shares (with the editor's
+  email and the access type) stay admin-only. `anyone_with_link` shares carry a security warning
+  on the admin screens.
+- Revocation: the client owns the folder, so the checklist records a removal request and the
+  client's confirmation; ending an assignment never marks access removed (pgTAP).
+- Notifications to admins say only that an asset on a named project cannot be opened; the
+  editor's note is not copied. Audit rows hold ids only. pgTAP `096`-`098` (admin, editor A,
+  editor B, applicant, suspended, anon).
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |
@@ -194,6 +214,7 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 | Projects, briefs, references       | —                      | —                                                                   | project + deliverables at `opportunity`; early-access references at `opportunity`; all references and brief versions at `assigned` | read; write via functions only       |
 | Assets                             | —                      | —                                                                   | early-access assets at `opportunity`; all at `assigned`                                                                            | full; write via functions only       |
 | Folder shares, admin notes         | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
+| Asset access reports (12B)         | —                      | —                                                                   | own rows (read); report/confirm via `editor_*` functions at `assigned` only                                                        | read; resolve via function           |
 | `project_internal`, clients        | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
 | Access, assignments, offers        | —                      | —                                                                   | own rows (read); answer own offer via `editor_respond_offer`                                                                       | read; write via functions only       |
 | Interpretations, confirmations     | —                      | —                                                                   | own rows (read); submit/confirm/start via `editor_*` functions while `confirmed`/`in_progress`                                     | read; review/start via functions     |
@@ -255,7 +276,7 @@ none has been exploited or confirmed beyond local review.
 | S6  | 7 moderate `npm audit` advisories in dev-only lint tooling                                                                                                    | dev dependencies                                                          | Low                      | Do not `npm audit fix --force`                                                             |
 | S7  | A revoked admin can still read notifications already received (fixed text and project titles only)                                                            | `notifications` RLS                                                       | Low                      | Accepted (Phase 10 review)                                                                 |
 | S8  | Hosted configuration untested: MFA plan, SMTP, backups, network restrictions, auth rate limits                                                                | hosted Supabase / Vercel                                                  | Unknown                  | No hosted project yet                                                                      |
-| S9  | Asset links are client-owned; Lenscape cannot revoke access or see who opened a link (KB7, KB7a)                                                              | process                                                                   | Medium (data exposure)   | Process controls only; removal request to the client proposed                              |
+| S9  | Asset links are client-owned; Lenscape cannot revoke access or see who opened a link (KB7, KB7a)                                                              | process                                                                   | Medium (data exposure)   | Process controls: removal request and confirmation recorded (Phase 12B)                    |
 | S10 | Payout details (E) will hold bank account data once built                                                                                                     | future `editor_payout_details`                                            | High sensitivity         | Approved in principle; no real bank data stored until counsel confirms PDPA handling       |
 
 Suggested scope for the assessment: RLS and function authorisation (all `public` functions),

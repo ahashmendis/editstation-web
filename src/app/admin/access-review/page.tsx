@@ -6,7 +6,8 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { EmptyState } from "@/components/empty-state";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RevokeGrantForm } from "@/features/access/components/forms";
+import { GrantAccessType, RemovalState } from "@/features/access/components/admin-panels";
+import { RemovalForms } from "@/features/access/components/forms";
 import {
   ASSET_PROVIDER_LABEL,
   REVOCATION_REASON_LABEL,
@@ -33,15 +34,16 @@ async function AccessReviewContent() {
   return (
     <AreaShell
       title="Access review"
-      subtitle="Folder shares that should be taken back."
+      subtitle="Client folder shares whose access should be removed."
       actions={<SignOutButton />}
     >
       <Card>
         <CardHeader>
-          <CardTitle>Shares to remove</CardTitle>
+          <CardTitle>Access to remove</CardTitle>
           <CardDescription>
-            Remove each folder share in Google Drive or Dropbox first, then mark it as removed here.
-            This page only records it; it does not change anything in the provider.
+            The client owns these folders, so only the client can remove access. Ask the client to
+            remove the editor&apos;s access and record the request, then record the client&apos;s
+            confirmation. This page only records it; it changes nothing in the provider.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -68,6 +70,7 @@ async function AccessReviewContent() {
                     {ASSET_PROVIDER_LABEL[r.provider as AssetProvider] ?? r.provider} · shared with{" "}
                     <span className="break-all">{r.sharedWithEmail}</span>
                   </p>
+                  <GrantAccessType accessType={r.accessType} />
                   <p className="text-muted-foreground">
                     {REVOCATION_REASON_LABEL[r.reason] ?? "This share needs a check."}
                   </p>
@@ -83,7 +86,12 @@ async function AccessReviewContent() {
                       </a>
                     </p>
                   ) : null}
-                  <RevokeGrantForm grantId={r.grantId} projectId={null} />
+                  <RemovalState requestedAt={r.removalRequestedAt} confirmedAt={null} />
+                  <RemovalForms
+                    grantId={r.grantId}
+                    projectId={null}
+                    requested={r.removalRequestedAt !== null}
+                  />
                 </li>
               ))}
             </ul>

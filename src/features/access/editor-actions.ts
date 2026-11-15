@@ -7,7 +7,7 @@ import { validationError, type FormState } from "@/features/authentication/schem
 import { requireActiveEditor } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
-import { respondSchema } from "./schemas";
+import { assetActionSchema, reportAssetSchema, respondSchema } from "./schemas";
 
 /** The editor's answer to an offer: accept, decline or propose a different amount. */
 export async function editorRespondAction(_prev: FormState, formData: FormData) {
@@ -42,5 +42,47 @@ export async function editorRespondAction(_prev: FormState, formData: FormData) 
         : v.action === "counter"
           ? "Your counteroffer was sent."
           : "You declined the offer.",
+  } as FormState;
+}
+
+/** KB7: the assigned editor cannot open an asset. Notifies the studio. */
+export async function reportAssetAction(_prev: FormState, formData: FormData) {
+  await requireActiveEditor();
+  const kept = { note: String(formData.get("note") ?? "").slice(0, 1000) };
+  const parsed = reportAssetSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error, kept);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("editor_report_asset_inaccessible", {
+    p_asset_id: parsed.data.assetId,
+    p_note: parsed.data.note,
+  });
+  if (error) {
+    return { status: "error", message: userMessageFromDbError(error), values: kept } as FormState;
+  }
+  revalidatePath(`/editor/projects/${parsed.data.projectId}`);
+  refresh();
+  return {
+    status: "success",
+    message: "Reported. The studio has been told and will sort out access.",
+  } as FormState;
+}
+
+/** The editor can open the asset. Recorded for the studio; it does not verify access. */
+export async function confirmAssetAccessAction(_prev: FormState, formData: FormData) {
+  await requireActiveEditor();
+  const parsed = assetActionSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("editor_confirm_asset_access", {
+    p_asset_id: parsed.data.assetId,
+  });
+  if (error) {
+    return { status: "error", message: userMessageFromDbError(error) } as FormState;
+  }
+  revalidatePath(`/editor/projects/${parsed.data.projectId}`);
+  refresh();
+  return {
+    status: "success",
+    message: "Thanks. The studio will verify your access.",
   } as FormState;
 }

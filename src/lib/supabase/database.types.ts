@@ -185,12 +185,17 @@ export type Database = {
       };
       asset_access_grants: {
         Row: {
+          access_type: Database["public"]["Enums"]["asset_access_type"];
           created_at: string;
           editor_id: string;
           folder_url: string | null;
           id: string;
           project_id: string;
           provider: Database["public"]["Enums"]["asset_provider"];
+          removal_confirmed_at: string | null;
+          removal_confirmed_by: string | null;
+          removal_requested_at: string | null;
+          removal_requested_by: string | null;
           revoke_reason: string | null;
           revoked_at: string | null;
           revoked_by: string | null;
@@ -201,12 +206,17 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          access_type?: Database["public"]["Enums"]["asset_access_type"];
           created_at?: string;
           editor_id: string;
           folder_url?: string | null;
           id?: string;
           project_id: string;
           provider: Database["public"]["Enums"]["asset_provider"];
+          removal_confirmed_at?: string | null;
+          removal_confirmed_by?: string | null;
+          removal_requested_at?: string | null;
+          removal_requested_by?: string | null;
           revoke_reason?: string | null;
           revoked_at?: string | null;
           revoked_by?: string | null;
@@ -216,12 +226,17 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          access_type?: Database["public"]["Enums"]["asset_access_type"];
           created_at?: string;
           editor_id?: string;
           folder_url?: string | null;
           id?: string;
           project_id?: string;
           provider?: Database["public"]["Enums"]["asset_provider"];
+          removal_confirmed_at?: string | null;
+          removal_confirmed_by?: string | null;
+          removal_requested_at?: string | null;
+          removal_requested_by?: string | null;
           revoke_reason?: string | null;
           revoked_at?: string | null;
           revoked_by?: string | null;
@@ -246,6 +261,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "asset_access_grants_removal_confirmed_by_fkey";
+            columns: ["removal_confirmed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "asset_access_grants_removal_requested_by_fkey";
+            columns: ["removal_requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "asset_access_grants_revoked_by_fkey";
             columns: ["revoked_by"];
             isOneToOne: false;
@@ -255,6 +284,69 @@ export type Database = {
           {
             foreignKeyName: "asset_access_grants_shared_by_fkey";
             columns: ["shared_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      asset_access_reports: {
+        Row: {
+          asset_id: string | null;
+          created_at: string;
+          editor_id: string;
+          id: string;
+          note: string;
+          project_id: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          asset_id?: string | null;
+          created_at?: string;
+          editor_id: string;
+          id?: string;
+          note: string;
+          project_id: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Update: {
+          asset_id?: string | null;
+          created_at?: string;
+          editor_id?: string;
+          id?: string;
+          note?: string;
+          project_id?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "asset_access_reports_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "project_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "asset_access_reports_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "asset_access_reports_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "asset_access_reports_resolved_by_fkey";
+            columns: ["resolved_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -1525,8 +1617,12 @@ export type Database = {
       };
       project_assets: {
         Row: {
+          access_instructions: string | null;
+          access_status: Database["public"]["Enums"]["asset_access_status"];
           created_at: string;
+          description: string | null;
           early_access: boolean;
+          editor_confirmed_at: string | null;
           id: string;
           kind: string | null;
           label: string;
@@ -1536,11 +1632,17 @@ export type Database = {
           sort_order: number;
           updated_at: string;
           url: string;
+          verified_at: string | null;
+          verified_by: string | null;
         };
         ComputedFields: never;
         Insert: {
+          access_instructions?: string | null;
+          access_status?: Database["public"]["Enums"]["asset_access_status"];
           created_at?: string;
+          description?: string | null;
           early_access?: boolean;
+          editor_confirmed_at?: string | null;
           id?: string;
           kind?: string | null;
           label: string;
@@ -1550,10 +1652,16 @@ export type Database = {
           sort_order?: number;
           updated_at?: string;
           url: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
         };
         Update: {
+          access_instructions?: string | null;
+          access_status?: Database["public"]["Enums"]["asset_access_status"];
           created_at?: string;
+          description?: string | null;
           early_access?: boolean;
+          editor_confirmed_at?: string | null;
           id?: string;
           kind?: string | null;
           label?: string;
@@ -1563,6 +1671,8 @@ export type Database = {
           sort_order?: number;
           updated_at?: string;
           url?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
         };
         Relationships: [
           {
@@ -1570,6 +1680,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_assets_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -2252,6 +2369,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_complete_project: { Args: { p_project_id: string }; Returns: undefined };
+      admin_confirm_access_removal: { Args: { p_grant_id: string }; Returns: undefined };
       admin_confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_convert_inquiry: { Args: { p_input: Json; p_inquiry_id: string }; Returns: string };
       admin_create_application_request: {
@@ -2291,12 +2409,14 @@ export type Database = {
       admin_pending_revocations: {
         Args: Record<PropertyKey, never>;
         Returns: {
+          access_type: Database["public"]["Enums"]["asset_access_type"];
           editor_id: string;
           folder_url: string;
           grant_id: string;
           project_id: string;
           provider: Database["public"]["Enums"]["asset_provider"];
           reason: string;
+          removal_requested_at: string;
           shared_at: string;
           shared_with_email: string;
         }[];
@@ -2312,6 +2432,7 @@ export type Database = {
       };
       admin_record_asset_grant: {
         Args: {
+          p_access_type?: Database["public"]["Enums"]["asset_access_type"];
           p_editor_id: string;
           p_email: string;
           p_folder_url?: string;
@@ -2326,6 +2447,8 @@ export type Database = {
       };
       admin_release_payment_hold: { Args: { p_payment_id: string }; Returns: undefined };
       admin_reopen_application: { Args: { p_editor_id: string }; Returns: string };
+      admin_request_access_removal: { Args: { p_grant_id: string }; Returns: undefined };
+      admin_resolve_asset_report: { Args: { p_report_id: string }; Returns: undefined };
       admin_respond_counter: {
         Args: {
           p_action: string;
@@ -2409,6 +2532,7 @@ export type Database = {
       admin_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
+      admin_verify_asset: { Args: { p_asset_id: string }; Returns: undefined };
       admin_withdraw_offer: {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
@@ -2417,6 +2541,7 @@ export type Database = {
         Args: { p_revision_id: string; p_start?: boolean };
         Returns: undefined;
       };
+      editor_confirm_asset_access: { Args: { p_asset_id: string }; Returns: undefined };
       editor_confirm_brief: {
         Args: {
           p_amount: number;
@@ -2457,6 +2582,10 @@ export type Database = {
           transaction_reference: string;
           transfer_date: string;
         }[];
+      };
+      editor_report_asset_inaccessible: {
+        Args: { p_asset_id: string; p_note: string };
+        Returns: string;
       };
       editor_respond_offer: {
         Args: {
@@ -2565,6 +2694,8 @@ export type Database = {
         | "rejected"
         | "withdrawn";
       assessment_result: "passed" | "failed" | "inconclusive";
+      asset_access_status: "awaiting_access" | "verified" | "inaccessible";
+      asset_access_type: "editor_account" | "anyone_with_link";
       asset_provider: "google_drive" | "dropbox" | "other";
       assignment_status:
         | "offered"
@@ -2603,7 +2734,8 @@ export type Database = {
         | "invitation"
         | "assignment_confirmed"
         | "revision_requested"
-        | "payment_paid";
+        | "payment_paid"
+        | "asset_inaccessible";
       payment_kind: "assignment" | "reversal";
       payment_status:
         "not_due" | "pending_approval" | "approved" | "processing" | "paid" | "on_hold";
@@ -2754,6 +2886,8 @@ export const Constants = {
         "withdrawn",
       ],
       assessment_result: ["passed", "failed", "inconclusive"],
+      asset_access_status: ["awaiting_access", "verified", "inaccessible"],
+      asset_access_type: ["editor_account", "anyone_with_link"],
       asset_provider: ["google_drive", "dropbox", "other"],
       assignment_status: [
         "offered",
@@ -2795,6 +2929,7 @@ export const Constants = {
         "assignment_confirmed",
         "revision_requested",
         "payment_paid",
+        "asset_inaccessible",
       ],
       payment_kind: ["assignment", "reversal"],
       payment_status: ["not_due", "pending_approval", "approved", "processing", "paid", "on_hold"],

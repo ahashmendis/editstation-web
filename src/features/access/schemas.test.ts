@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   addNoteSchema,
+  assetActionSchema,
   assetRowsFromForm,
   assetsPayload,
   assetsSchema,
@@ -9,12 +10,14 @@ import {
   earlyAccessSchema,
   grantAccessInput,
   grantAccessSchema,
+  grantRemovalSchema,
   makeOfferSchema,
   reassignSchema,
   recordGrantSchema,
+  reportAssetSchema,
+  resolveReportSchema,
   respondSchema,
   revokeAccessSchema,
-  revokeGrantSchema,
   saveAssetsSchema,
   withdrawOfferSchema,
 } from "./schemas";
@@ -79,6 +82,8 @@ describe("assets", () => {
       provider: "dropbox",
       kind: null,
       notes: null,
+      description: null,
+      access_instructions: null,
       sort_order: 0,
     });
     expect(payload[1]).toMatchObject({ id: ID, sort_order: 1 });
@@ -222,6 +227,7 @@ describe("recordGrantSchema", () => {
     editorId: ID2,
     email: "  Editor@Drive.COM ",
     provider: "google_drive",
+    accessType: "editor_account",
     folderUrl: "",
   };
 
@@ -243,24 +249,53 @@ describe("recordGrantSchema", () => {
     expect(recordGrantSchema.safeParse({ ...base, provider: "" }).success).toBe(false);
     expect(recordGrantSchema.safeParse({ ...base, editorId: "" }).success).toBe(false);
   });
+
+  it("requires a known access type", () => {
+    expect(recordGrantSchema.safeParse({ ...base, accessType: "anyone_with_link" }).success).toBe(
+      true,
+    );
+    expect(recordGrantSchema.safeParse({ ...base, accessType: "" }).success).toBe(false);
+    expect(recordGrantSchema.safeParse({ ...base, accessType: "public" }).success).toBe(false);
+  });
 });
 
-describe("revokeGrantSchema", () => {
-  it("allows no project and no reason", () => {
-    expect(revokeGrantSchema.parse({ grantId: ID, projectId: "", reason: "" })).toEqual({
+describe("grantRemovalSchema", () => {
+  it("allows no project (access review page)", () => {
+    expect(grantRemovalSchema.parse({ grantId: ID, projectId: "" })).toEqual({
       grantId: ID,
       projectId: null,
-      reason: null,
     });
   });
 
-  it("limits the reason", () => {
-    const result = revokeGrantSchema.safeParse({
-      grantId: ID,
-      projectId: "",
-      reason: "x".repeat(501),
+  it("needs a valid share id", () => {
+    expect(grantRemovalSchema.safeParse({ grantId: "x", projectId: "" }).success).toBe(false);
+  });
+});
+
+describe("asset access schemas", () => {
+  it("needs a note of up to 1000 characters to report an asset", () => {
+    const base = { projectId: ID, assetId: ID2 };
+    expect(reportAssetSchema.safeParse({ ...base, note: "   " }).success).toBe(false);
+    expect(reportAssetSchema.safeParse({ ...base, note: "x".repeat(1001) }).success).toBe(false);
+    expect(reportAssetSchema.parse({ ...base, note: "  Access denied  " }).note).toBe(
+      "Access denied",
+    );
+  });
+
+  it("needs valid ids to verify or resolve", () => {
+    expect(assetActionSchema.safeParse({ projectId: ID, assetId: "x" }).success).toBe(false);
+    expect(resolveReportSchema.safeParse({ projectId: ID, reportId: ID2 }).success).toBe(true);
+  });
+
+  it("keeps description and access instructions on asset rows", () => {
+    const row = { id: "", label: "A", url: "https://drive.example/x", provider: "dropbox" };
+    const parsed = assetsSchema.parse([
+      { ...row, description: " Camera A ", accessInstructions: "Use your account" },
+    ]);
+    expect(assetsPayload(parsed)[0]).toMatchObject({
+      description: "Camera A",
+      access_instructions: "Use your account",
     });
-    expect(result.success).toBe(false);
   });
 });
 

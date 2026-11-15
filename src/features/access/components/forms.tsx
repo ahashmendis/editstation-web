@@ -11,21 +11,30 @@ import { selectClassName } from "@/features/projects/components/select-class";
 import {
   addNoteAction,
   confirmAssignmentAction,
+  confirmRemovalAction,
   grantAccessAction,
   makeOfferAction,
   reassignAction,
   recordGrantAction,
+  requestRemovalAction,
+  resolveReportAction,
   revokeAccessAction,
-  revokeGrantAction,
   saveAssetsAction,
   setEarlyAccessAction,
   respondCounterAction,
+  verifyAssetAction,
   withdrawOfferAction,
 } from "../admin-actions";
-import { editorRespondAction } from "../editor-actions";
+import {
+  confirmAssetAccessAction,
+  editorRespondAction,
+  reportAssetAction,
+} from "../editor-actions";
 import {
   ACCESS_REASONS,
   ACCESS_REASON_LABEL,
+  ASSET_ACCESS_TYPES,
+  ASSET_ACCESS_TYPE_LABEL,
   ASSET_KIND_SUGGESTIONS,
   ASSET_PROVIDERS,
   ASSET_PROVIDER_LABEL,
@@ -48,9 +57,20 @@ export type AssetRow = {
   provider: string;
   kind: string;
   notes: string;
+  description: string;
+  accessInstructions: string;
 };
 
-const blankAsset: AssetRow = { id: "", label: "", url: "", provider: "other", kind: "", notes: "" };
+const blankAsset: AssetRow = {
+  id: "",
+  label: "",
+  url: "",
+  provider: "other",
+  kind: "",
+  notes: "",
+  description: "",
+  accessInstructions: "",
+};
 
 /** Rows live in state (not the DOM) so a failed save keeps everything the admin typed. */
 export function AssetsForm({
@@ -138,6 +158,29 @@ export function AssetsForm({
                       maxLength={40}
                       placeholder="footage"
                     />
+                  </div>
+                  <div className="grid gap-1 sm:col-span-2">
+                    <Label htmlFor={id("description")}>Description</Label>
+                    <Textarea
+                      {...bind("description")}
+                      rows={2}
+                      maxLength={2000}
+                      placeholder="What is in this folder or file"
+                    />
+                  </div>
+                  <div className="grid gap-1 sm:col-span-2">
+                    <Label htmlFor={id("accessInstructions")}>Access instructions</Label>
+                    <Textarea
+                      {...bind("accessInstructions")}
+                      rows={2}
+                      maxLength={2000}
+                      aria-describedby={id("access-hint")}
+                      placeholder="e.g. Shared with your Google account; request access if it does not open"
+                    />
+                    <p id={id("access-hint")} className="text-muted-foreground text-xs">
+                      Editors see these. Never put passwords here. Changing the link or provider
+                      resets the access check.
+                    </p>
                   </div>
                   <div className="grid gap-1 sm:col-span-2">
                     <Label htmlFor={id("notes")}>Notes</Label>
@@ -553,13 +596,27 @@ export function RecordGrantForm({
                 </option>
               ))}
             </SelectField>
+            <SelectField
+              id="grant-access-type"
+              name="accessType"
+              label="How the client shared it"
+              state={state}
+              defaultValue="editor_account"
+              hint="The editor's own account is preferred. Anyone-with-the-link shares are accepted but flagged with a security warning."
+            >
+              {ASSET_ACCESS_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ASSET_ACCESS_TYPE_LABEL[t]}
+                </option>
+              ))}
+            </SelectField>
             <TextField
               id="grant-email"
               name="email"
               label="Shared with (email)"
               type="email"
               inputMode="email"
-              hint="The account you shared the folder with."
+              hint="The editor account the client shared the folder with (or sent the link to)."
               state={state}
             />
             <TextField
@@ -577,32 +634,132 @@ export function RecordGrantForm({
   );
 }
 
-export function RevokeGrantForm({
+/** KB7a-2: ask the client to remove the editor's access, then record their confirmation. */
+export function RemovalForms({
   grantId,
   projectId,
+  requested,
 }: {
   grantId: string;
   projectId: string | null;
+  requested: boolean;
+}) {
+  const ids = hiddenIds({ grantId, projectId: projectId ?? "" });
+  return requested ? (
+    <StayForm
+      action={confirmRemovalAction}
+      submitLabel="Confirm removal"
+      variant="outline"
+      confirm="Has the client confirmed the editor's access is removed?"
+    >
+      {ids}
+    </StayForm>
+  ) : (
+    <StayForm
+      action={requestRemovalAction}
+      submitLabel="Request removal"
+      variant="outline"
+      confirm="Have you asked the client to remove this editor's access? This only records it."
+    >
+      {ids}
+    </StayForm>
+  );
+}
+
+// --- Asset access ------------------------------------------------------------------------------
+
+export function VerifyAssetForm({
+  projectId,
+  assetId,
+  label,
+}: {
+  projectId: string;
+  assetId: string;
+  label: string;
 }) {
   return (
     <StayForm
-      action={revokeGrantAction}
-      submitLabel="Mark as removed"
+      action={verifyAssetAction}
+      submitLabel={`Verify access to ${label}`}
       variant="outline"
-      confirm="Have you removed this share in the provider? This only records it."
+      confirm="Have you checked the editor is authorised and can open it? A link that opens is not proof."
     >
-      {(state) => (
-        <>
-          {hiddenIds({ grantId, projectId: projectId ?? "" })}
-          <TextField
-            id={`revoke-${grantId}`}
-            name="reason"
-            label="Reason (optional)"
-            maxLength={500}
-            state={state}
-          />
-        </>
-      )}
+      {hiddenIds({ projectId, assetId })}
+    </StayForm>
+  );
+}
+
+export function ResolveReportForm({
+  projectId,
+  reportId,
+}: {
+  projectId: string;
+  reportId: string;
+}) {
+  return (
+    <StayForm
+      action={resolveReportAction}
+      submitLabel="Mark report resolved"
+      variant="outline"
+      confirm="Has the client fixed access? You still verify the asset afterwards."
+    >
+      {hiddenIds({ projectId, reportId })}
+    </StayForm>
+  );
+}
+
+/** Editor: "I cannot open this", with a note for the studio. */
+export function ReportAssetForm({
+  projectId,
+  assetId,
+  label,
+}: {
+  projectId: string;
+  assetId: string;
+  label: string;
+}) {
+  return (
+    <details className="rounded-lg border p-3">
+      <summary className="cursor-pointer text-sm font-medium">Report {label} inaccessible</summary>
+      <div className="pt-3">
+        <StayForm action={reportAssetAction} submitLabel="Send report" resetOnSuccess>
+          {(state) => (
+            <>
+              {hiddenIds({ projectId, assetId })}
+              <AreaField
+                id={`report-${assetId}`}
+                name="note"
+                label="What happens when you open it?"
+                hint="For example: access denied, link expired, wrong folder. The studio is notified."
+                rows={2}
+                maxLength={1000}
+                state={state}
+              />
+            </>
+          )}
+        </StayForm>
+      </div>
+    </details>
+  );
+}
+
+/** Editor: "I can open this". Never verifies the asset; the studio does. */
+export function ConfirmAssetAccessForm({
+  projectId,
+  assetId,
+  label,
+}: {
+  projectId: string;
+  assetId: string;
+  label: string;
+}) {
+  return (
+    <StayForm
+      action={confirmAssetAccessAction}
+      submitLabel={`I can open ${label}`}
+      variant="outline"
+    >
+      {hiddenIds({ projectId, assetId })}
     </StayForm>
   );
 }

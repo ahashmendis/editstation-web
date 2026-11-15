@@ -3,6 +3,35 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-15: Phase 12B asset access
+
+- Branch `phase12b-assets`, **uncommitted, pending owner review**. Spec section 4.7 and the
+  asset-inaccessible notification (section 6); decisions KB7, KB7a.
+- Migrations: `20261115042630_phase12b_notification_kind.sql` (`asset_inaccessible`, alone in its
+  migration), `20261115042633_phase12b_assets_schema.sql` (enums `asset_access_status`,
+  `asset_access_type`; new columns on `project_assets` and `asset_access_grants`; append-only
+  `asset_access_reports` with `private.guard_asset_access_reports`) and
+  `20261115042637_phase12b_assets_functions.sql` (`editor_report_asset_inaccessible`,
+  `editor_confirm_asset_access`, `admin_verify_asset`, `admin_resolve_asset_report`,
+  `admin_request_access_removal`, `admin_confirm_access_removal`; replaced `private.parse_assets`,
+  `private.sync_asset_rows`, `admin_record_asset_grant` (+ `p_access_type`) and
+  `admin_pending_revocations` (+ access type, removal requested)).
+- Implementation calls (flag for owner): the editor's "I can open this" is stored on the asset
+  (`editor_confirmed_at` only, no editor id since editors read the row; stale when older than the current assignment's `confirmed_at`) as a hint, never a verification; verifying is refused while a report
+  is open; resolving the last open report puts an inaccessible asset back to `awaiting_access`; a
+  changed link or provider resets verification; a report note is required (max 1000); one open
+  report per editor and asset; confirming removal also closes the share (`revoked_at`); the old
+  "Mark as removed" button is gone from the UI (the Phase 5 `admin_revoke_asset_grant` function
+  still exists); reports keep their history when an asset is removed (`asset_id` set null).
+- Tests: pgTAP `096_phase12b_assets_schema`, `097_phase12b_assets_functions`,
+  `098_phase12b_function_security`; `058` now pins the six-argument `admin_record_asset_grant`.
+  Unit tests for the new schemas, activity labels and the notification link.
+- App: `src/features/access` (`verifyAssetAction`, `resolveReportAction`, `requestRemovalAction`,
+  `confirmRemovalAction`, `reportAssetAction`, `confirmAssetAccessAction`; `RemovalForms`,
+  `VerifyAssetForm`, `ResolveReportForm`, `ReportAssetForm`, `ConfirmAssetAccessForm`; Asset access
+  card); `revokeGrantAction` / `RevokeGrantForm` / `revokeGrantSchema` removed. Activity labels for
+  the six new audit actions.
+
 ## 2026-11-15: Phase 12A project terms
 
 - Branch `phase12a-terms`, **uncommitted, pending owner review**. Spec

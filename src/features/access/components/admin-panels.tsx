@@ -5,8 +5,15 @@ import { formatDateTime } from "@/features/applications/components/status-badge"
 
 import {
   ACCESS_REASON_LABEL,
+  ANYONE_WITH_LINK_WARNING,
+  ASSET_ACCESS_STATUS_LABEL,
+  ASSET_ACCESS_STATUS_TONE,
+  ASSET_ACCESS_TYPE_LABEL,
   ASSET_PROVIDER_LABEL,
   EARLY_ACCESS_HINT,
+  WORKING_LINK_HINT,
+  type AssetAccessStatus,
+  type AssetAccessType,
   editorAccessWarning,
   editorLabel,
   formatMoney,
@@ -25,9 +32,11 @@ import {
   MakeOfferForm,
   ReassignForm,
   RecordGrantForm,
+  RemovalForms,
+  ResolveReportForm,
   RespondForms,
   RevokeAccessForm,
-  RevokeGrantForm,
+  VerifyAssetForm,
   WithdrawOfferForm,
 } from "./forms";
 import { NegotiationHistory } from "./negotiation-history";
@@ -64,6 +73,7 @@ export function AdminAccessPanels({
   return (
     <>
       <AssetsCard projectId={projectId} locked={locked} data={data} />
+      <AssetAccessCard projectId={projectId} locked={locked} data={data} />
       <EarlyAccessCard projectId={projectId} locked={locked} references={references} data={data} />
       <EditorsCard
         projectId={projectId}
@@ -101,12 +111,103 @@ function AssetsCard({ projectId, locked, data }: Pick<Props, "projectId" | "lock
             provider: a.provider,
             kind: a.kind ?? "",
             notes: a.notes ?? "",
+            description: a.description ?? "",
+            accessInstructions: a.access_instructions ?? "",
           }))}
         />
         {locked ? (
           <p className="text-muted-foreground pt-3 text-sm">
             This project can no longer be edited.
           </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** KB7: per-asset access state, editor reports and the admin's verification. */
+function AssetAccessCard({
+  projectId,
+  locked,
+  data,
+}: Pick<Props, "projectId" | "locked" | "data">) {
+  const openReports = data.reports.filter((r) => r.resolvedAt === null);
+  // The current confirmed/working editor. An "I can open this" older than their confirmation is
+  // stale (it came from an earlier assignment) and is not shown.
+  const working = data.assignments.find(
+    (x) => x.status === "confirmed" || x.status === "in_progress",
+  );
+  const freshConfirm = (at: string | null) =>
+    at !== null && working?.confirmedAt != null && at >= working.confirmedAt;
+  const removedAssetReports = openReports.filter(
+    (r) => r.assetId === null || !data.assets.some((a) => a.id === r.assetId),
+  );
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Asset access</CardTitle>
+        <CardDescription>
+          {WORKING_LINK_HINT} Editors can report a link they cannot open; you are notified.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        {data.assets.length === 0 ? (
+          <EmptyState title="No assets yet">Add assets above first.</EmptyState>
+        ) : (
+          <ul className="grid gap-4">
+            {data.assets.map((a) => {
+              const status = a.access_status as AssetAccessStatus;
+              const reports = openReports.filter((r) => r.assetId === a.id);
+              return (
+                <li key={a.id} className="grid gap-3 rounded-lg border p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium break-all">{a.label}</span>
+                    <StatusPill tone={ASSET_ACCESS_STATUS_TONE[status]}>
+                      {ASSET_ACCESS_STATUS_LABEL[status]}
+                    </StatusPill>
+                  </div>
+                  {a.verified_at ? (
+                    <p className="text-muted-foreground">
+                      Verified by {data.nameOf(a.verified_by)} on {formatDateTime(a.verified_at)}
+                    </p>
+                  ) : null}
+                  {working && freshConfirm(a.editor_confirmed_at) && status !== "verified" ? (
+                    <p className="text-muted-foreground">
+                      {data.nameOf(working.editorId)} says they can open it (
+                      {formatDateTime(a.editor_confirmed_at)}). This is not a verification.
+                    </p>
+                  ) : null}
+                  {reports.map((r) => (
+                    <div key={r.id} className="grid gap-2 rounded-md border p-3">
+                      <p>
+                        <span className="font-medium">{r.editorName}</span> reported it inaccessible
+                        on {formatDateTime(r.createdAt)}:
+                      </p>
+                      <p className="break-words whitespace-pre-line">{r.note}</p>
+                      <ResolveReportForm projectId={projectId} reportId={r.id} />
+                    </div>
+                  ))}
+                  {status !== "verified" && reports.length === 0 && !locked ? (
+                    <VerifyAssetForm projectId={projectId} assetId={a.id} label={a.label} />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {removedAssetReports.length > 0 ? (
+          <div className="grid gap-3 border-t pt-4 text-sm">
+            <h3 className="font-medium">Open reports on removed assets</h3>
+            {removedAssetReports.map((r) => (
+              <div key={r.id} className="grid gap-2 rounded-md border p-3">
+                <p>
+                  <span className="font-medium">{r.editorName}</span>, {formatDateTime(r.createdAt)}
+                  : <span className="break-words whitespace-pre-line">{r.note}</span>
+                </p>
+                <ResolveReportForm projectId={projectId} reportId={r.id} />
+              </div>
+            ))}
+          </div>
         ) : null}
       </CardContent>
     </Card>
@@ -384,8 +485,9 @@ function SharesCard({ projectId, locked, data }: Pick<Props, "projectId" | "lock
       <CardHeader>
         <CardTitle>Folder shares</CardTitle>
         <CardDescription>
-          Folders are shared by hand in Google Drive or Dropbox. Record each share here so it can be
-          taken back when the work is over. This does not share anything by itself.
+          The client shares folders in Google Drive or Dropbox. Record each share here. When the
+          work ends, ask the client to remove the editor&apos;s access and record their
+          confirmation: ending an assignment never removes access by itself.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
@@ -407,12 +509,18 @@ function SharesCard({ projectId, locked, data }: Pick<Props, "projectId" | "lock
                   {ASSET_PROVIDER_LABEL[g.provider as AssetProvider]} · shared with{" "}
                   <span className="break-all">{g.email}</span>
                 </p>
+                <GrantAccessType accessType={g.accessType} />
                 {g.folderUrl ? (
                   <p>
                     <ExternalLink href={g.folderUrl}>Open folder</ExternalLink>
                   </p>
                 ) : null}
-                <RevokeGrantForm grantId={g.id} projectId={projectId} />
+                <RemovalState requestedAt={g.removalRequestedAt} confirmedAt={null} />
+                <RemovalForms
+                  grantId={g.id}
+                  projectId={projectId}
+                  requested={g.removalRequestedAt !== null}
+                />
               </li>
             ))}
           </ul>
@@ -425,8 +533,10 @@ function SharesCard({ projectId, locked, data }: Pick<Props, "projectId" | "lock
             <ul className="grid gap-2 pt-3 text-sm">
               {past.map((g) => (
                 <li key={g.id} className="text-muted-foreground">
-                  {g.editorName}, <span className="break-all">{g.email}</span>, removed{" "}
-                  {formatDateTime(g.revokedAt)}
+                  {g.editorName}, <span className="break-all">{g.email}</span>,{" "}
+                  {g.removalConfirmedAt
+                    ? `removal requested ${formatDateTime(g.removalRequestedAt)}, confirmed ${formatDateTime(g.removalConfirmedAt)}`
+                    : `closed ${formatDateTime(g.revokedAt)} (no client confirmation recorded)`}
                   {g.revokeReason ? `: ${g.revokeReason}` : ""}
                 </li>
               ))}
@@ -440,6 +550,45 @@ function SharesCard({ projectId, locked, data }: Pick<Props, "projectId" | "lock
       </CardContent>
     </Card>
   );
+}
+
+/** Access type, with the KB7a-1 security warning for anyone-with-the-link shares. */
+export function GrantAccessType({ accessType }: { accessType: string }) {
+  const type = accessType as AssetAccessType;
+  return type === "anyone_with_link" ? (
+    <div role="note" className="grid gap-1">
+      <span className="flex flex-wrap items-center gap-2">
+        <StatusPill tone="warning">{ASSET_ACCESS_TYPE_LABEL[type]}</StatusPill>
+      </span>
+      <p className="text-sm">{ANYONE_WITH_LINK_WARNING}</p>
+    </div>
+  ) : (
+    <p className="text-muted-foreground">{ASSET_ACCESS_TYPE_LABEL[type] ?? accessType}</p>
+  );
+}
+
+/** Revoke checklist state in words (never colour alone). */
+export function RemovalState({
+  requestedAt,
+  confirmedAt,
+}: {
+  requestedAt: string | null;
+  confirmedAt: string | null;
+}) {
+  if (confirmedAt) {
+    return (
+      <StatusPill tone="success">{`Removal confirmed ${formatDateTime(confirmedAt)}`}</StatusPill>
+    );
+  }
+  if (requestedAt) {
+    return (
+      <span className="flex flex-wrap items-center gap-2">
+        <StatusPill tone="warning">{`Removal requested ${formatDateTime(requestedAt)}`}</StatusPill>
+        <span className="text-muted-foreground text-sm">Waiting for the client to confirm.</span>
+      </span>
+    );
+  }
+  return <StatusPill tone="neutral">Access live: removal not requested</StatusPill>;
 }
 
 function NotesCard({ projectId, data }: Pick<Props, "projectId" | "data">) {

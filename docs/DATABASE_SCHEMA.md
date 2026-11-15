@@ -168,6 +168,48 @@ Backfill (call 10, local data only): every existing project got terms v1 from it
 `revision_allowance`, agreed (no `agreed_by`) where an editor had been confirmed, otherwise draft;
 no stages.
 
+## Asset access _(Phase 12B, implemented on branch, pending owner review)_
+
+Spec section 4.7 and section 6; decisions KB7, KB7a. Migrations
+`20261115042630_phase12b_notification_kind.sql` (adds `notification_kind.asset_inaccessible`, alone
+in its migration), `20261115042633_phase12b_assets_schema.sql`,
+`20261115042637_phase12b_assets_functions.sql`. Enums: `asset_access_status` (`awaiting_access`,
+`verified`, `inaccessible`), `asset_access_type` (`editor_account`, `anyone_with_link`). The
+`asset_provider` value `other` is kept.
+
+| Table / change           | Key columns / rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Editor reads                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `project_assets` (+)     | `description`, `access_instructions` (≤2000 each, saved by `admin_save_assets`), `access_status` default `awaiting_access`, `verified_by/at` (set together with `verified`, check), `editor_confirmed_at` (the confirmed editor says they can open it; a hint, never a verification; no editor id stored; stale when older than the current assignment's `confirmed_at`). A changed link or provider resets verification and editor confirmation, and status to `awaiting_access` unless a report is open (then it stays `inaccessible`) | as before (`assigned`, or early) |
+| `asset_access_grants`(+) | `access_type` default `editor_account`; `removal_requested_at/by`, `removal_confirmed_at/by` (check: confirmed needs requested; `by` only with `at`)                                                                                                                                                                                                                                                                                                                                                                                     | never                            |
+| `asset_access_reports`   | **append-only**: project (restrict), asset (set null when the asset is removed), editor, note (1..1000), created_at, resolved_by/at. Trigger refuses delete and every change except resolving once and foreign keys going null. RLS: admins all, an active editor only their own; no write grants                                                                                                                                                                                                                                        | own rows (active editors)        |
+
+Functions (security definer, empty `search_path`, executable by `anon` and `authenticated`,
+authorise in the body; ES401/ES403/ES409/ES422):
+
+- `editor_report_asset_inaccessible(asset_id, note)` returns the report id: only the editor at the
+  `assigned` stage of the asset's project, re-checked after the project row lock (an unknown or foreign asset is ES403); note required;
+  one open report per editor and asset (ES409). Sets the asset `inaccessible` (clears verification),
+  audits `asset.reported_inaccessible` and notifies every active admin (`asset_inaccessible`,
+  entity `project`; the note is not copied into the notification).
+- `editor_confirm_asset_access(asset_id)`: same caller rule; records `editor_confirmed_at` (no-op if already set during the current assignment) and
+  audits `asset.editor_can_open`. Never changes `access_status`. Refused (ES409) while the editor's
+  own report is open.
+- `admin_verify_asset(asset_id)`: the only way to `verified`; refused on cancelled/archived
+  projects, when already verified, or while a report is open (ES409). Audits `asset.verified`.
+- `admin_resolve_asset_report(report_id)`: resolves once (ES409 after); when no report stays open
+  on an `inaccessible` asset it returns to `awaiting_access` (the admin still verifies). Audits
+  `asset_report.resolved`. Allowed on closed projects.
+- `admin_record_asset_grant(..., folder_url, access_type default 'editor_account')` (replaced; the
+  old five-argument version was dropped, calls with four or five arguments still work).
+- `admin_request_access_removal(grant_id)` / `admin_confirm_access_removal(grant_id)`: the revoke
+  checklist for client-owned folders. Confirm needs a prior request; confirming also closes the
+  share (`revoked_at/by`). Audits `asset_grant.removal_requested` / `asset_grant.removal_confirmed`.
+  Allowed on closed projects. Ending an assignment never sets either.
+- `admin_pending_revocations()` (replaced): adds `access_type` and `removal_requested_at`; rules
+  unchanged.
+
+Audit rows hold ids only (project, asset, report, grant, editor), never notes, links or emails.
+
 ## Delivery, money, audit
 
 | Table               | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Created |
@@ -218,19 +260,8 @@ Nothing below exists yet. Each item needs a design, owner approval, a **new** mi
 edit to a committed one), pgTAP tests as admin, editor A, editor B, applicant and anon, and
 `npm run db:types`. Amounts, charges and day counts are never defaulted.
 
-**Assets (KB7).** Today: `project_assets` (label, https url, provider `google_drive | dropbox |
-other`, kind, notes, early_access); `asset_access_grants` records shares made by Lenscape
-(`shared_by` = admin); editors can only read assets.
-
-- `project_assets`: add `description`, `access_instructions`, `access_status`
-  (`awaiting_access | verified | inaccessible`), `verified_by`, `verified_at`. Decide whether
-  `other` stays as a provider value (decision names only Drive and Dropbox).
-- New `asset_access_reports` (append-only): asset, editor, note, created_at, resolved_by,
-  resolved_at. Insert only through a `public.editor_report_asset_inaccessible` function (assigned
-  editor of that project only), resolution through an `admin_*` function; both audited.
-- `asset_access_grants`: record that the client shared (`shared_by_client` / source) and add a
-  `removal_requested_at` step for the revoke checklist (KB7a).
-- New notification event (extends KB10, needs owner OK): "asset reported inaccessible" to admins.
+**Assets (KB7, KB7a).** _Built in Phase 12B (see "Asset access"); `other` stays as a provider
+value._
 
 **Revision policy (F).** _Phase 12A builds the versioned agreement as `project_terms` (see
 "Project terms"); the `revision_requests.chargeable` link, scope quotes and adjustments below are
@@ -302,10 +333,8 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
   need a scheduled job. The project uses no scheduler today. Options: `pg_cron` (hosted) calling a
   `private` function, or a check that runs when an admin opens the dashboard. Design call for
   Phase 12; both must be audited.
-- **Assets** (KB7a): `access_type` (`editor_account | anyone_with_link`) on `asset_access_grants`
-  (or the asset), with the warning shown to admins; revocation checklist states
-  `removal_requested_at` and `removal_confirmed_at` (+ by); new notification kind
-  `asset_inaccessible` to admins.
+- **Assets** (KB7a): _built in Phase 12B_ (`access_type` on `asset_access_grants` with the admin
+  warning, removal requested/confirmed states, notification kind `asset_inaccessible`).
 - **Payout details** (E): design `editor_payout_details` (masked account number, verification
   state, audited reads of the full number, admin phone-verification step) and the mark-paid check
   for a verified account. **No real bank data may be stored until counsel confirms PDPA
@@ -325,6 +354,6 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
    locked, versioned agreement (default 3 kept on the form).
 7. `editor_list_payments` returns `on_hold_reason` text to editors; with client-payment waits,
    reasons must never contain client financial details (use the `waiting_on_client` flag).
-8. The revoke checklist treats shares as something Lenscape revokes; KB7a needs request/confirm
-   states for client-owned folders.
+8. ~~The revoke checklist treats shares as something Lenscape revokes~~: resolved in Phase 12B
+   (request/confirm states for client-owned folders).
 9. No scheduler exists for the 14-day rules.

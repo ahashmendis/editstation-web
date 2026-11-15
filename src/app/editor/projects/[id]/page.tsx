@@ -10,9 +10,20 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { StatusPill } from "@/components/status-pill";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AssignmentPill } from "@/features/access/components/assignment-pill";
-import { RespondForms } from "@/features/access/components/forms";
+import {
+  ConfirmAssetAccessForm,
+  ReportAssetForm,
+  RespondForms,
+} from "@/features/access/components/forms";
 import { NegotiationHistory } from "@/features/access/components/negotiation-history";
-import { ASSET_PROVIDER_LABEL, formatMoney, type AssetProvider } from "@/features/access/constants";
+import {
+  ASSET_ACCESS_STATUS_LABEL,
+  ASSET_ACCESS_STATUS_TONE,
+  ASSET_PROVIDER_LABEL,
+  formatMoney,
+  type AssetAccessStatus,
+  type AssetProvider,
+} from "@/features/access/constants";
 import { getEditorProject } from "@/features/access/queries";
 import { EditorConfirmationPanel } from "@/features/confirmation/components/editor-panel";
 import { getConfirmationData } from "@/features/confirmation/queries";
@@ -346,8 +357,10 @@ async function EditorProjectContent({
         <CardHeader>
           <CardTitle>Assets</CardTitle>
           <CardDescription>
-            Material supplied for the project.
-            {!confirmed ? " You will see all assets if you are confirmed." : ""}
+            Material supplied for the project. Links are shared by the client with your account.
+            {confirmed
+              ? " If one does not open, report it so the studio can sort out access."
+              : " You will see all assets if you are confirmed."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -355,20 +368,63 @@ async function EditorProjectContent({
             <EmptyState title="No assets to show" />
           ) : (
             <ul className="grid gap-3">
-              {detail.assets.map((a) => (
-                <li key={a.id} className="grid gap-1 rounded-lg border p-3 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium">{a.label}</span>
-                    <span className="text-muted-foreground">
-                      {[a.kind, ASSET_PROVIDER_LABEL[a.provider as AssetProvider]]
-                        .filter(Boolean)
-                        .join(" · ")}
+              {detail.assets.map((a) => {
+                const status = a.access_status as AssetAccessStatus;
+                const reported = detail.openReportAssetIds.includes(a.id);
+                // Stale when older than this editor's own confirmation (an earlier assignment).
+                const saidOpen =
+                  a.editor_confirmed_at !== null &&
+                  working?.confirmedAt != null &&
+                  a.editor_confirmed_at >= working.confirmedAt;
+                return (
+                  <li key={a.id} className="grid gap-2 rounded-lg border p-3 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium">{a.label}</span>
+                      <span className="text-muted-foreground">
+                        {[a.kind, ASSET_PROVIDER_LABEL[a.provider as AssetProvider]]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </div>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <StatusPill tone={ASSET_ACCESS_STATUS_TONE[status]}>
+                        {ASSET_ACCESS_STATUS_LABEL[status]}
+                      </StatusPill>
                     </span>
-                  </div>
-                  <Link2 href={a.url}>{a.url}</Link2>
-                  {a.notes ? <p className="whitespace-pre-line">{a.notes}</p> : null}
-                </li>
-              ))}
+                    <Link2 href={a.url}>{a.url}</Link2>
+                    {a.description ? <p className="whitespace-pre-line">{a.description}</p> : null}
+                    {a.access_instructions ? (
+                      <p className="whitespace-pre-line">
+                        <span className="font-medium">How to get access: </span>
+                        {a.access_instructions}
+                      </p>
+                    ) : null}
+                    {a.notes ? <p className="whitespace-pre-line">{a.notes}</p> : null}
+                    {confirmed ? (
+                      reported ? (
+                        <p className="text-muted-foreground">
+                          You reported this as inaccessible. The studio is sorting out access.
+                        </p>
+                      ) : (
+                        <div className="grid gap-3">
+                          {saidOpen ? (
+                            <p className="text-muted-foreground">
+                              You told the studio you can open this.
+                            </p>
+                          ) : status !== "verified" ? (
+                            <ConfirmAssetAccessForm
+                              projectId={p.id}
+                              assetId={a.id}
+                              label={a.label}
+                            />
+                          ) : null}
+                          <ReportAssetForm projectId={p.id} assetId={a.id} label={a.label} />
+                        </div>
+                      )
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

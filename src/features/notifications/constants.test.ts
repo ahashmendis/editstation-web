@@ -11,6 +11,7 @@ describe("notificationHref", () => {
     ["applicant_response", `/admin/applications/${id}`],
     ["counteroffer", `/admin/projects/${id}`],
     ["submission", `/admin/projects/${id}`],
+    ["asset_inaccessible", `/admin/projects/${id}`],
     ["application_decision", "/apply"],
     ["application_request", "/apply"],
     ["invitation", `/editor/projects/${id}`],

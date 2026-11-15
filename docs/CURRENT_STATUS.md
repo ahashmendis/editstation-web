@@ -9,13 +9,27 @@ mark paid cannot check verified payout details (unbuilt by design until E is bui
 suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
-KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15, not yet built: KB7, F, KB9.
+KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 not yet built.
 **Last updated:** 2026-11-15
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
 
 ## What exists
+
+- **Phase 12B assets (branch `phase12b-assets`, uncommitted, pending owner review, 2026-11-15):**
+  migrations `20261115042630_phase12b_notification_kind.sql`,
+  `20261115042633_phase12b_assets_schema.sql`, `20261115042637_phase12b_assets_functions.sql`:
+  asset description, access instructions, `access_status` (awaiting/verified/inaccessible, only an
+  admin verifies), editor "I can open this" hint; share `access_type` with an admin security
+  warning for anyone-with-the-link; append-only `asset_access_reports`;
+  `editor_report_asset_inaccessible` (assigned editor only, notifies admins with the new
+  `asset_inaccessible` kind), `editor_confirm_asset_access`, `admin_verify_asset`,
+  `admin_resolve_asset_report`, `admin_request_access_removal`, `admin_confirm_access_removal`;
+  revoke checklist shows requested/confirmed states. App: Asset access card and removal buttons on
+  `/admin/projects/[id]` and `/admin/access-review`, new asset form fields, editor asset list with
+  description, instructions, "I can open" and a report form. pgTAP `096`-`098`. Signed-in e2e not
+  extended (no route changes); the new screens are covered by pgTAP and unit tests only.
 
 - **Phase 12A terms (branch `phase12a-terms`, uncommitted, pending owner review, 2026-11-15):**
   migrations `20261115032846_phase12a_terms_schema.sql` and
@@ -187,8 +201,8 @@ tested locally; nothing has run on hosted infrastructure.
 
 ## Next task
 
-0. Owner review of Phase 12A (branch `phase12a-terms`; not committed). Then 12B (assets) in
-   parallel and 12C (client milestones, deposit gate, timed rules).
+0. Owner review of Phase 12B (branch `phase12b-assets`; not committed). Then 12C (client
+   milestones, deposit gate, timed rules).
 
 1. Owner decisions of 2026-11-15 (KB7 client Drive/Dropbox links, F per-project revision policy,
    KB9 50/50 client and editor milestones) are recorded in docs only; **code still reflects the old

@@ -12,6 +12,34 @@ export const ASSET_PROVIDER_LABEL: Record<AssetProvider, string> = {
   other: "Other",
 };
 
+/** Asset access verification (KB7). Only an admin marks an asset verified. */
+export const ASSET_ACCESS_STATUSES = ["awaiting_access", "verified", "inaccessible"] as const;
+export type AssetAccessStatus = (typeof ASSET_ACCESS_STATUSES)[number];
+export const ASSET_ACCESS_STATUS_LABEL: Record<AssetAccessStatus, string> = {
+  awaiting_access: "Awaiting access check",
+  verified: "Access verified",
+  inaccessible: "Reported inaccessible",
+};
+export const ASSET_ACCESS_STATUS_TONE: Record<AssetAccessStatus, StatusTone> = {
+  awaiting_access: "warning",
+  verified: "success",
+  inaccessible: "danger",
+};
+
+/** How the client shared a folder (KB7a-1). The editor's own account is preferred. */
+export const ASSET_ACCESS_TYPES = ["editor_account", "anyone_with_link"] as const;
+export type AssetAccessType = (typeof ASSET_ACCESS_TYPES)[number];
+export const ASSET_ACCESS_TYPE_LABEL: Record<AssetAccessType, string> = {
+  editor_account: "Shared with the editor's account",
+  anyone_with_link: "Anyone with the link",
+};
+export const ANYONE_WITH_LINK_WARNING =
+  "Security warning: anyone who gets this link can open the folder. Ask the client to share it with the editor's own account where possible.";
+
+/** A working link is never proof of access (KB7a-1). */
+export const WORKING_LINK_HINT =
+  "A link that opens is not proof the editor is authorised. Verify access after the editor confirms it.";
+
 /** Suggestions only: the database accepts any kind of 1 to 40 characters. */
 export const ASSET_KIND_SUGGESTIONS = [
   "footage",
