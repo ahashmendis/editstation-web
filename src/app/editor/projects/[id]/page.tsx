@@ -25,6 +25,8 @@ import {
   type AssetProvider,
 } from "@/features/access/constants";
 import { getEditorProject } from "@/features/access/queries";
+import { EditorAdjustmentOffers } from "@/features/adjustments/components/panels";
+import { getRevisionGates, listMyAdjustments } from "@/features/adjustments/queries";
 import { EditorConfirmationPanel } from "@/features/confirmation/components/editor-panel";
 import { getConfirmationData } from "@/features/confirmation/queries";
 import { EditorTermsSummary } from "@/features/projects/components/editor-terms";
@@ -93,6 +95,18 @@ async function EditorProjectContent({
     getEditorTerms(p.id),
   ]);
   const confirmation = working ? (confirmations?.get(working.id) ?? null) : null;
+  // Offers show whenever the editor can see the project (also cancellation offers on an ended
+  // assignment); gates only matter while working.
+  const [offers, gates] = await Promise.all([
+    listMyAdjustments(p.id),
+    working
+      ? getRevisionGates(
+          (submissionData?.revisions ?? [])
+            .filter((r) => r.assignmentId === working.id && r.status === "requested")
+            .map((r) => r.id),
+        )
+      : Promise.resolve({}),
+  ]);
   const briefType = p.brief_type as BriefType;
   const live =
     current &&
@@ -213,12 +227,15 @@ async function EditorProjectContent({
         />
       ) : null}
 
+      <EditorAdjustmentOffers offers={offers} />
+
       {working?.status === "in_progress" && submissionData ? (
         <EditorSubmissionsPanel
           projectId={p.id}
           assignmentId={working.id}
           projectStatus={p.status}
           data={submissionData}
+          gates={gates}
         />
       ) : null}
 

@@ -8,6 +8,11 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { EmptyState } from "@/components/empty-state";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AdminExtraPayPanel,
+  CancellationSettlementPanel,
+} from "@/features/adjustments/components/panels";
+import { getAdminAdjustmentData, previewSettlement } from "@/features/adjustments/queries";
 import { AdminActionForm } from "@/features/applications/components/admin-action-form";
 import { formatDateTime } from "@/features/applications/components/status-badge";
 import { AdminAccessPanels } from "@/features/access/components/admin-panels";
@@ -58,18 +63,32 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
   await requireAdmin();
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [detail, options, access, submissionData, terms, billing] = await Promise.all([
+  const [detail, options, access, submissionData, terms, billing, extras] = await Promise.all([
     getProjectDetail(id),
     getProjectFormOptions(),
     getProjectAccessData(id),
     getSubmissionData(id),
     getProjectTerms(id),
     getClientBilling(id),
+    getAdminAdjustmentData(id),
   ]);
   if (!detail) notFound();
   const working = access.assignments.filter(
     (a) => a.status === "confirmed" || a.status === "in_progress",
   );
+  const inProgress = working.find((a) => a.status === "in_progress") ?? null;
+  // A settlement applies to an assigned or started project with a confirmed editor (spec §4.6).
+  const settleable =
+    !extras.settlement &&
+    detail.project.archived_at === null &&
+    working.length > 0 &&
+    (["assigned", "in_progress", "in_review", "revision_requested"].includes(
+      detail.project.status,
+    ) ||
+      (detail.project.status === "on_hold" && detail.project.status_before_hold === "assigned"));
+  const settlementPreview = settleable
+    ? await previewSettlement(id)
+    : { preview: null, message: null };
   const confirmationData = await getConfirmationData(working.map((a) => a.id));
   const {
     project: p,
@@ -314,6 +333,27 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
           data={submissionData}
         />
       ) : null}
+
+      <AdminExtraPayPanel
+        projectId={p.id}
+        assignmentId={inProgress?.id ?? null}
+        currency={inProgress?.agreedCurrency ?? p.proposed_currency ?? "LKR"}
+        clientCurrency={internal?.client_price_currency ?? "LKR"}
+        revisions={submissionData.revisions}
+        data={extras}
+        today={billing.today}
+        locked={locked}
+      />
+
+      <CancellationSettlementPanel
+        projectId={p.id}
+        settlement={extras.settlement}
+        preview={settlementPreview.preview}
+        previewMessage={settlementPreview.message}
+        cancelledAssignmentId={extras.settlement?.assignmentId ?? null}
+        cancellationOffers={extras.adjustments.filter((a) => a.kind === "cancellation")}
+        archived={archived}
+      />
 
       <Card>
         <CardHeader>

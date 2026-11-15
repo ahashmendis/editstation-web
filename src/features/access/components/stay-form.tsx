@@ -172,9 +172,15 @@ export function TextField(
 }
 
 export function AreaField(
-  props: FieldBase & { rows?: number; maxLength?: number; defaultValue?: string },
+  props: FieldBase & {
+    rows?: number;
+    maxLength?: number;
+    defaultValue?: string;
+    /** Marks the field required for assistive technology (e.g. when another field makes it so). */
+    ariaRequired?: boolean;
+  },
 ) {
-  const { id, name, label, state, hint, rows = 3, maxLength, defaultValue } = props;
+  const { id, name, label, state, hint, rows = 3, maxLength, defaultValue, ariaRequired } = props;
   return (
     <div className="grid gap-2">
       <Label htmlFor={id}>{label}</Label>
@@ -184,6 +190,7 @@ export function AreaField(
         rows={rows}
         maxLength={maxLength}
         defaultValue={state.values?.[name] ?? defaultValue}
+        aria-required={ariaRequired || undefined}
         aria-invalid={state.fieldErrors?.[name]?.length ? true : undefined}
         aria-describedby={describedBy(props)}
       />

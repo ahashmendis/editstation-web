@@ -93,8 +93,8 @@ select columns_are('public', 'submissions', array['id', 'assignment_id', 'projec
   'outcome', 'feedback', 'reviewed_by', 'reviewed_at', 'created_at'], 'submissions columns');
 select columns_are('public', 'revision_requests', array['id', 'project_id', 'assignment_id', 'submission_id', 'type',
   'counts_against_allowance', 'round_number', 'beyond_allowance', 'reason', 'status', 'acknowledged_at',
-  'resubmitted_at', 'resolved_at', 'created_by', 'classified_by', 'classified_at', 'created_at', 'updated_at'],
-  'revision_requests columns');
+  'resubmitted_at', 'resolved_at', 'created_by', 'classified_by', 'classified_at', 'created_at', 'updated_at',
+  'adjustment_required'], 'revision_requests columns (12D part 2 adds adjustment_required)');
 select ok((select relrowsecurity from pg_class where oid = 'public.submissions'::regclass), 'RLS on submissions');
 select ok((select relrowsecurity from pg_class where oid = 'public.revision_requests'::regclass),
   'RLS on revision_requests');

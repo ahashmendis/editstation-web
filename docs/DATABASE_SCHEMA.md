@@ -314,6 +314,82 @@ from 12D part 2) and `payment_hold_label` (`under_review`, `assignment_ended`,
   never returns `payable_reason`, admin ids or client money.
 - Unchanged: the Phase 9 hold-on-close trigger (12D part 2 settlement replaces it).
 
+## Extra pay, scope quotes and cancellation settlement _(Phase 12D part 2, implemented on branch, pending owner review)_
+
+Spec sections 4.3 (`cancelled`), 4.4, 4.6, 6 and calls 2, 5, 6, 8; decisions F, F2 (a-d), KB9a-3,
+Phase 12 principles. Migrations `20261115093806_phase12d2_payment_cancelled.sql`
+(`payment_status.cancelled`, alone), `20261115093810_phase12d2_notification_kinds.sql`
+(`adjustment_offered`, `adjustment_answered`, alone), `20261115093814_phase12d2_schema.sql`,
+`20261115093818_phase12d2_adjustments.sql`, `20261115093821_phase12d2_settlement.sql`. Enums
+`adjustment_kind` (`extra_round`, `scope_change`, `cancellation`), `adjustment_status` (`offered`,
+`accepted`, `declined`, `withdrawn`), `scope_quote_status` (`drafted`, `sent`, `accepted`,
+`declined`).
+
+- `compensation_adjustments` (admin select only; no write grants): `assignment_id`, `project_id`,
+  `editor_id`, `kind`, `amount` (> 0) and `currency` (the assignment's agreed currency),
+  `revision_request_id` (extra round) or `scope_quote_id` (scope change) or neither
+  (cancellation), `status`, `note` (for the editor), offered/answered/withdrawn by and at. One live
+  (offered or accepted) offer per round and per quote; one open cancellation offer per
+  assignment. Guard: no delete, identity and amount fixed, one answering move. Editor pay only.
+- `scope_change_quotes` (admin-only client money): `revision_request_id` (a `scope_change`
+  request), `description`, `amount`, `currency`, `status`, `sent_at`, answered by/at (the client's
+  answer, recorded by an admin). One live (not declined) quote per request; amount fixed.
+- `cancellation_settlements` (admin-only, append-only, one per project): stage, schedule
+  percentages, agreed amount, computed and final editor earned (+ reason when they differ),
+  accepted extra pay (earned in full), milestones paid before, settlement amount (milestone
+  shortfall), milestone overpayment, cancelled row count, client base (deposit +
+  balance milestones), verified received, charge, refund and amount still owed.
+- `revision_requests.adjustment_required` (client revisions only; cleared on reclassification).
+- `client_milestones` gains `scope_quote_id` / `revision_request_id` (an `extra_work` row's source;
+  one live row each) and `settlement_id` (refund rows); fixed once written.
+- `payments` gains `adjustment_id` and `settlement_id`; `milestone_seq` is null on those extra
+  lines (`payments_line_chk`: an extra-pay row has `payable_reason = adjustment_accepted`, a
+  settlement row `cancellation_settlement`). `cancelled` is final like `paid` and is set only by a
+  settlement (transaction-local flag); open-row keys exclude cancelled rows; one open row per
+  offer and per settlement. Insert guard: milestones (net, cancelled excluded) within the agreed
+  amount; an extra-pay row within its accepted offer; a settlement row within the shortfall; a
+  settlement may reverse part of a paid row (overpayment), other reversals are whole. Audit
+  action `payment.cancelled`.
+- A request the editor has begun (acknowledged, in progress) cannot be reclassified as a scope
+  change (ES409; raise a new change request). A scope-change offer needs the accepted quote, so
+  an accepted offer never outlives a declined quote.
+- Gate (`private.revision_gate`, enforced in the replaced `guard_revision_requests`, so every
+  acknowledge/start/submit path): a marked client revision needs an accepted extra-round offer; a
+  scope change needs an accepted scope offer **and** an accepted quote. Codes `ok`,
+  `needs_extra_pay`, `waiting_for_scope_approval` (`editor_revision_gate` for the editor's own
+  request).
+- Functions: `admin_set_revision_adjustment_required`, `admin_offer_adjustment` (notifies the
+  editor, `adjustment_offered`), `admin_withdraw_adjustment` (offered only),
+  `editor_respond_adjustment` (accept creates its own `pending_approval` payment, payable now, due
+  business date + `editor_pay_days`; notifies admins, `adjustment_answered`),
+  `editor_list_adjustments` (own offers; no admin ids, quotes or client money),
+  `admin_create_scope_quote`, `admin_send_scope_quote`, `admin_record_scope_quote_answer`
+  (acceptance needs an admin due date and creates an invoiced `extra_work` client milestone; call
+  5), `admin_charge_extra_round` (a beyond-allowance client revision, terms `extra_round_charge`,
+  admin due date, once), `admin_preview_cancellation_settlement`, `admin_settle_cancellation`.
+  Replaced: `admin_reverse_payment` (keeps the line), `editor_list_payments` (adds `line_kind`:
+  `milestone`, `extra_round`, `scope_change`, `cancellation_extra`, `cancellation_settlement`,
+  `cancellation_reconciliation`), `admin_set_project_status` (settle-instead rule),
+  `check_payment_row`, `guard_payments`, `audit_payments`, `require_unpaid`.
+- Settlement (`admin_settle_cancellation(project, adjusted_editor_earned?, reason?)`, one
+  transaction, locks project, assignments, payments, client milestones): stage = project status
+  (on hold from assigned counts as assigned); refused cleanly when the agreed terms have no
+  schedule row for the stage, when no editor is confirmed, when a client payment is recorded but
+  unverified, or when already settled. Editor earned = round(agreed amount x
+  `editor_earned_percent`, 2) + accepted extra pay (extra rounds, scope changes) in full, or the
+  admin's figure (between the accepted extra pay and agreed + extra pay, reason required). It
+  cancels the project (assignment withdrawn, access revoked, open offers withdrawn); extra pay
+  rows are untouched (paid stays paid, unpaid stays payable); unpaid milestone rows are cancelled;
+  a settlement row pays the milestone shortfall, or settlement reversals of the newest paid
+  milestone rows record a milestone overpayment; and it
+  records refund rows (newest verified receipt first) for verified deposit + balance money above
+  the client charge (round(client base x `client_charge_percent`, 2)). Extra-work client charges
+  are not part of the client calculation.
+- When the settlement is required: the project has a confirmed or in-progress assignment and the
+  agreed terms have a schedule row for its stage; then `admin_set_project_status(..., cancelled)`
+  is refused (ES409). Otherwise the plain cancel keeps the Phase 9 hold-on-close behaviour
+  (unpaid rows on hold for the admin), e.g. backfilled terms without a schedule.
+
 ## Delivery, money, audit
 
 | Table               | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Created |
@@ -449,9 +525,9 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
 1. _(Resolved in Phase 12C: `assigned -> on_hold` for the unpaid-deposit rule only.)_ Project `on_hold` is refused from `assigned`/`in_progress` (Phase 4 rule), but KB9a-2 puts a
    project on hold when the deposit does not clear, which can happen after an editor is assigned.
 2. _(Resolved in Phase 12C: deposit gate.)_ The start gate does not check client money; KB9b-4 requires a verified deposit.
-3. _(Resolved in Phase 12D part 1 for milestones; adjustments and settlements are part 2.)_ One open editor payment per assignment (`payments_open_key`), created whole at confirmation;
+3. _(Resolved in Phase 12D: milestones in part 1; extra-pay and settlement lines in part 2.)_ One open editor payment per assignment (`payments_open_key`), created whole at confirmation;
    the decisions need milestones, adjustments and settlements as separate rows.
-4. Ending an assignment puts unpaid payments on hold automatically (Phase 9, flagged under F);
+4. _(Resolved in Phase 12D part 2: cancellation settlement where a schedule applies; the hold stays for reassignment and unscheduled cancels.)_ Ending an assignment puts unpaid payments on hold automatically (Phase 9, flagged under F);
    F2/KB9a-3 say cancellation must settle completed work and kill fees instead of freezing pay.
 5. _(Resolved in Phase 12D part 1: dispute split rows.)_ Holds are whole-row; KB9a-4 needs partial holds.
 6. `revision_allowance` is editable until cancel/archive and is not an agreement; F requires a

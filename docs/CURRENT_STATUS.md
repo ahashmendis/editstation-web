@@ -4,18 +4,31 @@
 Phase 11 added signed-in Playwright e2e, security headers, a local backup/restore drill,
 `docs/RUNBOOKS.md` and the KB §16 evidence table (below). Full report:
 `docs/reports/editstation-system-report.html`. Owner flags still open from
-earlier phases: Phase 9 (a) F: ended assignments put unpaid payments on hold automatically, (b) E:
+earlier phases: Phase 9 (a) F: ended assignments put unpaid payments on hold automatically (12D part 2 settles scheduled cancellations instead), (b) E:
 mark paid cannot check verified payout details (unbuilt by design until E is built), (c)
 suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
-KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1).
+KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1), extra pay offers, scope quotes and cancellation settlement built on branch (12D part 2).
 **Last updated:** 2026-11-15
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
 
 ## What exists
+
+- **Phase 12D part 2 extra pay and settlement (branch `phase12d2-adjustments`, uncommitted,
+  pending owner review, 2026-11-15):** `compensation_adjustments` (admin offers, editor accepts or
+  declines; accepting creates its own payable payment row), `revision_requests.adjustment_required`
+  and a database gate (a marked round or a scope change cannot begin until extra pay, and for a
+  scope change the client quote, is accepted), admin-only `scope_change_quotes` (acceptance adds an
+  invoiced extra-work client milestone with an admin due date), extra-round client charges from the
+  terms, `payment_status.cancelled` and `admin_settle_cancellation` (cancels and settles: schedule
+  maths, unpaid rows cancelled, shortfall row or overpayment reversal, client refund rows),
+  notification kinds `adjustment_offered` / `adjustment_answered`. App: extra pay and settlement
+  cards on `/admin/projects/[id]`, offers on `/editor/projects/[id]` and `/editor/earnings`,
+  extra/cancelled/settlement lines on both earnings pages. pgTAP `105`-`108`. Owner calls are
+  listed in `CHANGELOG.md`. Not yet: payout details (12E); signed-in e2e not extended.
 
 - **Phase 12D part 1 editor pay (branch `phase12d-editor-pay`, uncommitted, pending owner review,
   2026-11-15):** editor milestone rows from the agreed terms shares (default 50/50, last row takes
@@ -26,8 +39,8 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   (`admin_split_payment_for_dispute`, only the disputed part held); `editor_list_payments` returns
   fixed hold labels ("Under review", "Waiting for client payment") instead of reasons. App:
   milestones on `/editor/earnings`, `/admin/earnings` and `/admin/earnings/[id]` (payable reason,
-  split form). pgTAP `102`-`104`. Not yet: extra pay offers, scope quotes, cancellation settlement
-  (`cancelled` status) in part 2; payout details (12E).
+  split form). pgTAP `102`-`104`. Part 2 (above) adds extra pay, scope quotes and settlement;
+  payout details are 12E.
 
 - **Phase 12C client billing (branch `phase12c-billing`, uncommitted, pending owner review,
   2026-11-15):** admin-only `client_milestones` (default 50/50 of the client price, per-project

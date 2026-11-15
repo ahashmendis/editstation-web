@@ -1,12 +1,13 @@
 import { formatDateTime } from "@/features/applications/components/status-badge";
 
-import { HOLD_LABEL, milestoneLabel } from "../constants";
+import { HOLD_LABEL, lineLabel } from "../constants";
 import type { EditorPaymentRow } from "../queries";
 import { Money } from "./money";
 import { PaymentStatusPill } from "./payment-status-pill";
 
 /**
- * The editor's own payments as cards (one column at 375px), one per pay milestone. Holds and waits
+ * The editor's own payments as cards (one column at 375px), one per pay milestone or extra line
+ * (extra pay, cancellation settlement; cancelled rows show "Cancelled"). Holds and waits
  * show a fixed label only (KB9a-5): never the admin's reason or any client money.
  */
 export function EditorPaymentList({ rows }: { rows: EditorPaymentRow[] }) {
@@ -21,7 +22,7 @@ export function EditorPaymentList({ rows }: { rows: EditorPaymentRow[] }) {
             <div className="grid gap-0.5">
               <p className="font-medium break-words">{row.projectTitle}</p>
               <p className="text-muted-foreground text-xs">
-                {milestoneLabel(row.milestoneSeq)}
+                {lineLabel(row.lineKind, row.milestoneSeq)}
                 {row.splitFromPaymentId ? " · disputed part" : ""}
               </p>
             </div>

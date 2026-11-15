@@ -238,6 +238,38 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   was verified (or protection applied) from a later milestone's `due_date` minus the editor pay
   days. Only the day leaks, never amounts or references.
 - `reversal_reason` is not editor-visible either: editors see a reversal row as "Reversed" only.
+
+## Extra pay, scope quotes and cancellation settlement (Phase 12D part 2, implemented on branch, pending owner review)
+
+- `compensation_adjustments`, `scope_change_quotes` and `cancellation_settlements`: RLS on, MFA
+  admin select only, no write grants for any API role; guards hold for the table owner (pgTAP
+  `105`). Editors read their own offers only through `editor_list_adjustments` (editor pay, note,
+  status; never admin ids, the quote or client money) and the gate code of their own request
+  through `editor_revision_gate` (`ok`, `needs_extra_pay`, `waiting_for_scope_approval`; no client
+  amounts or dates). Editor B sees nothing of editor A (pgTAP `106`, `108`).
+- Client quotes, extra-round and scope charges, refunds, client charge percentages and the
+  client side of a settlement stay in admin-only tables (`scope_change_quotes`,
+  `client_milestones`, `cancellation_settlements`, `project_terms_stages`). Adjustment rows hold
+  only editor pay in the agreed currency.
+- `editor_list_payments` adds a fixed `line_kind` label (milestone, extra round, scope change,
+  extra cancellation pay, cancellation settlement, cancellation reconciliation); settlement
+  reversal reasons and the admin's adjustment reason stay admin-only.
+- The extra-work gate is enforced by the revision-request guard trigger, so no API path
+  (acknowledge, start, submit) can begin a blocked change. `cancelled` payments are final and set
+  only inside `admin_settle_cancellation` (transaction-local flag), never by hand or by the table
+  owner without it (pgTAP `107`).
+- Every new public function is executable by anon and authenticated, revoked from PUBLIC,
+  `security definer` with an empty `search_path`, and authorises in its body: admin functions
+  ES401 for anon and ES403 without an MFA admin session; editor functions ES403 for admins,
+  suspended editors and applicants (pgTAP `108`). Audit rows hold ids, enum names and field names
+  only (never amounts, reasons, notes or dates).
+- A begun change request cannot be reclassified as a scope change (it would skip the quote and
+  extra pay gate), and a scope offer needs the client's accepted quote (pgTAP `106`).
+- Extra-work client payments are excluded from the settlement refund; reassignment (not
+  cancellation) keeps the Phase 9 hold on the ended editor's unpaid payments for the admin to
+  resolve, and a later cancel does not settle them (owner to confirm).
+- Accepted inference: an editor who accepts extra pay learns that Lenscape agreed extra work for
+  the client, not its price.
 - Late-balance protection runs in `private.apply_timed_rules` (no API grant); its audit rows hold
   ids and the enum reason, and only admins are notified. Lock order is project, assignments,
   payments everywhere the payable rules run.

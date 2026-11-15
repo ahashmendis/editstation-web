@@ -248,3 +248,52 @@ test.describe("client billing (Phase 12C)", () => {
     await editorContext.close();
   });
 });
+
+test.describe("cancellation settlement (Phase 12D part 2)", () => {
+  test("a changed earned amount needs a reason; the typed amount is kept", async ({ browser }) => {
+    test.setTimeout(150_000);
+    const admin = await createAdminWithTotp();
+    const editor = await createConfirmedUser("editor-settle");
+    activateEditor(editor.id);
+    const projectId = createProjectWithOffer(
+      admin.id,
+      editor.id,
+      `E2E project settle ${Date.now()}`,
+    );
+    confirmAssignmentAwaitingDeposit(admin.id, editor.id, projectId, 20000, {
+      stages: [{ stage: "assigned", editor_earned_percent: 10, client_charge_percent: 5 }],
+    });
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await signIn(page, admin);
+    await page.goto("/mfa");
+    await page.waitForLoadState("networkidle");
+    await page
+      .getByLabel("6-digit code")
+      .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
+
+    await page.goto(`/admin/projects/${projectId}`);
+    await expect(page.getByText("Cancellation settlement")).toBeVisible();
+    // 10% of the 5000 LKR agreed pay.
+    const earned = page.getByLabel(/Editor earned, only to change the proposed 500 LKR/);
+    await expect(earned).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(async () => {
+      await earned.fill("600");
+      await page.getByRole("button", { name: "Cancel the project and settle" }).click();
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await expect(
+        page.getByText("Give the reason for changing the editor's earned amount."),
+      ).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
+    await expect(earned).toHaveValue("600");
+    await expect(page.getByLabel("Reason for a changed amount")).toHaveAttribute(
+      "aria-required",
+      "true",
+    );
+    await context.close();
+  });
+});

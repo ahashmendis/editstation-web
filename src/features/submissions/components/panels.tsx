@@ -1,6 +1,7 @@
 import { EmptyState } from "@/components/empty-state";
 import { StatusPill } from "@/components/status-pill";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { editorGateNotice, type RevisionGate } from "@/features/adjustments/constants";
 import { formatDateTime } from "@/features/applications/components/status-badge";
 
 import {
@@ -98,20 +99,25 @@ export function EditorSubmissionsPanel({
   assignmentId,
   projectStatus,
   data,
+  gates = {},
 }: {
   projectId: string;
   assignmentId: string;
   projectStatus: string;
   data: SubmissionData;
+  /** Gate codes of requests not yet begun (extra pay or scope approval pending). */
+  gates?: Record<string, RevisionGate | "unknown">;
 }) {
   const submissions = data.submissions.filter((s) => s.assignmentId === assignmentId);
   const revisions = data.revisions.filter((r) => r.assignmentId === assignmentId);
   const pending = submissions.some((s) => s.outcome === null);
   const open = revisions.find((r) => OPEN_REVISION_STATUSES.includes(r.status));
+  const openGate = open?.status === "requested" ? (gates[open.id] ?? "ok") : "ok";
   const canSubmit =
     (projectStatus === "in_progress" || projectStatus === "revision_requested") &&
     !pending &&
-    open?.status !== "disputed";
+    open?.status !== "disputed" &&
+    openGate === "ok";
 
   return (
     <Card>
@@ -158,7 +164,11 @@ export function EditorSubmissionsPanel({
                 <li key={r.id} className="grid gap-2">
                   <RevisionHeading r={r} />
                   <p className="text-sm whitespace-pre-wrap">{r.reason}</p>
-                  {r.status === "requested" || r.status === "acknowledged" ? (
+                  {r.status === "requested" && editorGateNotice(gates[r.id]) ? (
+                    <p role="status" className="bg-muted rounded-md p-3 text-sm">
+                      {editorGateNotice(gates[r.id])}
+                    </p>
+                  ) : r.status === "requested" || r.status === "acknowledged" ? (
                     <div className="flex flex-wrap gap-2">
                       {r.status === "requested" ? (
                         <AcknowledgeRevisionForm
@@ -234,7 +244,8 @@ export function AdminReviewPanel({
         </div>
         {rounds.beyond > 0 ? (
           <p className="text-muted-foreground text-sm">
-            Charges for extra rounds are not decided yet; nothing is calculated here.
+            Charge chargeable rounds to the client and offer extra editor pay under Extra pay and
+            client charges below.
           </p>
         ) : null}
 

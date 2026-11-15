@@ -41,7 +41,8 @@ insert into public.payments (id, assignment_id, project_id, editor_id, milestone
    'd2000000-0000-0000-0000-0000000000f1', 'd2000000-0000-0000-0000-000000000001', 2, 500, 'LKR');
 
 select has_column('public', 'payments', 'milestone_seq', 'payments.milestone_seq exists');
-select col_not_null('public', 'payments', 'milestone_seq', 'milestone_seq is required');
+select col_is_null('public', 'payments', 'milestone_seq',
+  'milestone_seq is nullable (12D part 2: extra pay and settlement lines have none; payments_line_chk)');
 select col_type_is('public', 'payments', 'payable_reason', 'payment_payable_reason', 'payable_reason is an enum');
 select col_not_null('public', 'payments', 'waiting_on_client', 'waiting_on_client is a required boolean');
 select enum_has_labels('public', 'payment_payable_reason', array['client_deposit_verified', 'client_balance_verified',

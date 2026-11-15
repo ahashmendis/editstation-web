@@ -36,13 +36,15 @@ insert into public.assignments (id, project_id, editor_id, status, proposed_amou
 -- Catalogue
 -- ---------------------------------------------------------------------------
 select enum_has_labels('public', 'payment_status',
-  array['not_due', 'pending_approval', 'approved', 'processing', 'paid', 'on_hold'], 'payment_status labels');
+  array['not_due', 'pending_approval', 'approved', 'processing', 'paid', 'on_hold', 'cancelled'],
+  'payment_status labels (12D part 2 adds cancelled)');
 select enum_has_labels('public', 'payment_kind', array['assignment', 'reversal'], 'payment_kind labels');
 select columns_are('public', 'payments', array['id', 'assignment_id', 'project_id', 'editor_id', 'kind', 'amount',
   'currency', 'status', 'held_from_status', 'on_hold_reason', 'due_date', 'transfer_date', 'transaction_reference',
   'reverses_payment_id', 'reversal_reason', 'approved_by', 'approved_at', 'marked_paid_by', 'marked_paid_at',
   'created_by', 'created_at', 'updated_at', 'milestone_seq', 'payable_reason', 'payable_at', 'split_from_payment_id',
-  'amount_before_split', 'waiting_on_client'], 'payments columns (12D milestone columns included)');
+  'amount_before_split', 'waiting_on_client', 'adjustment_id', 'settlement_id'],
+  'payments columns (12D milestone, extra pay and settlement columns included)');
 select columns_are('public', 'payment_notes', array['id', 'payment_id', 'author_id', 'note', 'created_at'],
   'payment_notes columns');
 select set_has($$ select conname::text from pg_constraint where conrelid = 'public.payments'::regclass $$,
@@ -187,10 +189,10 @@ $$;
 
 create temp table matrix as
   select f::text as f, t::text as t,
-    pg_temp.try_status(f, t, case when f = 'on_hold' and t not in ('on_hold', 'paid') then t end) as r
+    pg_temp.try_status(f, t, case when f = 'on_hold' and t not in ('on_hold', 'paid', 'cancelled') then t end) as r
   from unnest(enum_range(null::public.payment_status)) f cross join unnest(enum_range(null::public.payment_status)) t;
 
-select is((select count(*)::int from matrix), 36, 'all 36 pairs tried');
+select is((select count(*)::int from matrix), 49, 'all 49 pairs tried (cancelled is set only by a settlement)');
 select set_eq($$ select f || '>' || t from matrix where r = 'ok' and f <> t $$,
   $$ values ('not_due>pending_approval'), ('not_due>on_hold'), ('pending_approval>approved'),
             ('pending_approval>on_hold'), ('approved>processing'), ('approved>paid'), ('approved>on_hold'),

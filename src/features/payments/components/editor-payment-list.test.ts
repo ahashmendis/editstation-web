@@ -15,7 +15,8 @@ const base: EditorPaymentRow = {
   currency: "LKR",
   dueDate: null,
   markedPaidAt: null,
-  milestoneSeq: 1,
+  milestoneSeq: 1 as number | null,
+  lineKind: "milestone" as const,
   holdLabel: null,
   waitingOnClient: false,
   splitFromPaymentId: null,
@@ -54,5 +55,17 @@ describe("EditorPaymentList", () => {
     expect(html).toContain("Reversed");
     expect(html).not.toMatch(/reason|client disputes|balance unpaid|late_balance/i);
     expect(Object.keys(base).some((k) => /reason/i.test(k))).toBe(false);
+  });
+
+  it("labels extra pay, cancelled milestones and the settlement with fixed wording", () => {
+    const html = render([
+      { ...base, id: "c", lineKind: "extra_round", milestoneSeq: null, status: "pending_approval" },
+      { ...base, id: "d", status: "cancelled" },
+      { ...base, id: "e", lineKind: "cancellation_settlement", milestoneSeq: null },
+    ]);
+    expect(html).toContain("Extra round pay");
+    expect(html).toContain("Cancelled");
+    expect(html).toContain("Cancellation settlement");
+    expect(html).not.toMatch(/refund|client charge|client price/i);
   });
 });

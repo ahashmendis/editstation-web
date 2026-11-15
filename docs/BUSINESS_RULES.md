@@ -30,6 +30,9 @@ requirements; enforce them in the database.
   or a scope change, gets extra editor compensation agreed per job. It is offered to the editor
   and explicitly accepted in the app **before** the extra work begins; a scope change's editor
   amount is agreed alongside the revised client price. The original agreed amount is never edited.
+  _(Phase 12D part 2: an accepted offer is its own payment row, payable when accepted and due
+  within the editor pay days; the client charge for an extra round or scope change has a due date
+  the admin enters per charge, with no default, call 5.)_
 - **Cancellation (F2):** a cancellation/kill-fee schedule based on how far the work got is agreed
   per project before work begins. The editor is paid for completed work plus any agreed
   cancellation compensation; a client cancellation never automatically forfeits editor pay.
@@ -108,6 +111,14 @@ paid and tracked here: OPEN_QUESTIONS G.
 - **Cancellation after deposit (KB9a-3):** the client is refunded the unused portion after
   deducting agreed completed work and cancellation charges; the editor keeps pay for completed
   work and any agreed kill fee; any editor overpayment is reconciled by an audited reversal.
+  _(Phase 12D part 2: the client charge is the client price (deposit + balance milestones) times
+  the stage's agreed client percentage; the refund is verified deposit and balance money above
+  that charge; extra-work client payments (extra rounds, scope changes) are excluded from the
+  refund. Editor earned is the agreed pay times the stage's editor percentage plus accepted extra
+  pay in full, changeable by the admin only with a recorded reason; paid extra pay is never
+  reversed and unpaid extra pay stays payable. Amounts round to cents. No percentage is ever
+  defaulted. Reassignment (not cancellation) keeps the ended editor's unpaid payments on hold for
+  the admin to resolve; a later cancel does not settle them (owner to confirm).)_
 - **Editor view (KB9a-5):** editors may see "Waiting for client payment", never the client's
   price, balance, payment history or other confidential financial information.
 - Every milestone (client or editor) records amount, currency, due date, transfer reference and

@@ -72,12 +72,12 @@ create temp table a_payments as select id from public.payments where editor_id =
 grant select on a_payments to authenticated;
 
 select is(pg_get_function_result('public.editor_list_payments()'::regprocedure),
-  'TABLE(id uuid, project_id uuid, project_title text, kind payment_kind, milestone_seq smallint, amount numeric, '
+  'TABLE(id uuid, project_id uuid, project_title text, kind payment_kind, milestone_seq smallint, line_kind text, amount numeric, '
   || 'currency character, status payment_status, hold_label payment_hold_label, waiting_on_client boolean, '
   || 'reverses_payment_id uuid, split_from_payment_id uuid, due_date date, '
   || 'transfer_date date, transaction_reference text, approved_at timestamp with time zone, '
   || 'marked_paid_at timestamp with time zone, created_at timestamp with time zone)',
-  'editor_list_payments returns exactly the declared columns (12D: hold label, no hold/reversal reasons or actor ids)');
+  'editor_list_payments returns exactly the declared columns (12D: hold label and line kind, no hold/reversal reasons or actor ids)');
 
 select pg_temp.as_user('75000000-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.editor_list_payments()), 1, 'A lists one payment');

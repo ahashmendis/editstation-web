@@ -185,6 +185,8 @@ export function confirmAssignmentAwaitingDeposit(
   editorId: string,
   projectId: string,
   clientPrice: number,
+  /** Optional terms draft (e.g. a cancellation schedule) saved before agreeing. */
+  terms?: Record<string, unknown>,
 ) {
   const as = (uid: string, aal: string) => `
     select set_config('request.jwt.claims',
@@ -200,6 +202,7 @@ export function confirmAssignmentAwaitingDeposit(
     begin;
     ${as(adminId, "aal2")}
     select public.admin_update_project(${lit(projectId)}, jsonb_build_object('client_price', ${clientPrice}));
+    ${terms ? `select public.admin_save_terms_draft(${lit(projectId)}, ${lit(JSON.stringify(terms))}::jsonb);` : ""}
     select public.admin_agree_terms(${lit(projectId)}, 1);
     ${as(editorId, "aal1")}
     select public.editor_respond_offer(${asg}, 'accept');

@@ -11,7 +11,7 @@ import {
   PAYABLE_REASON_LABEL,
   PAYMENT_STATUS_LABEL,
   canSplitForDispute,
-  milestoneLabel,
+  adminLineLabel,
   nextAdminActions,
 } from "@/features/payments/constants";
 import { Money } from "@/features/payments/components/money";
@@ -88,7 +88,7 @@ async function PaymentContent({ params }: { params: PageProps<"/admin/earnings/[
             </Fact>
             <Fact label="Editor">{p.editorName}</Fact>
             <Fact label="Milestone">
-              {milestoneLabel(p.milestoneSeq)}
+              {adminLineLabel(p)}
               {p.splitFromPaymentId ? " (disputed part)" : ""}
             </Fact>
             <Fact label="Payable">

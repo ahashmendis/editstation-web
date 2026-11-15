@@ -3,6 +3,46 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-15: Phase 12D part 2 extra pay, scope quotes, cancellation settlement
+
+- Branch `phase12d2-adjustments`, **uncommitted, pending owner review**. Spec 4.3 (`cancelled`),
+  4.4, 4.6, 6; calls 2, 5, 6, 8; decisions F, F2 (a-d), KB9a-3, Phase 12 principles.
+- Migrations `20261115093806`-`20261115093821` (see DATABASE_SCHEMA "Extra pay, scope quotes and
+  cancellation settlement"). Replaced in place: `private.check_payment_row`,
+  `private.guard_payments`, `private.audit_payments`, `private.require_unpaid`,
+  `private.guard_revision_requests` (the gate), `admin_reverse_payment`, `admin_set_project_status`
+  (settle-instead rule). `editor_list_payments` dropped and recreated (`line_kind`). No Phase 8
+  function body changed: the gate lives in the revision guard trigger.
+- Implementation calls (flag for owner): an accepted offer is payable at once (due editor pay
+  days later), not tied to client payment of the extra charge; the settlement counts accepted
+  extra pay as earned in full and leaves its rows alone (paid stays paid, unpaid stays payable;
+  only milestones are cancelled or reconciled; the admin's figure is between the extra pay and
+  agreed + extra pay); client charge base = deposit + balance milestones (extra-work
+  charges excluded); a recorded but unverified client payment blocks settling; settlement is
+  required only with a confirmed editor and a schedule row for the stage, otherwise the Phase 9
+  hold stays (also for reassignment, and a later cancel does not settle the reassigned editor's
+  held rows); a scope change always needs both the accepted quote and then an accepted offer
+  (offer only after the quote is accepted); a begun request cannot be reclassified as a scope
+  change (review fix); accepting a quote records it as invoiced with the admin's due
+  date; "withdraw the change request" is not built (no revision status for it; options are a new
+  offer, clearing the requirement, or reassignment); extra cancellation pay can be offered only
+  after a settlement; offer notifications link to `/editor/earnings`, where open offers are also
+  answered.
+- Tests: pgTAP `105`-`108`; older tests updated: 070 (status matrix 49 pairs, new columns), 075
+  (editor list type), 080 (revision columns), 081 (unlocks the scope change before resubmitting),
+  102 (`milestone_seq` nullable). Unit tests for adjustment schemas, payment line labels,
+  editor list labels, notification links and activity labels.
+- Review fixes: scope offers only after quote acceptance; no begun-request reclassification to
+  scope change; settlement earned includes accepted extra pay; editor offers shown whenever the
+  project is visible; quote currency kept after an error; gate errors show a neutral notice;
+  settlement label formats money; reason marked aria-required once an amount is typed; signed-in
+  e2e for a changed amount without a reason.
+- App: admin project page "Extra pay and client charges" (mark round, offer, withdraw, charge
+  extra round, scope quote draft/send/answer) and "Cancellation settlement" (proposed figures,
+  change with reason, confirm; record and extra cancellation pay afterwards); editor project page
+  and `/editor/earnings` show offers with Accept/Decline and the blocked state; earnings show
+  extra pay, Cancelled and settlement lines with fixed labels; admin earnings label extra lines.
+
 ## 2026-11-15: Phase 12D part 1 editor pay milestones, late-balance protection, dispute splits
 
 - Branch `phase12d-editor-pay`, **uncommitted, pending owner review**. Spec 4.2 note, 4.3, 4.5, 5

@@ -675,6 +675,120 @@ export type Database = {
         };
         Relationships: [];
       };
+      cancellation_settlements: {
+        Row: {
+          adjustment_reason: string | null;
+          agreed_amount: number;
+          assignment_id: string;
+          cancelled_payment_count: number;
+          client_base: number;
+          client_charge: number;
+          client_charge_percent: number;
+          client_currency: string | null;
+          client_owes: number;
+          client_received: number;
+          client_refund: number;
+          computed_editor_earned: number;
+          editor_currency: string;
+          editor_earned: number;
+          editor_earned_percent: number;
+          editor_extra_pay: number;
+          editor_overpayment: number;
+          editor_paid_before: number;
+          editor_settlement_amount: number;
+          id: string;
+          project_id: string;
+          settled_at: string;
+          settled_by: string | null;
+          stage: Database["public"]["Enums"]["terms_stage"];
+          terms_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          adjustment_reason?: string | null;
+          agreed_amount: number;
+          assignment_id: string;
+          cancelled_payment_count: number;
+          client_base?: number;
+          client_charge?: number;
+          client_charge_percent: number;
+          client_currency?: string | null;
+          client_owes?: number;
+          client_received?: number;
+          client_refund?: number;
+          computed_editor_earned: number;
+          editor_currency: string;
+          editor_earned: number;
+          editor_earned_percent: number;
+          editor_extra_pay?: number;
+          editor_overpayment: number;
+          editor_paid_before: number;
+          editor_settlement_amount: number;
+          id?: string;
+          project_id: string;
+          settled_at?: string;
+          settled_by?: string | null;
+          stage: Database["public"]["Enums"]["terms_stage"];
+          terms_id: string;
+        };
+        Update: {
+          adjustment_reason?: string | null;
+          agreed_amount?: number;
+          assignment_id?: string;
+          cancelled_payment_count?: number;
+          client_base?: number;
+          client_charge?: number;
+          client_charge_percent?: number;
+          client_currency?: string | null;
+          client_owes?: number;
+          client_received?: number;
+          client_refund?: number;
+          computed_editor_earned?: number;
+          editor_currency?: string;
+          editor_earned?: number;
+          editor_earned_percent?: number;
+          editor_extra_pay?: number;
+          editor_overpayment?: number;
+          editor_paid_before?: number;
+          editor_settlement_amount?: number;
+          id?: string;
+          project_id?: string;
+          settled_at?: string;
+          settled_by?: string | null;
+          stage?: Database["public"]["Enums"]["terms_stage"];
+          terms_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_settlements_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cancellation_settlements_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cancellation_settlements_settled_by_fkey";
+            columns: ["settled_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cancellation_settlements_terms_id_fkey";
+            columns: ["terms_id"];
+            isOneToOne: false;
+            referencedRelation: "project_terms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       client_inquiries: {
         Row: {
           budget_currency: string;
@@ -824,7 +938,10 @@ export type Database = {
           project_id: string;
           received_at: string | null;
           reverses_id: string | null;
+          revision_request_id: string | null;
+          scope_quote_id: string | null;
           seq: number;
+          settlement_id: string | null;
           share_percent: number | null;
           terms_id: string;
           transfer_reference: string | null;
@@ -852,7 +969,10 @@ export type Database = {
           project_id: string;
           received_at?: string | null;
           reverses_id?: string | null;
+          revision_request_id?: string | null;
+          scope_quote_id?: string | null;
           seq: number;
+          settlement_id?: string | null;
           share_percent?: number | null;
           terms_id: string;
           transfer_reference?: string | null;
@@ -879,7 +999,10 @@ export type Database = {
           project_id?: string;
           received_at?: string | null;
           reverses_id?: string | null;
+          revision_request_id?: string | null;
+          scope_quote_id?: string | null;
           seq?: number;
+          settlement_id?: string | null;
           share_percent?: number | null;
           terms_id?: string;
           transfer_reference?: string | null;
@@ -910,6 +1033,27 @@ export type Database = {
             columns: ["reverses_id"];
             isOneToOne: false;
             referencedRelation: "client_milestones";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_revision_request_id_fkey";
+            columns: ["revision_request_id"];
+            isOneToOne: false;
+            referencedRelation: "revision_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_scope_quote_id_fkey";
+            columns: ["scope_quote_id"];
+            isOneToOne: false;
+            referencedRelation: "scope_change_quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_settlement_id_fkey";
+            columns: ["settlement_id"];
+            isOneToOne: false;
+            referencedRelation: "cancellation_settlements";
             referencedColumns: ["id"];
           },
           {
@@ -989,6 +1133,130 @@ export type Database = {
             columns: ["merged_into_id"];
             isOneToOne: false;
             referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      compensation_adjustments: {
+        Row: {
+          amount: number;
+          answered_at: string | null;
+          answered_by: string | null;
+          assignment_id: string;
+          created_at: string;
+          currency: string;
+          editor_id: string;
+          id: string;
+          kind: Database["public"]["Enums"]["adjustment_kind"];
+          note: string | null;
+          offered_at: string;
+          offered_by: string | null;
+          project_id: string;
+          revision_request_id: string | null;
+          scope_quote_id: string | null;
+          status: Database["public"]["Enums"]["adjustment_status"];
+          updated_at: string;
+          withdrawn_at: string | null;
+          withdrawn_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          answered_at?: string | null;
+          answered_by?: string | null;
+          assignment_id: string;
+          created_at?: string;
+          currency: string;
+          editor_id: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["adjustment_kind"];
+          note?: string | null;
+          offered_at?: string;
+          offered_by?: string | null;
+          project_id: string;
+          revision_request_id?: string | null;
+          scope_quote_id?: string | null;
+          status?: Database["public"]["Enums"]["adjustment_status"];
+          updated_at?: string;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          answered_at?: string | null;
+          answered_by?: string | null;
+          assignment_id?: string;
+          created_at?: string;
+          currency?: string;
+          editor_id?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["adjustment_kind"];
+          note?: string | null;
+          offered_at?: string;
+          offered_by?: string | null;
+          project_id?: string;
+          revision_request_id?: string | null;
+          scope_quote_id?: string | null;
+          status?: Database["public"]["Enums"]["adjustment_status"];
+          updated_at?: string;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "compensation_adjustments_answered_by_fkey";
+            columns: ["answered_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_offered_by_fkey";
+            columns: ["offered_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_revision_request_id_fkey";
+            columns: ["revision_request_id"];
+            isOneToOne: false;
+            referencedRelation: "revision_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_scope_quote_id_fkey";
+            columns: ["scope_quote_id"];
+            isOneToOne: false;
+            referencedRelation: "scope_change_quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "compensation_adjustments_withdrawn_by_fkey";
+            columns: ["withdrawn_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -1527,6 +1795,7 @@ export type Database = {
       };
       payments: {
         Row: {
+          adjustment_id: string | null;
           amount: number;
           amount_before_split: number | null;
           approved_at: string | null;
@@ -1542,13 +1811,14 @@ export type Database = {
           kind: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at: string | null;
           marked_paid_by: string | null;
-          milestone_seq: number;
+          milestone_seq: number | null;
           on_hold_reason: string | null;
           payable_at: string | null;
           payable_reason: Database["public"]["Enums"]["payment_payable_reason"] | null;
           project_id: string;
           reversal_reason: string | null;
           reverses_payment_id: string | null;
+          settlement_id: string | null;
           split_from_payment_id: string | null;
           status: Database["public"]["Enums"]["payment_status"];
           transaction_reference: string | null;
@@ -1558,6 +1828,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          adjustment_id?: string | null;
           amount: number;
           amount_before_split?: number | null;
           approved_at?: string | null;
@@ -1573,13 +1844,14 @@ export type Database = {
           kind?: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at?: string | null;
           marked_paid_by?: string | null;
-          milestone_seq?: number;
+          milestone_seq?: number | null;
           on_hold_reason?: string | null;
           payable_at?: string | null;
           payable_reason?: Database["public"]["Enums"]["payment_payable_reason"] | null;
           project_id: string;
           reversal_reason?: string | null;
           reverses_payment_id?: string | null;
+          settlement_id?: string | null;
           split_from_payment_id?: string | null;
           status?: Database["public"]["Enums"]["payment_status"];
           transaction_reference?: string | null;
@@ -1588,6 +1860,7 @@ export type Database = {
           waiting_on_client?: boolean;
         };
         Update: {
+          adjustment_id?: string | null;
           amount?: number;
           amount_before_split?: number | null;
           approved_at?: string | null;
@@ -1603,13 +1876,14 @@ export type Database = {
           kind?: Database["public"]["Enums"]["payment_kind"];
           marked_paid_at?: string | null;
           marked_paid_by?: string | null;
-          milestone_seq?: number;
+          milestone_seq?: number | null;
           on_hold_reason?: string | null;
           payable_at?: string | null;
           payable_reason?: Database["public"]["Enums"]["payment_payable_reason"] | null;
           project_id?: string;
           reversal_reason?: string | null;
           reverses_payment_id?: string | null;
+          settlement_id?: string | null;
           split_from_payment_id?: string | null;
           status?: Database["public"]["Enums"]["payment_status"];
           transaction_reference?: string | null;
@@ -1618,6 +1892,13 @@ export type Database = {
           waiting_on_client?: boolean;
         };
         Relationships: [
+          {
+            foreignKeyName: "payments_adjustment_id_fkey";
+            columns: ["adjustment_id"];
+            isOneToOne: false;
+            referencedRelation: "compensation_adjustments";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "payments_approved_by_fkey";
             columns: ["approved_by"];
@@ -1665,6 +1946,13 @@ export type Database = {
             columns: ["reverses_payment_id"];
             isOneToOne: false;
             referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_settlement_id_fkey";
+            columns: ["settlement_id"];
+            isOneToOne: false;
+            referencedRelation: "cancellation_settlements";
             referencedColumns: ["id"];
           },
           {
@@ -2288,6 +2576,7 @@ export type Database = {
       revision_requests: {
         Row: {
           acknowledged_at: string | null;
+          adjustment_required: boolean;
           assignment_id: string;
           beyond_allowance: boolean;
           classified_at: string | null;
@@ -2309,6 +2598,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           acknowledged_at?: string | null;
+          adjustment_required?: boolean;
           assignment_id: string;
           beyond_allowance?: boolean;
           classified_at?: string | null;
@@ -2329,6 +2619,7 @@ export type Database = {
         };
         Update: {
           acknowledged_at?: string | null;
+          adjustment_required?: boolean;
           assignment_id?: string;
           beyond_allowance?: boolean;
           classified_at?: string | null;
@@ -2381,6 +2672,84 @@ export type Database = {
             columns: ["submission_id"];
             isOneToOne: false;
             referencedRelation: "submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      scope_change_quotes: {
+        Row: {
+          amount: number;
+          answered_at: string | null;
+          answered_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          description: string;
+          id: string;
+          project_id: string;
+          revision_request_id: string;
+          sent_at: string | null;
+          status: Database["public"]["Enums"]["scope_quote_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          answered_at?: string | null;
+          answered_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency: string;
+          description: string;
+          id?: string;
+          project_id: string;
+          revision_request_id: string;
+          sent_at?: string | null;
+          status?: Database["public"]["Enums"]["scope_quote_status"];
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          answered_at?: string | null;
+          answered_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          description?: string;
+          id?: string;
+          project_id?: string;
+          revision_request_id?: string;
+          sent_at?: string | null;
+          status?: Database["public"]["Enums"]["scope_quote_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scope_change_quotes_answered_by_fkey";
+            columns: ["answered_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scope_change_quotes_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scope_change_quotes_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scope_change_quotes_revision_request_id_fkey";
+            columns: ["revision_request_id"];
+            isOneToOne: false;
+            referencedRelation: "revision_requests";
             referencedColumns: ["id"];
           },
         ];
@@ -2547,6 +2916,10 @@ export type Database = {
         Args: { p_archive: boolean; p_project_id: string };
         Returns: undefined;
       };
+      admin_charge_extra_round: {
+        Args: { p_due_date: string; p_revision_request_id: string };
+        Returns: string;
+      };
       admin_classify_revision: {
         Args: { p_reason: string; p_revision_id: string; p_type: string };
         Returns: undefined;
@@ -2573,6 +2946,15 @@ export type Database = {
         Returns: number;
       };
       admin_create_project: { Args: { p_input: Json }; Returns: string };
+      admin_create_scope_quote: {
+        Args: {
+          p_amount: number;
+          p_currency: string;
+          p_description: string;
+          p_revision_request_id: string;
+        };
+        Returns: string;
+      };
       admin_dashboard_metrics: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_extend_deposit_due: {
         Args: { p_due_date: string; p_milestone_id: string; p_reason: string };
@@ -2602,6 +2984,17 @@ export type Database = {
         Returns: undefined;
       };
       admin_merge_clients: { Args: { p_source: string; p_target: string }; Returns: undefined };
+      admin_offer_adjustment: {
+        Args: {
+          p_amount: number;
+          p_assignment_id: string;
+          p_kind: string;
+          p_note?: string;
+          p_revision_request_id?: string;
+          p_scope_quote_id?: string;
+        };
+        Returns: string;
+      };
       admin_pending_revocations: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2617,6 +3010,7 @@ export type Database = {
           shared_with_email: string;
         }[];
       };
+      admin_preview_cancellation_settlement: { Args: { p_project_id: string }; Returns: Json };
       admin_reassign: { Args: { p_assignment_id: string; p_message?: string }; Returns: undefined };
       admin_record_assessment_result: {
         Args: {
@@ -2640,6 +3034,10 @@ export type Database = {
       admin_record_client_payment: {
         Args: { p_milestone_id: string; p_received_on?: string; p_transfer_reference: string };
         Returns: undefined;
+      };
+      admin_record_scope_quote_answer: {
+        Args: { p_accepted: boolean; p_due_date?: string; p_quote_id: string };
+        Returns: string;
       };
       admin_reject_application: {
         Args: { p_application_id: string; p_message?: string };
@@ -2689,6 +3087,7 @@ export type Database = {
       admin_save_assets: { Args: { p_items: Json; p_project_id: string }; Returns: undefined };
       admin_save_brief: { Args: { p_input: Json; p_project_id: string }; Returns: number };
       admin_save_terms_draft: { Args: { p_input: Json; p_project_id: string }; Returns: string };
+      admin_send_scope_quote: { Args: { p_quote_id: string }; Returns: undefined };
       admin_set_asset_early_access: {
         Args: { p_asset_id: string; p_value: boolean };
         Returns: undefined;
@@ -2730,6 +3129,14 @@ export type Database = {
         Args: { p_reference_id: string; p_value: boolean };
         Returns: undefined;
       };
+      admin_set_revision_adjustment_required: {
+        Args: { p_required: boolean; p_revision_id: string };
+        Returns: undefined;
+      };
+      admin_settle_cancellation: {
+        Args: { p_adjusted_editor_earned?: number; p_project_id: string; p_reason?: string };
+        Returns: string;
+      };
       admin_split_payment_for_dispute: {
         Args: { p_disputed_amount: number; p_payment_id: string; p_reason: string };
         Returns: string;
@@ -2740,6 +3147,7 @@ export type Database = {
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
       admin_verify_asset: { Args: { p_asset_id: string }; Returns: undefined };
       admin_verify_client_payment: { Args: { p_milestone_id: string }; Returns: undefined };
+      admin_withdraw_adjustment: { Args: { p_adjustment_id: string }; Returns: undefined };
       admin_withdraw_offer: {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
@@ -2769,6 +3177,24 @@ export type Database = {
           version: number;
         }[];
       };
+      editor_list_adjustments: {
+        Args: { p_project_id?: string };
+        Returns: {
+          amount: number;
+          answered_at: string;
+          assignment_id: string;
+          currency: string;
+          id: string;
+          kind: Database["public"]["Enums"]["adjustment_kind"];
+          note: string;
+          offered_at: string;
+          project_id: string;
+          project_title: string;
+          revision_request_id: string;
+          status: Database["public"]["Enums"]["adjustment_status"];
+          withdrawn_at: string;
+        }[];
+      };
       editor_list_payments: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2780,6 +3206,7 @@ export type Database = {
           hold_label: Database["public"]["Enums"]["payment_hold_label"];
           id: string;
           kind: Database["public"]["Enums"]["payment_kind"];
+          line_kind: string;
           marked_paid_at: string;
           milestone_seq: number;
           project_id: string;
@@ -2796,6 +3223,10 @@ export type Database = {
         Args: { p_asset_id: string; p_note: string };
         Returns: string;
       };
+      editor_respond_adjustment: {
+        Args: { p_adjustment_id: string; p_response: string };
+        Returns: undefined;
+      };
       editor_respond_offer: {
         Args: {
           p_action: string;
@@ -2806,6 +3237,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      editor_revision_gate: { Args: { p_revision_id: string }; Returns: string };
       editor_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
       editor_submit_interpretation: {
         Args: {
@@ -2893,6 +3325,8 @@ export type Database = {
       withdraw_editor_application: { Args: Record<PropertyKey, never>; Returns: string };
     };
     Enums: {
+      adjustment_kind: "extra_round" | "scope_change" | "cancellation";
+      adjustment_status: "offered" | "accepted" | "declined" | "withdrawn";
       application_request_kind: "info" | "test";
       application_status:
         | "draft"
@@ -2949,7 +3383,9 @@ export type Database = {
         | "payment_paid"
         | "asset_inaccessible"
         | "project_auto_held"
-        | "late_balance_payable";
+        | "late_balance_payable"
+        | "adjustment_offered"
+        | "adjustment_answered";
       payment_hold_label: "under_review" | "assignment_ended" | "waiting_for_client_payment";
       payment_kind: "assignment" | "reversal";
       payment_payable_reason:
@@ -2959,7 +3395,13 @@ export type Database = {
         | "adjustment_accepted"
         | "cancellation_settlement";
       payment_status:
-        "not_due" | "pending_approval" | "approved" | "processing" | "paid" | "on_hold";
+        | "not_due"
+        | "pending_approval"
+        | "approved"
+        | "processing"
+        | "paid"
+        | "on_hold"
+        | "cancelled";
       profile_option_kind: "specialisation" | "software";
       project_access_reason: "invited" | "available";
       project_status:
@@ -2978,6 +3420,7 @@ export type Database = {
       revision_status:
         "requested" | "acknowledged" | "in_progress" | "resubmitted" | "approved" | "disputed";
       revision_type: "client_revision" | "editor_correction" | "scope_change";
+      scope_quote_status: "drafted" | "sent" | "accepted" | "declined";
       submission_outcome:
         "approved" | "revision_requested" | "rejected_needs_discussion" | "scope_change_required";
       terms_stage: "assigned" | "in_progress" | "in_review" | "revision_requested";
@@ -3095,6 +3538,8 @@ export const Constants = {
   },
   public: {
     Enums: {
+      adjustment_kind: ["extra_round", "scope_change", "cancellation"],
+      adjustment_status: ["offered", "accepted", "declined", "withdrawn"],
       application_request_kind: ["info", "test"],
       application_status: [
         "draft",
@@ -3155,6 +3600,8 @@ export const Constants = {
         "asset_inaccessible",
         "project_auto_held",
         "late_balance_payable",
+        "adjustment_offered",
+        "adjustment_answered",
       ],
       payment_hold_label: ["under_review", "assignment_ended", "waiting_for_client_payment"],
       payment_kind: ["assignment", "reversal"],
@@ -3165,7 +3612,15 @@ export const Constants = {
         "adjustment_accepted",
         "cancellation_settlement",
       ],
-      payment_status: ["not_due", "pending_approval", "approved", "processing", "paid", "on_hold"],
+      payment_status: [
+        "not_due",
+        "pending_approval",
+        "approved",
+        "processing",
+        "paid",
+        "on_hold",
+        "cancelled",
+      ],
       profile_option_kind: ["specialisation", "software"],
       project_access_reason: ["invited", "available"],
       project_status: [
@@ -3191,6 +3646,7 @@ export const Constants = {
         "disputed",
       ],
       revision_type: ["client_revision", "editor_correction", "scope_change"],
+      scope_quote_status: ["drafted", "sent", "accepted", "declined"],
       submission_outcome: [
         "approved",
         "revision_requested",

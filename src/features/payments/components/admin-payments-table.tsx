@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { StatusPill } from "@/components/status-pill";
 
-import { PAYABLE_REASON_LABEL, UNPAID_STATUSES, milestoneLabel } from "../constants";
+import { PAYABLE_REASON_LABEL, UNPAID_STATUSES, adminLineLabel } from "../constants";
 import type { AdminPaymentRow } from "../queries";
 import { colomboDay } from "../summary";
 import { Money } from "./money";
@@ -29,7 +29,7 @@ export function AdminPaymentsTable({ rows, now }: { rows: AdminPaymentRow[]; now
               <PaymentStatusPill status={row.status} kind={row.kind} />
             </div>
             <p className="text-muted-foreground">
-              {row.editorName} · {milestoneLabel(row.milestoneSeq)}
+              {row.editorName} · {adminLineLabel(row)}
               {row.splitFromPaymentId ? " (disputed part)" : ""}
             </p>
             {row.payableReason ? (
@@ -70,7 +70,7 @@ export function AdminPaymentsTable({ rows, now }: { rows: AdminPaymentRow[]; now
               </td>
               <td className="py-2 pr-4">{row.editorName}</td>
               <td className="py-2 pr-4">
-                {milestoneLabel(row.milestoneSeq)}
+                {adminLineLabel(row)}
                 {row.splitFromPaymentId ? (
                   <span className="text-muted-foreground block text-xs">Disputed part</span>
                 ) : null}

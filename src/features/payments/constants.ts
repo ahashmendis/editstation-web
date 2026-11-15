@@ -8,6 +8,7 @@ export const PAYMENT_STATUSES = [
   "processing",
   "paid",
   "on_hold",
+  "cancelled",
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 export type PaymentKind = "assignment" | "reversal";
@@ -19,6 +20,7 @@ export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   processing: "Processing",
   paid: "Paid",
   on_hold: "On hold",
+  cancelled: "Cancelled",
 };
 
 export const PAYMENT_STATUS_TONE: Record<PaymentStatus, StatusTone> = {
@@ -28,6 +30,7 @@ export const PAYMENT_STATUS_TONE: Record<PaymentStatus, StatusTone> = {
   processing: "info",
   paid: "success",
   on_hold: "danger",
+  cancelled: "neutral",
 };
 
 export const UNPAID_STATUSES: readonly PaymentStatus[] = [
@@ -70,6 +73,9 @@ export function nextAdminActions(
       return ["release", "set_due_date"];
     case "paid":
       return hasReversal ? [] : ["reverse"];
+    case "cancelled":
+      // Final: voided by a cancellation settlement.
+      return [];
   }
 }
 
@@ -95,17 +101,57 @@ export const HOLD_LABEL: Record<HoldLabel, string> = {
   waiting_for_client_payment: "Waiting for client payment",
 };
 
-export const milestoneLabel = (seq: number) => `Milestone ${seq}`;
+export const milestoneLabel = (seq: number | null) =>
+  seq === null ? "Extra line" : `Milestone ${seq}`;
+
+/** What an editor's payment row pays (editor_list_payments.line_kind): fixed labels only. */
+export const LINE_KINDS = [
+  "milestone",
+  "extra_round",
+  "scope_change",
+  "cancellation_extra",
+  "cancellation_settlement",
+  "cancellation_reconciliation",
+] as const;
+export type LineKind = (typeof LINE_KINDS)[number];
+
+const LINE_KIND_LABEL: Record<Exclude<LineKind, "milestone">, string> = {
+  extra_round: "Extra round pay",
+  scope_change: "Scope change pay",
+  cancellation_extra: "Extra cancellation pay",
+  cancellation_settlement: "Cancellation settlement",
+  cancellation_reconciliation: "Cancellation reconciliation",
+};
+
+export const isLineKind = (value: unknown): value is LineKind =>
+  typeof value === "string" && (LINE_KINDS as readonly string[]).includes(value);
+
+export function lineLabel(lineKind: LineKind, seq: number | null): string {
+  return lineKind === "milestone" ? milestoneLabel(seq) : LINE_KIND_LABEL[lineKind];
+}
+
+/** Admin label for a row: the milestone, or the extra line it belongs to. */
+export function adminLineLabel(p: {
+  milestoneSeq: number | null;
+  adjustmentId: string | null;
+  settlementId: string | null;
+}): string {
+  if (p.adjustmentId) return "Extra pay";
+  if (p.settlementId && p.milestoneSeq === null) return "Cancellation settlement";
+  if (p.settlementId) return `${milestoneLabel(p.milestoneSeq)} · settlement reconciliation`;
+  return milestoneLabel(p.milestoneSeq);
+}
 
 /** Largest disputed part of a payment (one cent less than it), as a form value. */
 export function maxDisputedAmount(amount: number): string {
   return (Math.round(amount * 100 - 1) / 100).toFixed(2);
 }
 
-/** A dispute split is offered for an unsplit, unpaid milestone that is not on hold. */
+/** A dispute split is offered for an unsplit, unpaid milestone (not an extra line) that is not on hold or cancelled. */
 export function canSplitForDispute(p: {
   kind: PaymentKind;
   status: PaymentStatus;
+  milestoneSeq: number | null;
   splitFromPaymentId: string | null;
   amountBeforeSplit: number | null;
 }): boolean {
@@ -113,6 +159,8 @@ export function canSplitForDispute(p: {
     p.kind === "assignment" &&
     p.status !== "paid" &&
     p.status !== "on_hold" &&
+    p.status !== "cancelled" &&
+    p.milestoneSeq !== null &&
     p.splitFromPaymentId === null &&
     p.amountBeforeSplit === null
   );

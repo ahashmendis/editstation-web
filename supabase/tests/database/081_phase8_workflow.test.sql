@@ -203,6 +203,18 @@ select pg_temp.submit('p', 's3');
 select pg_temp.review('s3', 'scope_change_required', 'client_revision', 'r3');
 select is((select (type, round_number)::text from public.revision_requests where id = pg_temp.a('r3')),
   '(scope_change,)', 'scope_change_required always records a scope change without a round');
+-- Phase 12D part 2: a scope change begins only after the client quote and the editor's extra pay
+-- are both accepted (tested in 105-107); unlock it here so the round numbering below still runs.
+select pg_temp.as_user('81000000-0000-0000-0000-00000000000a', 'aal2');
+select public.admin_send_scope_quote(public.admin_create_scope_quote(pg_temp.a('r3'), 'New scene', 100, 'LKR'));
+select public.admin_record_scope_quote_answer((select id from public.scope_change_quotes
+  where revision_request_id = pg_temp.a('r3')), true, '2099-01-01');
+select public.admin_offer_adjustment(pg_temp.a('p'), 'scope_change', 50, null,
+  (select id from public.scope_change_quotes where revision_request_id = pg_temp.a('r3')));
+select pg_temp.as_user('81000000-0000-0000-0000-000000000001');
+select public.editor_respond_adjustment((select id from public.editor_list_adjustments()
+  where revision_request_id = pg_temp.a('r3')), 'accept');
+reset role;
 select pg_temp.submit('p', 's4');
 select pg_temp.review('s4', 'revision_requested', 'client_revision', 'r4');
 select pg_temp.submit('p', 's5');

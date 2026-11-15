@@ -28,6 +28,8 @@ export type RevisionRow = {
   countsAgainstAllowance: boolean;
   roundNumber: number | null;
   beyondAllowance: boolean;
+  /** The admin requires extra editor pay to be accepted before this client revision begins. */
+  adjustmentRequired: boolean;
   reason: string;
   status: RevisionStatus;
   createdAt: string;
@@ -52,7 +54,7 @@ export async function getSubmissionData(projectId: string): Promise<SubmissionDa
     supabase
       .from("revision_requests")
       .select(
-        "id, assignment_id, submission_id, type, counts_against_allowance, round_number, beyond_allowance, reason, status, created_at",
+        "id, assignment_id, submission_id, type, counts_against_allowance, round_number, beyond_allowance, adjustment_required, reason, status, created_at",
       )
       .eq("project_id", projectId)
       .order("created_at", { ascending: false }),
@@ -83,6 +85,7 @@ export async function getSubmissionData(projectId: string): Promise<SubmissionDa
       countsAgainstAllowance: r.counts_against_allowance ?? r.type === "client_revision",
       roundNumber: r.round_number,
       beyondAllowance: r.beyond_allowance,
+      adjustmentRequired: r.adjustment_required,
       reason: r.reason,
       status: r.status,
       createdAt: r.created_at,

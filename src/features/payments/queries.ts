@@ -2,7 +2,8 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
-import type { HoldLabel, PayableReason, PaymentKind, PaymentStatus } from "./constants";
+import { isLineKind } from "./constants";
+import type { HoldLabel, LineKind, PayableReason, PaymentKind, PaymentStatus } from "./constants";
 import type { AdminEarningsFilter } from "./schemas";
 import type { PaymentLike } from "./summary";
 
@@ -16,7 +17,9 @@ export type EditorPaymentRow = PaymentLike & {
   id: string;
   projectId: string;
   projectTitle: string;
-  milestoneSeq: number;
+  milestoneSeq: number | null;
+  /** What the row pays: a milestone or an extra line (fixed label; never a reason). */
+  lineKind: LineKind;
   /** A fixed label (Under review, Waiting for client payment, ...); never the admin's reason. */
   holdLabel: HoldLabel | null;
   waitingOnClient: boolean;
@@ -45,6 +48,7 @@ export async function listMyPayments(): Promise<EditorPaymentRow[]> {
     dueDate: r.due_date,
     markedPaidAt: r.marked_paid_at,
     milestoneSeq: r.milestone_seq,
+    lineKind: isLineKind(r.line_kind) ? r.line_kind : "milestone",
     holdLabel: r.hold_label,
     waitingOnClient: r.waiting_on_client,
     splitFromPaymentId: r.split_from_payment_id,
@@ -62,7 +66,9 @@ export type AdminPaymentRow = PaymentLike & {
   projectId: string;
   projectTitle: string;
   assignmentId: string;
-  milestoneSeq: number;
+  milestoneSeq: number | null;
+  adjustmentId: string | null;
+  settlementId: string | null;
   payableReason: PayableReason | null;
   splitFromPaymentId: string | null;
   transferDate: string | null;
@@ -70,7 +76,7 @@ export type AdminPaymentRow = PaymentLike & {
 };
 
 const ADMIN_COLUMNS =
-  "id, assignment_id, project_id, editor_id, kind, milestone_seq, payable_reason, split_from_payment_id, amount, currency, status, due_date, transfer_date, marked_paid_at, created_at, projects(title)";
+  "id, assignment_id, project_id, editor_id, kind, milestone_seq, adjustment_id, settlement_id, payable_reason, split_from_payment_id, amount, currency, status, due_date, transfer_date, marked_paid_at, created_at, projects(title)";
 
 /** Names for a set of accounts. Admin only (RLS on profiles). */
 async function namesFor(ids: string[]): Promise<Map<string, string>> {
@@ -89,7 +95,9 @@ type AdminSelectRow = {
   project_id: string;
   editor_id: string;
   kind: string;
-  milestone_seq: number;
+  milestone_seq: number | null;
+  adjustment_id: string | null;
+  settlement_id: string | null;
   payable_reason: PayableReason | null;
   split_from_payment_id: string | null;
   amount: number;
@@ -124,6 +132,8 @@ export async function listAdminPayments(filter?: AdminEarningsFilter): Promise<A
     editorName: names.get(r.editor_id) ?? "Unknown editor",
     kind: r.kind as PaymentKind,
     milestoneSeq: r.milestone_seq,
+    adjustmentId: r.adjustment_id,
+    settlementId: r.settlement_id,
     payableReason: r.payable_reason,
     splitFromPaymentId: r.split_from_payment_id,
     status: r.status as PaymentStatus,
@@ -183,7 +193,9 @@ export type AdminPaymentDetail = {
   currency: string;
   heldFromStatus: PaymentStatus | null;
   onHoldReason: string | null;
-  milestoneSeq: number;
+  milestoneSeq: number | null;
+  adjustmentId: string | null;
+  settlementId: string | null;
   payableReason: PayableReason | null;
   payableAt: string | null;
   waitingOnClient: boolean;
@@ -211,7 +223,7 @@ export async function getAdminPayment(id: string): Promise<AdminPaymentDetail | 
   const { data: p, error } = await supabase
     .from("payments")
     .select(
-      "id, assignment_id, project_id, editor_id, kind, milestone_seq, payable_reason, payable_at, waiting_on_client, split_from_payment_id, amount_before_split, amount, currency, status, held_from_status, on_hold_reason, due_date, transfer_date, transaction_reference, reverses_payment_id, reversal_reason, approved_by, approved_at, marked_paid_by, marked_paid_at, created_at, projects(title)",
+      "id, assignment_id, project_id, editor_id, kind, milestone_seq, adjustment_id, settlement_id, payable_reason, payable_at, waiting_on_client, split_from_payment_id, amount_before_split, amount, currency, status, held_from_status, on_hold_reason, due_date, transfer_date, transaction_reference, reverses_payment_id, reversal_reason, approved_by, approved_at, marked_paid_by, marked_paid_at, created_at, projects(title)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -265,6 +277,8 @@ export async function getAdminPayment(id: string): Promise<AdminPaymentDetail | 
     heldFromStatus: p.held_from_status as PaymentStatus | null,
     onHoldReason: p.on_hold_reason,
     milestoneSeq: p.milestone_seq,
+    adjustmentId: p.adjustment_id,
+    settlementId: p.settlement_id,
     payableReason: p.payable_reason,
     payableAt: p.payable_at,
     waitingOnClient: p.waiting_on_client,

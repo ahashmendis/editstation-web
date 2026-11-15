@@ -6,6 +6,8 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { EmptyState } from "@/components/empty-state";
 import { SignOutButton } from "@/components/sign-out-button";
 import { buttonVariants } from "@/components/ui/button";
+import { EditorAdjustmentOffers } from "@/features/adjustments/components/panels";
+import { listMyAdjustments } from "@/features/adjustments/queries";
 import { EditorPaymentList } from "@/features/payments/components/editor-payment-list";
 import { StatusFilter } from "@/features/payments/components/status-filter";
 import { SummaryCards, type SummaryCardSpec } from "@/features/payments/components/summary-cards";
@@ -39,7 +41,8 @@ async function EarningsContent({
 }) {
   await requireActiveEditor();
   const filter = parseEditorEarningsFilter(await searchParams);
-  const rows = await listMyPayments();
+  const [rows, offers] = await Promise.all([listMyPayments(), listMyAdjustments()]);
+  const openOffers = offers.filter((o) => o.status === "offered");
   const shown = filter.status ? rows.filter((r) => r.status === filter.status) : rows;
 
   return (
@@ -48,6 +51,7 @@ async function EarningsContent({
       subtitle="What Lenscape has committed to pay you and what has been paid."
       actions={<SignOutButton />}
     >
+      <EditorAdjustmentOffers offers={openOffers} showProject />
       {rows.length === 0 ? (
         <EmptyState title="No earnings yet">
           Pay appears here once an admin confirms you on a project.

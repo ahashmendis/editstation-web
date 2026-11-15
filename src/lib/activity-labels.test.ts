@@ -40,6 +40,18 @@ describe("activityLabel", () => {
     );
   });
 
+  it("maps Phase 12D part 2 extra pay, scope and settlement codes", () => {
+    expect(activityLabel("payment.cancelled")).toBe("Cancelled by the cancellation settlement");
+    expect(activityLabel("adjustment.offered")).toBe("Extra pay offered");
+    expect(activityLabel("adjustment.accepted")).toBe("Extra pay accepted");
+    expect(activityLabel("scope_quote.accepted")).toBe("Scope quote accepted by the client");
+    expect(activityLabel("client_milestone.extra_round_charged")).toBe(
+      "Extra round charged to the client",
+    );
+    expect(activityLabel("project.cancellation_settled")).toBe("Cancellation settled");
+    expect(entityTypeLabel("adjustment")).toBe("Extra pay offer");
+  });
+
   it("maps Phase 12A terms codes", () => {
     expect(activityLabel("project_terms.draft_saved")).toBe("Terms draft saved");
     expect(activityLabel("project_terms.agreed")).toBe("Terms agreed");

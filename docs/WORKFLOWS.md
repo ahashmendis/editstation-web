@@ -165,7 +165,15 @@ hint and never verifies; confirming removal closes the share._
 
 **Revision policy (F).** _Built in Phase 12A (branch, pending owner review): steps 1-2 via
 `project_terms` (Terms card on the admin project page; an editor cannot be confirmed until terms
-are agreed). Steps 3-4 remain planned (12D)._
+are agreed). Steps 3-4 built in Phase 12D part 2 (branch, pending owner review): the admin marks a
+chargeable client revision "extra pay required" and offers extra pay; a scope change needs a
+drafted, sent and client-accepted quote (the admin records the answer and enters the client due
+date; no default) plus the editor's accepted offer. The block is enforced in the database for
+acknowledge, start and resubmit. The scope offer is made only after the client accepts the
+quote, and a begun request cannot be reclassified as a scope change. A declined offer leaves the admin a new offer, clearing the
+requirement, or reassignment (withdrawing a change request has no status and is not built). An
+accepted offer is its own payment row, payable at once (due editor pay days later). A chargeable
+round's client charge comes from the terms with an admin due date._
 
 1. Before the project opens to editors, the admin sets the policy (the form pre-fills 3 included rounds): included rounds (0..n) or
    chargeable from round 1 (0 included rounds; F3 confirmed these are the same), plus the client charge per additional round when known.
@@ -205,8 +213,23 @@ are agreed). Steps 3-4 remain planned (12D)._
    amounts.
 5. _(Built in Phase 12D part 1: the admin splits the milestone; the editor sees "Under review" on
    the disputed part.)_ Dispute on final delivery: only the disputed portion of milestone 2 goes on hold.
-6. Cancellation: apply the agreed schedule; the editor is paid for completed work plus any kill
-   fee; overpayments are reversed (audited); the client is refunded the unused portion.
+6. _(Built in Phase 12D part 2, pending owner review: `admin_settle_cancellation`, Cancellation
+   settlement card on the admin project page.)_ Cancellation: apply the agreed schedule; the editor is paid for completed work plus any kill
+   fee; overpayments are reversed (audited); the client is refunded the unused portion. As built:
+   the stage is the project status at cancellation (on hold from assigned = assigned); editor
+   earned = agreed pay x the stage's editor percentage plus accepted extra pay in full (the admin
+   may change it with a reason, never below the extra pay); extra pay rows stay as they are (paid
+   or payable); unpaid milestones become `cancelled`; a settlement row pays any milestone
+   shortfall or partial reversals record a milestone overpayment (recovery outside the app); refund rows return
+   verified deposit and balance money above the client charge (client price x the stage's client
+   percentage), verified like any transfer; a remaining client debt is only recorded. Settling
+   cancels the project in the same step. Minimal rule for when it applies: a confirmed or
+   in-progress editor **and** a schedule row for the stage; then the plain cancel is refused.
+   Without a schedule (e.g. backfilled terms) or without a confirmed editor the plain cancel keeps
+   the Phase 9 behaviour (unpaid rows on hold). Reassignment (not cancellation) keeps the Phase 9
+   hold on the ended editor's unpaid payments for the admin to resolve, and a later plain or
+   settled cancel does not settle them (owner to confirm). Extra-work client payments are
+   excluded from the refund calculation.
 7. Every milestone keeps amount, currency, due date, transfer reference and verification status.
 
 ## 4. Status sets as written in the knowledge base
@@ -242,4 +265,6 @@ an admin withdraw history row) and revokes every live access row. `open → draf
 any access row or assignment exists. Folder shares are not revoked automatically: they appear on
 the revoke checklist. Pay consequences: OPEN_QUESTIONS F2 (kill fees) and KB9a (client deposit refunds and editor milestones). Suspending or revoking an
 editor with live assignments needs an admin decision per assignment (reassign or keep); the app
-should list them rather than act silently.
+should list them rather than act silently. _(Phase 12D part 2: a cancellation with a confirmed
+editor and an agreed schedule row for its stage goes through the cancellation settlement instead;
+see 3a, Payments step 6.)_

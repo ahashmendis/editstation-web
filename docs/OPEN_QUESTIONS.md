@@ -350,8 +350,9 @@ open as F2 (F3 resolved: "no included" = "paid from round 1"). Original reasonin
 - **Recommendation:** `not_due` → `pending_approval` → `approved` → `processing` → `paid`, plus
   `on_hold` (reachable from any state before paid, with a required reason; a dispute is a
   reason). Create the record at assignment confirmation so committed-but-unpaid costs show up.
-  `paid` is final; corrections happen through an audited reversal entry. Whether `cancelled` is
-  needed depends on F.
+  `paid` is final; corrections happen through an audited reversal entry. ~~Whether `cancelled` is
+  needed depends on F.~~ _Superseded 2026-11-15 (Phase 12 design call 2, owner): `cancelled` was
+  added in Phase 12D part 2; it is final and set only by a cancellation settlement._
 - **Alternatives:** The §10.4 set creates the record only after approval, so outstanding
   liabilities aren't visible.
 - **Blocks:** Phase 9.
