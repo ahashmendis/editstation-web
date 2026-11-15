@@ -5,6 +5,9 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminActionForm } from "@/features/applications/components/admin-action-form";
+import { setBusinessTimezoneAction } from "@/features/billing/admin-actions";
+import { BillingForm } from "@/features/billing/components/billing-form";
+import { getBusinessTimezone } from "@/features/billing/queries";
 import { saveBudgetRangeAction, saveServiceTypeAction } from "@/features/inquiries/admin-actions";
 import { getSettingsLists } from "@/features/inquiries/queries";
 import { requireAdmin } from "@/lib/auth/access";
@@ -69,10 +72,38 @@ export default function SettingsPage() {
 
 async function SettingsContent() {
   await requireAdmin();
-  const { services, budgets } = await getSettingsLists();
+  const [{ services, budgets }, timezone] = await Promise.all([
+    getSettingsLists(),
+    getBusinessTimezone(),
+  ]);
 
   return (
     <AreaShell title="Settings" actions={<SignOutButton />}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Business timezone</CardTitle>
+          <CardDescription>
+            Payment due dates and the unpaid-deposit hold count calendar days in this timezone.
+            Currently {timezone}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BillingForm
+            action={setBusinessTimezoneAction}
+            submitLabel="Save timezone"
+            idPrefix="tz"
+            hidden={{}}
+            fields={[
+              {
+                name: "timezone",
+                label: "Timezone",
+                hint: "An IANA name, for example Asia/Colombo.",
+                defaultValue: timezone,
+              },
+            ]}
+          />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Service types</CardTitle>

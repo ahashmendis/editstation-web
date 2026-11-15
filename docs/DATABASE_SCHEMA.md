@@ -210,6 +210,54 @@ authorise in the body; ES401/ES403/ES409/ES422):
 
 Audit rows hold ids only (project, asset, report, grant, editor), never notes, links or emails.
 
+## Client billing, deposit gate and timed rules _(Phase 12C, implemented on branch, pending owner review)_
+
+Spec sections 4.2 and 5, calls 3, 4, 7, 9; decisions KB9, KB9a-2, KB9b. Migrations
+`20261115050654_phase12c_notification_kind.sql` (`notification_kind.project_auto_held`, alone),
+`20261115050658_phase12c_billing_schema.sql`, `20261115050702_phase12c_billing_functions.sql`,
+`20261115050706_phase12c_gate_and_timed_rules.sql`. Enums `client_milestone_kind` (`deposit`,
+`balance`, `extra_work`, `refund`), `client_verification_status` (`expected`,
+`received_unverified`, `verified`).
+
+- `client_milestones` (admin only, never editor-visible): project, terms (the agreed version
+  used), `seq`, `kind`, `share_percent` (deposit/balance), `amount` (>0; refunds <0 with
+  `reverses_id`), `currency`, `invoice_issued_at`, `due_date`, `received_at`,
+  `transfer_reference`, `verification_status`, `verified_by/at`, `auto_held_at`,
+  `due_change_reason`, `correction_reason`, `voided_at/by` (replaced before invoicing). One live
+  deposit and one live row per `seq` per project. Guard trigger: see SECURITY_AND_PRIVACY.
+- `app_settings` (admin only): `key` (only `business_timezone` so far), `value` jsonb,
+  `updated_by/at`. Seeded `Asia/Colombo` (call 4, owner to confirm).
+
+Functions (security definer, empty `search_path`, executable by `anon` and `authenticated`,
+authorise in the body; lock the project row first):
+
+- `admin_create_client_milestones(project, shares int[] default {50,50})`: needs agreed terms and
+  a client price > 0 (no invented amounts); the first share is the deposit, the rest balance rows;
+  amounts computed once, the last row takes the rounding remainder (call 9). `{100}` = 100%
+  upfront. Only before work starts; earlier rows are voided (kept) if none was invoiced or paid.
+- `admin_issue_client_invoice(milestone)` returns the due date: business-timezone date + agreed
+  `deposit_days` / `balance_days` (defaults 14 / 7). Deposit and balance only; once.
+- `admin_record_client_payment(milestone, reference, received_on default today)`: reference
+  required, no future date; may be re-recorded while unverified. Allowed on cancelled projects.
+- `admin_verify_client_payment(milestone)`: received -> verified (final).
+- `admin_correct_client_payment(milestone, reason)`: audited correction back to unverified.
+- `admin_extend_deposit_due(milestone, due_date, reason)`: later, not past; releases the hold only
+  when it is the deposit-unpaid hold (`auto_held_at` set, held from `assigned`) and lets the rule
+  act again after the new date. A manual resume also ends the hold (`auto_held_at` cleared).
+- `admin_set_business_timezone(tz)`: an IANA name known to Postgres.
+- Gate: `private.assignment_gate` (dropped and recreated) adds `client_deposit_verified`;
+  `ready` requires it. `get_assignment_gate` recreated with the new column; `gate_refusal` adds
+  the deposit message last ("Waiting for the client deposit..." for the editor).
+- `private.project_transition_allowed`: `assigned -> on_hold` and, for that hold,
+  `on_hold -> cancelled`; `admin_set_project_status` refuses a manual `assigned -> on_hold`.
+- `private.apply_timed_rules(p_now)` (idempotent; returns actions): an invoiced deposit still
+  unverified after its due date (business calendar day, so from the day after), on a project
+  `assigned` with a `confirmed` editor (never `open`) -> project `on_hold` from `assigned`,
+  `auto_held_at` and `auto_held_for_due` set (once per due date), audit `project.auto_held` (`reason: deposit_unpaid`),
+  notify admins (`project_auto_held`). `admin_run_timed_rules()` runs it as the admin (dashboard
+  and `/admin/earnings` call it on load) and audits `timed_rules.run` only when it acted.
+  `pg_cron` on hosted Supabase is not scheduled yet (hosted work needs owner approval).
+
 ## Delivery, money, audit
 
 | Table               | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Created |
@@ -342,9 +390,9 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
 
 **Conflicts with what Phases 0-11 built** (to resolve in Phase 12 design):
 
-1. Project `on_hold` is refused from `assigned`/`in_progress` (Phase 4 rule), but KB9a-2 puts a
+1. _(Resolved in Phase 12C: `assigned -> on_hold` for the unpaid-deposit rule only.)_ Project `on_hold` is refused from `assigned`/`in_progress` (Phase 4 rule), but KB9a-2 puts a
    project on hold when the deposit does not clear, which can happen after an editor is assigned.
-2. The start gate does not check client money; KB9b-4 requires a verified deposit.
+2. _(Resolved in Phase 12C: deposit gate.)_ The start gate does not check client money; KB9b-4 requires a verified deposit.
 3. One open editor payment per assignment (`payments_open_key`), created whole at confirmation;
    the decisions need milestones, adjustments and settlements as separate rows.
 4. Ending an assignment puts unpaid payments on hold automatically (Phase 9, flagged under F);
@@ -356,4 +404,4 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
    reasons must never contain client financial details (use the `waiting_on_client` flag).
 8. ~~The revoke checklist treats shares as something Lenscape revokes~~: resolved in Phase 12B
    (request/confirm states for client-owned folders).
-9. No scheduler exists for the 14-day rules.
+9. _(Resolved in Phase 12C for the deposit rule: `private.apply_timed_rules`; late-balance protection is 12D.)_ No scheduler exists for the 14-day rules.

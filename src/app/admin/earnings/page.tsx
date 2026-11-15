@@ -5,6 +5,7 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { EmptyState } from "@/components/empty-state";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { runTimedRules } from "@/features/billing/timed-rules";
 import { AdminFilters } from "@/features/payments/components/admin-filters";
 import { AdminPaymentsTable } from "@/features/payments/components/admin-payments-table";
 import { EditorBreakdown } from "@/features/payments/components/editor-breakdown";
@@ -42,6 +43,7 @@ async function EarningsContent({
   searchParams: PageProps<"/admin/earnings">["searchParams"];
 }) {
   await requireAdmin();
+  await runTimedRules();
   const filter = parseAdminEarningsFilter(await searchParams);
   const filtered = filter.status !== null || filter.editor !== null || filter.currency !== null;
   const [all, shown] = await Promise.all([

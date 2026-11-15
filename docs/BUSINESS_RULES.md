@@ -87,7 +87,9 @@ paid and tracked here: OPEN_QUESTIONS G.
 - **Deposit gate (KB9b-4):** work cannot start until the client deposit is received and verified
   by an admin, the editor has accepted, compensation is agreed and the brief is confirmed.
 - **Unpaid deposit (KB9a-2):** default 14 calendar days after the deposit invoice is issued; then
-  the project goes on hold automatically and the admin extends or cancels.
+  the project goes on hold automatically and the admin extends or cancels. _(Phase 12C: due date =
+  invoice date + deposit days in the business timezone, default Asia/Colombo; the hold applies from
+  the next calendar day, once per due date, only when an editor is confirmed.)_
 - **Editor compensation** is separate from client billing. The total is agreed before work
   starts. Default milestones: 50% at commencement (client deposit verified, assignment
   confirmed); 50% after final approval and receipt of the client balance. Lenscape pays each

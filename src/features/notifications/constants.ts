@@ -27,6 +27,7 @@ export function notificationHref(n: Pick<NotificationRow, "kind" | "entity_id">)
     case "counteroffer":
     case "submission":
     case "asset_inaccessible":
+    case "project_auto_held":
       return `/admin/projects/${n.entity_id}`;
     case "application_decision":
     case "application_request":

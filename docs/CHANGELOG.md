@@ -3,6 +3,31 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-15: Phase 12C client billing, deposit gate, timed rules
+
+- Branch `phase12c-billing`, **uncommitted, pending owner review**. Spec 4.2, 5 (start gate,
+  auto-hold, scheduler), calls 3, 4, 7, 9; decisions KB9, KB9a-2, KB9b; notification
+  `project_auto_held` (section 6).
+- Migrations `20261115050654`-`20261115050706` (see DATABASE_SCHEMA "Client billing"). The gate
+  dependents were listed from the catalog first (pg_depend empty; bodies referencing it:
+  gate_refusal, guard_assignment_start, get_assignment_gate, editor_submit_interpretation,
+  start_work, editor_confirm_brief, editor_submit_work); only `get_assignment_gate` was dropped and
+  recreated with it.
+- Implementation calls (flag for owner): hold from the calendar day after the due date; extension
+  releases the hold; on_hold -> cancelled allowed only for the deposit hold; a manual release ends the hold
+  but does not re-arm the rule for the same due date (`auto_held_for_due`); only `assigned`
+  projects are auto-held; verifying the deposit does not auto-release a hold; an
+  audited `admin_correct_client_payment` reverses a mistaken verification (not for a deposit once
+  work began); milestones can be replaced (old rows voided) until an invoice or payment exists;
+  `timed_rules.run` is audited only when the run acted; refund rows are enforced by the schema but
+  created only in 12D (cancellation settlement).
+- Tests: pgTAP `099`-`101`; older tests that start work (061, 063-066, 072, 080-082, 094) now
+  verify a deposit first. Unit tests for billing schemas/helpers, gate state, labels, notification
+  link. Signed-in e2e "client billing (Phase 12C)".
+- App: `src/features/billing` (Client billing panel on `/admin/projects/[id]`, timed rules on
+  `/admin` and `/admin/earnings` load, business timezone on `/admin/settings`); editor panel
+  shows "Waiting for the client deposit"; auto-held projects offer Resume or Cancel.
+
 ## 2026-11-15: Phase 12B asset access
 
 - Branch `phase12b-assets`, **uncommitted, pending owner review**. Spec section 4.7 and the

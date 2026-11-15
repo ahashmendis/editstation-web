@@ -53,6 +53,15 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "project.cancelled": "Cancelled",
   "project_terms.draft_saved": "Terms draft saved",
   "project_terms.agreed": "Terms agreed",
+  "project.auto_held": "Put on hold automatically (client deposit overdue)",
+  "client_milestones.created": "Client milestones created",
+  "client_milestone.invoice_issued": "Client invoice issued",
+  "client_milestone.payment_recorded": "Client payment recorded",
+  "client_milestone.verified": "Client payment verified",
+  "client_milestone.verification_corrected": "Client payment verification corrected",
+  "client_milestone.due_extended": "Client deposit due date extended",
+  "timed_rules.run": "Timed rules run",
+  "app_settings.changed": "Setting changed",
 
   "project.assets_changed": "Assets changed",
   "project.early_access_changed": "Early-access setting changed",
@@ -139,6 +148,8 @@ export const ENTITY_TYPE_LABEL: Record<string, string> = {
   submission: "Submission",
   revision_request: "Change request",
   payment: "Payment",
+  app_settings: "Setting",
+  timed_rules: "Timed rules",
 };
 
 export function entityTypeLabel(entityType: string): string {

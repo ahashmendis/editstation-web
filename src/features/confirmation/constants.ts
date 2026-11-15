@@ -1,6 +1,9 @@
 import type { StatusTone } from "@/components/status-pill";
 
-/** One row of `get_assignment_gate` (Phase 7 spec section 7). */
+/**
+ * One row of `get_assignment_gate` (Phase 7 spec section 7; Phase 12C adds the client deposit,
+ * which the editor sees only as a yes/no status, never an amount).
+ */
 export type GateRow = {
   compensation_approved: boolean;
   interpretation_required: boolean;
@@ -12,6 +15,7 @@ export type GateRow = {
   amount_changed: boolean;
   deliverables_changed: boolean;
   brief_confirmed: boolean;
+  client_deposit_verified: boolean;
   ready: boolean;
 };
 
@@ -77,6 +81,12 @@ export function gateChecklist(gate: GateRow, role: "editor" | "admin"): GateItem
     met: gate.brief_confirmed,
     detail: briefDetail,
   });
+  items.push({
+    key: "deposit",
+    label: "Client deposit confirmed by the studio",
+    met: gate.client_deposit_verified,
+    detail: gate.client_deposit_verified ? null : "Waiting for the client deposit.",
+  });
   return items;
 }
 
@@ -99,6 +109,7 @@ export type GateStateLabel =
   | "Awaiting interpretation"
   | "Interpretation to review"
   | "Awaiting brief confirmation"
+  | "Waiting for the client deposit"
   | "Ready to start"
   | "In progress"
   | "Re-confirmation needed";
@@ -124,6 +135,8 @@ export function gateState(
       : { label: "Awaiting brief confirmation", tone: "info" };
   }
   if (assignmentStatus === "in_progress") return { label: "In progress", tone: "success" };
+  if (!gate.client_deposit_verified)
+    return { label: "Waiting for the client deposit", tone: "info" };
   return gate.ready
     ? { label: "Ready to start", tone: "success" }
     : { label: "Awaiting brief confirmation", tone: "info" };

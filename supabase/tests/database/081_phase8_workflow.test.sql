@@ -6,6 +6,20 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(69);
 
+-- Phase 12C: work needs a verified client deposit (KB9b-4). Runs as the admin.
+create function pg_temp.verify_deposit(p_project uuid) returns void language plpgsql as $$
+declare
+  v uuid;
+begin
+  perform public.admin_update_project(p_project, '{"client_price": 20000}');
+  perform public.admin_create_client_milestones(p_project, '{100}');
+  select id into v from public.client_milestones where project_id = p_project and kind = 'deposit' and voided_at is null;
+  perform public.admin_record_client_payment(v, 'TEST-DEPOSIT');
+  perform public.admin_verify_client_payment(v);
+end;
+$$;
+grant execute on function pg_temp.verify_deposit(uuid) to authenticated;
+
 create function pg_temp.as_user(p_uid uuid, p_aal text default 'aal1')
 returns void language plpgsql as $$
 begin
@@ -29,6 +43,7 @@ begin
     'deliverables', jsonb_build_array(jsonb_build_object('name', 'Main'))));
   perform public.admin_set_project_status(v_project, 'open');
   perform public.admin_agree_terms(v_project, 1);
+  perform pg_temp.verify_deposit(v_project);
   v_id := public.admin_make_offer(v_project, p_editor, 10000, 'LKR');
   perform pg_temp.as_user(p_editor);
   perform public.editor_respond_offer(v_id, 'accept');

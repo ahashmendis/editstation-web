@@ -6,6 +6,20 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(12);
 
+-- Phase 12C: work needs a verified client deposit (KB9b-4). Runs as the admin.
+create function pg_temp.verify_deposit(p_project uuid) returns void language plpgsql as $$
+declare
+  v uuid;
+begin
+  perform public.admin_update_project(p_project, '{"client_price": 20000}');
+  perform public.admin_create_client_milestones(p_project, '{100}');
+  select id into v from public.client_milestones where project_id = p_project and kind = 'deposit' and voided_at is null;
+  perform public.admin_record_client_payment(v, 'TEST-DEPOSIT');
+  perform public.admin_verify_client_payment(v);
+end;
+$$;
+grant execute on function pg_temp.verify_deposit(uuid) to authenticated;
+
 create function pg_temp.as_user(p_uid uuid, p_aal text default 'aal1')
 returns void language plpgsql as $$
 begin
@@ -126,6 +140,7 @@ select pg_temp.as_user('82000000-0000-0000-0000-000000000001');
 select public.editor_respond_offer((select id from flow where kind = 'asg'), 'accept');
 select pg_temp.as_user('82000000-0000-0000-0000-00000000000a', 'aal2');
 select public.admin_confirm_assignment((select id from flow where kind = 'asg'));
+select pg_temp.verify_deposit((select id from flow where kind = 'project'));
 select pg_temp.as_user('82000000-0000-0000-0000-000000000001');
 select public.editor_confirm_brief((select id from flow where kind = 'asg'), 1, '2099-12-31', 10000, 'LKR');
 select public.editor_start_work((select id from flow where kind = 'asg'));

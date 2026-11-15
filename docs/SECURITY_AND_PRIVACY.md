@@ -202,6 +202,25 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   editor's note is not copied. Audit rows hold ids only. pgTAP `096`-`098` (admin, editor A,
   editor B, applicant, suspended, anon).
 
+## Client billing controls (Phase 12C, implemented on branch, pending owner review)
+
+- `client_milestones` (client amounts, transfer references, due dates) and `app_settings` are
+  admin-only: RLS select for MFA admins, no write grants, no anon access. Editors A and B, the
+  pending applicant and a suspended editor read nothing (pgTAP `099`).
+- Editors learn only a yes/no `client_deposit_verified` from `get_assignment_gate` (their own
+  assignment) and the status text "Waiting for the client deposit"; never amounts, due dates or
+  references (KB9a-5). Every public function that reads `client_milestones` calls
+  `require_admin` (pgTAP `100`). Auto-hold notifications go to admins only.
+- Guard trigger (holds for the table owner): no delete; amount, currency, kind and identity are
+  frozen; `expected -> received_unverified -> verified`; verified is final except
+  `admin_correct_client_payment` (reason required; refused for a deposit once work began or for a
+  refunded payment); refunds are negative rows that never exceed the payment they reverse.
+- Start gate: `private.assignment_gate` requires a verified deposit (start functions, the
+  `in_progress` guard trigger and submissions all use it). `assigned -> on_hold` happens only in
+  `private.apply_timed_rules`; `admin_set_project_status` refuses it.
+- Audit rows hold ids and field names only (no amounts, references, dates or reasons). pgTAP
+  `099`-`101` (admin, admin without MFA, editor A, editor B, applicant, suspended, anon).
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                      | Admin                                |
@@ -215,6 +234,7 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 | Assets                             | —                      | —                                                                   | early-access assets at `opportunity`; all at `assigned`                                                                            | full; write via functions only       |
 | Folder shares, admin notes         | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
 | Asset access reports (12B)         | —                      | —                                                                   | own rows (read); report/confirm via `editor_*` functions at `assigned` only                                                        | read; resolve via function           |
+| Client milestones, settings (12C)  | —                      | —                                                                   | none; deposit verified yes/no via `get_assignment_gate` (own assignment)                                                           | read; write via `admin_*` functions  |
 | `project_internal`, clients        | —                      | —                                                                   | —                                                                                                                                  | read; write via functions only       |
 | Access, assignments, offers        | —                      | —                                                                   | own rows (read); answer own offer via `editor_respond_offer`                                                                       | read; write via functions only       |
 | Interpretations, confirmations     | —                      | —                                                                   | own rows (read); submit/confirm/start via `editor_*` functions while `confirmed`/`in_progress`                                     | read; review/start via functions     |

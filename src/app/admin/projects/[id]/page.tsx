@@ -12,6 +12,8 @@ import { AdminActionForm } from "@/features/applications/components/admin-action
 import { formatDateTime } from "@/features/applications/components/status-badge";
 import { AdminAccessPanels } from "@/features/access/components/admin-panels";
 import { getProjectAccessData } from "@/features/access/queries";
+import { ClientBillingPanel } from "@/features/billing/components/billing-panel";
+import { getClientBilling } from "@/features/billing/queries";
 import { AdminConfirmationPanel } from "@/features/confirmation/components/admin-panel";
 import { getConfirmationData } from "@/features/confirmation/queries";
 import { archiveProjectAction, setProjectStatusAction } from "@/features/projects/admin-actions";
@@ -56,12 +58,13 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
   await requireAdmin();
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [detail, options, access, submissionData, terms] = await Promise.all([
+  const [detail, options, access, submissionData, terms, billing] = await Promise.all([
     getProjectDetail(id),
     getProjectFormOptions(),
     getProjectAccessData(id),
     getSubmissionData(id),
     getProjectTerms(id),
+    getClientBilling(id),
   ]);
   if (!detail) notFound();
   const working = access.assignments.filter(
@@ -195,6 +198,27 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
       </Card>
 
       <TermsCard projectId={p.id} terms={terms} locked={locked} />
+
+      <ClientBillingPanel
+        projectId={p.id}
+        milestones={billing.milestones}
+        today={billing.today}
+        timezone={billing.timezone}
+        termsAgreed={terms.some((t) => t.status === "agreed")}
+        hasClientPrice={
+          internal?.client_price !== null &&
+          internal?.client_price !== undefined &&
+          internal.client_price > 0
+        }
+        workStarted={
+          working.some((a) => a.status === "in_progress") ||
+          ["in_progress", "in_review", "revision_requested", "approved", "completed"].includes(
+            status,
+          )
+        }
+        locked={archived}
+        cancelled={status === "cancelled"}
+      />
 
       <Card>
         <CardHeader>

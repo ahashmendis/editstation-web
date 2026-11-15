@@ -85,6 +85,9 @@ refund`), `amount`, `currency`, `invoice_issued_at`, `due_date`, `received_at`,
   terms requires a client price; amounts are computed once and stored (last milestone takes the
   rounding remainder).
 - Editors never read this table. They see only a derived flag (4.3).
+- Note for 12D (from the 12C review): once refund rows exist, `client_deposit_verified` must
+  require the verified deposit amount plus its refund rows to be greater than 0 (12C checks only
+  that a verified deposit exists).
 
 ### 4.3 Editor pay (12D)
 

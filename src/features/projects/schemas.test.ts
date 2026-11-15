@@ -334,6 +334,10 @@ describe("status and archive", () => {
       "cancelled",
     ]);
     expect(allowedStatusActions("on_hold", "open").map((a) => a.to)).toEqual(["open"]);
+    expect(allowedStatusActions("on_hold", "assigned").map((a) => a.to)).toEqual([
+      "assigned",
+      "cancelled",
+    ]);
     expect(allowedStatusActions("cancelled", null)).toEqual([]);
     expect(allowedStatusActions("assigned", null)).toEqual([]);
   });

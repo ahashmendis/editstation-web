@@ -176,6 +176,42 @@ export function createProjectWithOffer(adminId: string, editorId: string, title:
 }
 
 /**
+ * Phase 12C: takes a project from createProjectWithOffer to a confirmed assignment whose brief the
+ * editor has confirmed, with agreed terms and a client price, so only the client deposit is
+ * missing before work can start. Runs each step as the right identity (aal2 admin, editor).
+ */
+export function confirmAssignmentAwaitingDeposit(
+  adminId: string,
+  editorId: string,
+  projectId: string,
+  clientPrice: number,
+) {
+  const as = (uid: string, aal: string) => `
+    select set_config('request.jwt.claims',
+      json_build_object('sub', ${lit(uid)}, 'role', 'authenticated', 'aal', ${lit(aal)})::text, true);
+    set local role authenticated;`;
+  const asg = `(select id from public.assignments where project_id = ${lit(projectId)} order by created_at desc limit 1)`;
+  sql(`
+    update public.projects set deadline = '2099-12-31' where id = ${lit(projectId)};
+    -- Projects inserted directly have no project_internal row (admin_create_project adds one).
+    insert into public.project_internal (project_id) values (${lit(projectId)}) on conflict do nothing;
+    insert into public.brief_versions (project_id, version, instructions, deliverables)
+    values (${lit(projectId)}, 1, 'Cut it', '[{"name": "Main"}]') on conflict do nothing;
+    begin;
+    ${as(adminId, "aal2")}
+    select public.admin_update_project(${lit(projectId)}, jsonb_build_object('client_price', ${clientPrice}));
+    select public.admin_agree_terms(${lit(projectId)}, 1);
+    ${as(editorId, "aal1")}
+    select public.editor_respond_offer(${asg}, 'accept');
+    ${as(adminId, "aal2")}
+    select public.admin_confirm_assignment(${asg});
+    ${as(editorId, "aal1")}
+    select public.editor_confirm_brief(${asg}, 1, '2099-12-31', 5000, 'LKR');
+    commit;
+  `);
+}
+
+/**
  * Removes everything the signed-in e2e tests created (accounts `e2e-…@example.test`, projects
  * titled `E2E project …`, inquiries from e2e emails) and every row that references them, found by
  * walking foreign keys. pgTAP tests count rows in a clean database, so e2e data must not stay

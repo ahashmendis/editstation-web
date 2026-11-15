@@ -88,6 +88,12 @@ export function EditorConfirmationPanel(props: Props) {
     props.agreedCurrency !== null &&
     !paused;
   const started = assignmentStatus === "in_progress";
+  // Everything the editor controls is done; only the client deposit (a status, never an amount).
+  const waitingForDeposit =
+    !gate.client_deposit_verified &&
+    gate.brief_confirmed &&
+    interpretationOk &&
+    gate.compensation_approved;
 
   return (
     <>
@@ -100,7 +106,7 @@ export function EditorConfirmationPanel(props: Props) {
           <CardDescription>
             {started
               ? "If the brief, deadline or pay changes, you will be asked to confirm again before you continue."
-              : "Work starts when the pay is approved, you have confirmed the brief and, where asked, your interpretation is accepted."}
+              : "Work starts when the pay is approved, you have confirmed the brief, your interpretation is accepted where asked, and the studio has confirmed the client deposit."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -132,8 +138,10 @@ export function EditorConfirmationPanel(props: Props) {
                 >
                   Start work
                 </button>
-                <p className="text-muted-foreground text-sm">
-                  Start work unlocks when every item above is done.
+                <p className="text-muted-foreground text-sm" role="status">
+                  {waitingForDeposit
+                    ? "Waiting for the client deposit. Start work unlocks once the studio confirms it."
+                    : "Start work unlocks when every item above is done."}
                 </p>
               </div>
             )

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import {
   activateEditor,
+  confirmAssignmentAwaitingDeposit,
   confirmationLinkFor,
   createAdminWithTotp,
   createConfirmedUser,
@@ -170,6 +171,68 @@ test.describe("project terms (Phase 12A)", () => {
     await expect(editorPage.getByText("Included client revision rounds")).toBeVisible();
     await expect(editorPage.getByText("50% / 50% of your agreed pay")).toBeVisible();
     await expect(editorPage.getByText("7777")).toHaveCount(0);
+    await editorContext.close();
+  });
+});
+
+test.describe("client billing (Phase 12C)", () => {
+  test("work waits for a verified client deposit; the editor sees only a status", async ({
+    browser,
+  }) => {
+    test.setTimeout(150_000);
+    const admin = await createAdminWithTotp();
+    const editor = await createConfirmedUser("editor-billing");
+    activateEditor(editor.id);
+    const title = `E2E project billing ${Date.now()}`;
+    const projectId = createProjectWithOffer(admin.id, editor.id, title);
+    confirmAssignmentAwaitingDeposit(admin.id, editor.id, projectId, 86420);
+
+    const editorContext = await browser.newContext();
+    const editorPage = await editorContext.newPage();
+    await signIn(editorPage, editor);
+    await editorPage.goto(`/editor/projects/${projectId}`);
+    await expect(editorPage.getByText("Waiting for the client deposit").first()).toBeVisible();
+    await expect(editorPage.getByText("86420")).toHaveCount(0);
+    await expect(editorPage.getByText("43210")).toHaveCount(0);
+
+    const adminContext = await browser.newContext();
+    const page = await adminContext.newPage();
+    await signIn(page, admin);
+    await page.goto("/mfa");
+    await page
+      .getByLabel("6-digit code")
+      .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+
+    await page.goto(`/admin/projects/${projectId}`);
+    await expect(page.getByText("No client milestones yet")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    // Retried: the click can land before the form has hydrated; the database refuses nothing here.
+    await expect(async () => {
+      await page.getByRole("button", { name: "Create milestones" }).click();
+      await expect(page.getByText("2 client milestones created.")).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
+    await expect(page.getByText("1. Deposit (50%): 43210 LKR")).toBeVisible();
+
+    await page.getByRole("button", { name: "Mark invoice issued" }).first().click();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    // The issue form disappears once the invoice is recorded; the milestone shows the issue date.
+    await expect(page.getByText(/^Issued /)).toBeVisible({ timeout: 30_000 });
+
+    await page.getByLabel("Transfer reference").first().fill("E2E-BANK-1");
+    await page.getByRole("button", { name: "Record transfer" }).first().click();
+    await expect(page.getByText("Received, not verified")).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Verify transfer" }).click();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText("Deposit verified", { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await adminContext.close();
+
+    await editorPage.reload();
+    await expect(editorPage.getByText("Ready to start")).toBeVisible();
+    await expect(editorPage.getByText("E2E-BANK-1")).toHaveCount(0);
     await editorContext.close();
   });
 });

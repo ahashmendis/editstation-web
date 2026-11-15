@@ -187,10 +187,14 @@ are agreed). Steps 3-4 remain planned (12D)._
    client milestones (default 50/50), revision policy, cancellation/kill-fee schedule, and the day
    counts (defaults: deposit 14 days, balance 7 days after completion, editor payment within 7
    days, late-balance protection 14 days). Later changes are new agreement versions.
-1. Client: the deposit invoice is issued; the admin records the transfer and verifies receipt. If
+1. _(Built in Phase 12C, pending owner review: client milestones, invoice, record, verify,
+   extend, auto-hold. The rule acts from the calendar day after the due date in the business
+   timezone; extending releases the hold; the admin can also resume or cancel. The admin issues
+   the balance invoice at approval.)_ Client: the deposit invoice is issued; the admin records the transfer and verifies receipt. If
    unverified 14 days after issue, the project goes on hold automatically and the admin extends or
    cancels. The balance is due 7 days after the completion/approval milestone.
-2. Start gate: editor accepted, pay agreed, brief confirmed **and** client deposit verified.
+2. Start gate: editor accepted, pay agreed, brief confirmed **and** client deposit verified
+   _(built in Phase 12C; the editor sees "Waiting for the client deposit")_.
 3. Editor milestone 1 (default 50%) becomes payable when the deposit is verified and the
    assignment confirmed; milestone 2 when the project is approved and the client balance is
    verified, or 14 days after the balance fell due if still unpaid (Lenscape carries the risk),

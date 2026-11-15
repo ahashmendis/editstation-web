@@ -112,6 +112,36 @@ export type Database = {
           },
         ];
       };
+      app_settings: {
+        Row: {
+          key: string;
+          updated_at: string;
+          updated_by: string | null;
+          value: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          key: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value: NonNullable<Json>;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       application_requests: {
         Row: {
           application_id: string;
@@ -773,6 +803,134 @@ export type Database = {
             columns: ["inquiry_id"];
             isOneToOne: false;
             referencedRelation: "client_inquiries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_milestones: {
+        Row: {
+          amount: number;
+          auto_held_at: string | null;
+          auto_held_for_due: string | null;
+          correction_reason: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          due_change_reason: string | null;
+          due_date: string | null;
+          id: string;
+          invoice_issued_at: string | null;
+          kind: Database["public"]["Enums"]["client_milestone_kind"];
+          project_id: string;
+          received_at: string | null;
+          reverses_id: string | null;
+          seq: number;
+          share_percent: number | null;
+          terms_id: string;
+          transfer_reference: string | null;
+          updated_at: string;
+          verification_status: Database["public"]["Enums"]["client_verification_status"];
+          verified_at: string | null;
+          verified_by: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          auto_held_at?: string | null;
+          auto_held_for_due?: string | null;
+          correction_reason?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency: string;
+          due_change_reason?: string | null;
+          due_date?: string | null;
+          id?: string;
+          invoice_issued_at?: string | null;
+          kind: Database["public"]["Enums"]["client_milestone_kind"];
+          project_id: string;
+          received_at?: string | null;
+          reverses_id?: string | null;
+          seq: number;
+          share_percent?: number | null;
+          terms_id: string;
+          transfer_reference?: string | null;
+          updated_at?: string;
+          verification_status?: Database["public"]["Enums"]["client_verification_status"];
+          verified_at?: string | null;
+          verified_by?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          auto_held_at?: string | null;
+          auto_held_for_due?: string | null;
+          correction_reason?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          due_change_reason?: string | null;
+          due_date?: string | null;
+          id?: string;
+          invoice_issued_at?: string | null;
+          kind?: Database["public"]["Enums"]["client_milestone_kind"];
+          project_id?: string;
+          received_at?: string | null;
+          reverses_id?: string | null;
+          seq?: number;
+          share_percent?: number | null;
+          terms_id?: string;
+          transfer_reference?: string | null;
+          updated_at?: string;
+          verification_status?: Database["public"]["Enums"]["client_verification_status"];
+          verified_at?: string | null;
+          verified_by?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_milestones_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_reverses_id_fkey";
+            columns: ["reverses_id"];
+            isOneToOne: false;
+            referencedRelation: "client_milestones";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_terms_id_fkey";
+            columns: ["terms_id"];
+            isOneToOne: false;
+            referencedRelation: "project_terms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_milestones_voided_by_fkey";
+            columns: ["voided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -2372,6 +2530,10 @@ export type Database = {
       admin_confirm_access_removal: { Args: { p_grant_id: string }; Returns: undefined };
       admin_confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_convert_inquiry: { Args: { p_input: Json; p_inquiry_id: string }; Returns: string };
+      admin_correct_client_payment: {
+        Args: { p_milestone_id: string; p_reason: string };
+        Returns: undefined;
+      };
       admin_create_application_request: {
         Args: {
           p_application_id: string;
@@ -2381,8 +2543,16 @@ export type Database = {
         Returns: string;
       };
       admin_create_client: { Args: { p_input: Json }; Returns: string };
+      admin_create_client_milestones: {
+        Args: { p_project_id: string; p_shares?: number[] };
+        Returns: number;
+      };
       admin_create_project: { Args: { p_input: Json }; Returns: string };
       admin_dashboard_metrics: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_extend_deposit_due: {
+        Args: { p_due_date: string; p_milestone_id: string; p_reason: string };
+        Returns: undefined;
+      };
       admin_grant_project_access: {
         Args: {
           p_editor_ids: string[];
@@ -2391,6 +2561,7 @@ export type Database = {
         };
         Returns: number;
       };
+      admin_issue_client_invoice: { Args: { p_milestone_id: string }; Returns: string };
       admin_make_offer: {
         Args: {
           p_amount: number;
@@ -2441,6 +2612,10 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_record_client_payment: {
+        Args: { p_milestone_id: string; p_received_on?: string; p_transfer_reference: string };
+        Returns: undefined;
+      };
       admin_reject_application: {
         Args: { p_application_id: string; p_message?: string };
         Returns: undefined;
@@ -2485,6 +2660,7 @@ export type Database = {
         Args: { p_editor_id: string; p_project_id: string };
         Returns: undefined;
       };
+      admin_run_timed_rules: { Args: Record<PropertyKey, never>; Returns: number };
       admin_save_assets: { Args: { p_items: Json; p_project_id: string }; Returns: undefined };
       admin_save_brief: { Args: { p_input: Json; p_project_id: string }; Returns: number };
       admin_save_terms_draft: { Args: { p_input: Json; p_project_id: string }; Returns: string };
@@ -2492,6 +2668,7 @@ export type Database = {
         Args: { p_asset_id: string; p_value: boolean };
         Returns: undefined;
       };
+      admin_set_business_timezone: { Args: { p_timezone: string }; Returns: undefined };
       admin_set_editor_access: {
         Args: {
           p_editor_id: string;
@@ -2533,6 +2710,7 @@ export type Database = {
       admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
       admin_verify_asset: { Args: { p_asset_id: string }; Returns: undefined };
+      admin_verify_client_payment: { Args: { p_milestone_id: string }; Returns: undefined };
       admin_withdraw_offer: {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
@@ -2622,6 +2800,7 @@ export type Database = {
         Returns: {
           amount_changed: boolean;
           brief_confirmed: boolean;
+          client_deposit_verified: boolean;
           compensation_approved: boolean;
           confirmed_brief_version: number;
           current_brief_version: number;
@@ -2709,6 +2888,8 @@ export type Database = {
         | "reassigned";
       brief_confirmation_kind: "confirmed" | "carried_forward";
       brief_type: "fully_instructed" | "reference_based" | "creative_led";
+      client_milestone_kind: "deposit" | "balance" | "extra_work" | "refund";
+      client_verification_status: "expected" | "received_unverified" | "verified";
       editor_access_status: "none" | "active" | "suspended" | "revoked";
       editor_level: "junior" | "professional" | "specialist";
       inquiry_status:
@@ -2735,7 +2916,8 @@ export type Database = {
         | "assignment_confirmed"
         | "revision_requested"
         | "payment_paid"
-        | "asset_inaccessible";
+        | "asset_inaccessible"
+        | "project_auto_held";
       payment_kind: "assignment" | "reversal";
       payment_status:
         "not_due" | "pending_approval" | "approved" | "processing" | "paid" | "on_hold";
@@ -2902,6 +3084,8 @@ export const Constants = {
       ],
       brief_confirmation_kind: ["confirmed", "carried_forward"],
       brief_type: ["fully_instructed", "reference_based", "creative_led"],
+      client_milestone_kind: ["deposit", "balance", "extra_work", "refund"],
+      client_verification_status: ["expected", "received_unverified", "verified"],
       editor_access_status: ["none", "active", "suspended", "revoked"],
       editor_level: ["junior", "professional", "specialist"],
       inquiry_status: [
@@ -2930,6 +3114,7 @@ export const Constants = {
         "revision_requested",
         "payment_paid",
         "asset_inaccessible",
+        "project_auto_held",
       ],
       payment_kind: ["assignment", "reversal"],
       payment_status: ["not_due", "pending_approval", "approved", "processing", "paid", "on_hold"],

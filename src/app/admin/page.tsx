@@ -6,6 +6,7 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
 import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { runTimedRules } from "@/features/billing/timed-rules";
 import { countNewInquiries } from "@/features/inquiries/queries";
 import { BarChart, MetricCard } from "@/features/metrics/components/metric-charts";
 import {
@@ -46,6 +47,8 @@ export default function AdminPage() {
 
 async function AdminContent() {
   const access = await requireAdmin();
+  // Timed rules first (Phase 12C auto-hold), so the figures below include any hold it applied.
+  await runTimedRules();
   const supabase = await createClient();
 
   // Both queries go through RLS: they return everything only because this

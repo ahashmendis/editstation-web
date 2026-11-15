@@ -9,13 +9,21 @@ mark paid cannot check verified payout details (unbuilt by design until E is bui
 suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
-KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 not yet built.
+KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built on branch (12C), editor side not yet.
 **Last updated:** 2026-11-15
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
 
 ## What exists
+
+- **Phase 12C client billing (branch `phase12c-billing`, uncommitted, pending owner review,
+  2026-11-15):** admin-only `client_milestones` (default 50/50 of the client price, per-project
+  split such as 100% upfront, invoice/due dates, record and verify transfers, audited correction,
+  deposit extension), deposit start gate (editors see only "Waiting for the client deposit"),
+  unpaid-deposit auto-hold via `private.apply_timed_rules` (admin dashboard and `/admin/earnings`
+  run it; `pg_cron` on hosted not scheduled), business timezone setting (default Asia/Colombo,
+  call 4 to confirm). Details: `docs/CHANGELOG.md`, `DATABASE_SCHEMA.md`.
 
 - **Phase 12B assets (branch `phase12b-assets`, uncommitted, pending owner review, 2026-11-15):**
   migrations `20261115042630_phase12b_notification_kind.sql`,
@@ -201,8 +209,9 @@ tested locally; nothing has run on hosted infrastructure.
 
 ## Next task
 
-0. Owner review of Phase 12B (branch `phase12b-assets`; not committed). Then 12C (client
-   milestones, deposit gate, timed rules).
+0. Owner review of Phase 12B and 12C (branches `phase12b-assets`, `phase12c-billing`; not
+   committed), incl. the 12C implementation calls in CHANGELOG. Then 12D (editor milestones,
+   adjustments, disputes, cancellation settlement, late-balance protection).
 
 1. Owner decisions of 2026-11-15 (KB7 client Drive/Dropbox links, F per-project revision policy,
    KB9 50/50 client and editor milestones) are recorded in docs only; **code still reflects the old

@@ -13,6 +13,7 @@ const gate: GateRow = {
   amount_changed: false,
   deliverables_changed: false,
   brief_confirmed: false,
+  client_deposit_verified: true,
   ready: false,
 };
 const confirmed: GateRow = {
@@ -25,10 +26,10 @@ const confirmed: GateRow = {
 
 describe("gate helpers", () => {
   it("lists the interpretation step only when required", () => {
-    expect(gateChecklist(gate, "editor").map((i) => i.key)).toEqual(["pay", "brief"]);
+    expect(gateChecklist(gate, "editor").map((i) => i.key)).toEqual(["pay", "brief", "deposit"]);
     expect(
       gateChecklist({ ...gate, interpretation_required: true }, "editor").map((i) => i.key),
-    ).toEqual(["pay", "interpretation", "brief"]);
+    ).toEqual(["pay", "interpretation", "brief", "deposit"]);
   });
 
   it("explains drift only after a confirmation exists", () => {
@@ -48,5 +49,13 @@ describe("gate helpers", () => {
     ).toBe("Interpretation to review");
     expect(gateState(confirmed, "confirmed", null).label).toBe("Ready to start");
     expect(gateState(confirmed, "in_progress", null).label).toBe("In progress");
+  });
+
+  it("shows only a status while the client deposit is unverified (Phase 12C)", () => {
+    const waiting = { ...confirmed, client_deposit_verified: false, ready: false };
+    expect(gateState(waiting, "confirmed", null).label).toBe("Waiting for the client deposit");
+    const item = gateChecklist(waiting, "editor").find((i) => i.key === "deposit");
+    expect(item).toMatchObject({ met: false, detail: "Waiting for the client deposit." });
+    expect(JSON.stringify(gateChecklist(waiting, "editor"))).not.toMatch(/d{3,}|LKR|price/i);
   });
 });

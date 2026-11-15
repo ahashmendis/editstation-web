@@ -101,7 +101,24 @@ export function allowedStatusActions(
       ];
     case "on_hold": {
       const back = statusBeforeHold ?? "draft";
-      return [{ to: back, label: `Resume (back to ${PROJECT_STATUS_LABEL[back].toLowerCase()})` }];
+      const resume: StatusAction = {
+        to: back,
+        label: `Resume (back to ${PROJECT_STATUS_LABEL[back].toLowerCase()})`,
+      };
+      // Only the unpaid-deposit rule holds an assigned project (Phase 12C): the admin extends the
+      // deposit (in Client billing), resumes or cancels.
+      return back === "assigned"
+        ? [
+            resume,
+            {
+              to: "cancelled",
+              label: "Cancel project",
+              confirm:
+                "Cancel this project? The confirmed editor is withdrawn. This cannot be undone.",
+              destructive: true,
+            },
+          ]
+        : [resume];
     }
     default:
       return [];

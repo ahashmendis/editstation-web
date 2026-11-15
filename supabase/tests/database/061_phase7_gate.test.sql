@@ -110,6 +110,18 @@ insert into public.project_references (project_id, url, title) values
 insert into public.project_assets (project_id, label, url) values
   ('61000000-0000-0000-0000-0000000000f5', 'Footage', 'https://drive.example.com/p5');
 
+-- Phase 12C: work needs a verified client deposit (KB9b-4); these fixtures have one (covered in 099+).
+create function pg_temp.verified_deposit(p_project uuid) returns void language sql as $$
+  insert into public.client_milestones (project_id, terms_id, seq, kind, share_percent, amount, currency)
+  select p_project, t.id, 1, 'deposit', 100, 1000, 'LKR' from public.project_terms t
+  where t.project_id = p_project and t.version = 1;
+  update public.client_milestones set verification_status = 'received_unverified', received_at = now(),
+    transfer_reference = 'TEST' where project_id = p_project and kind = 'deposit';
+  update public.client_milestones set verification_status = 'verified', verified_at = now()
+  where project_id = p_project and kind = 'deposit';
+$$;
+select pg_temp.verified_deposit(id) from public.projects where id::text like '61000000-%';
+
 create temp table ids (kind text primary key, id uuid not null);
 
 -- ---------------------------------------------------------------------------

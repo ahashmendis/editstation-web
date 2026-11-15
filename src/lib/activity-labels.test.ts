@@ -47,6 +47,22 @@ describe("activityLabel", () => {
     expect(activityLabel("asset_grant.removal_confirmed")).toBe("Access removal confirmed");
   });
 
+  it("maps Phase 12C billing codes", () => {
+    expect(activityLabel("project.auto_held")).toBe(
+      "Put on hold automatically (client deposit overdue)",
+    );
+    expect(activityLabel("client_milestones.created")).toBe("Client milestones created");
+    expect(activityLabel("client_milestone.invoice_issued")).toBe("Client invoice issued");
+    expect(activityLabel("client_milestone.payment_recorded")).toBe("Client payment recorded");
+    expect(activityLabel("client_milestone.verified")).toBe("Client payment verified");
+    expect(activityLabel("client_milestone.verification_corrected")).toBe(
+      "Client payment verification corrected",
+    );
+    expect(activityLabel("client_milestone.due_extended")).toBe("Client deposit due date extended");
+    expect(activityLabel("timed_rules.run")).toBe("Timed rules run");
+    expect(activityLabel("app_settings.changed")).toBe("Setting changed");
+  });
+
   it("falls back to Updated", () => {
     expect(activityLabel("something.else")).toBe("Updated");
   });
