@@ -61,6 +61,7 @@
 /* Light (default), from the same tokens. */
 :root {
   color-scheme: light;
+  --radius: 0.625rem;
   --background: oklch(0.986 0.003 286);
   --foreground: oklch(0.153 0.015 285);
   --card: oklch(1 0 90);
