@@ -1,5 +1,9 @@
 # Design system
 
+> **Update 2026-11-16 (owner):** the whole site is now light, whatever the system theme. The dark
+> token set stays in `globals.css` under `.dark` (nothing sets it), and the `dark:` variant follows
+> that class. Older text below describing dark as the default is superseded.
+
 Status: **owner-approved 2026-11-12 (recommended answers, section 9). Partly applied:** colour
 tokens (dark default, light via system setting), Geist applied, text wordmark in the public header
 and auth pages, token contrast test (`src/lib/design-tokens.test.ts`). **Not yet applied:** shared

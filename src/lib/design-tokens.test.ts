@@ -28,8 +28,8 @@ function tokens(source: string) {
   return map;
 }
 
-const dark = tokens(block(":root {", "\n}\n"));
-const light = tokens(block("@media (prefers-color-scheme: light) {", "\n  }\n}\n"));
+const light = tokens(block(":root {", "\n}\n"));
+const dark = tokens(block(".dark {", "\n}\n"));
 // The landing page's light base (brand purple as --primary), applied only while .landing exists.
 const landing = tokens(block(":root:has(.landing) {", "\n}\n"));
 
