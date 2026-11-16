@@ -6,8 +6,8 @@
 // an entry below. `href` opens the full video in a new tab: a per-file Google Drive share link or
 // an Instagram reel (decision 3). Only add work the owner has cleared for public display.
 //
-// TODO(owner): choose the six pieces and supply per-file share links (plan section 6).
-//   Candidates: Comun, Knockout Badminton Final, Great Ryrie, Lovenza Reel 1, Growthscape reels.
+// Current six: Growthscape's "More of our work" reels (owner's own company; thumbnails reused with
+// the owner's authorisation), each linking to its Instagram reel.
 
 export type WorkItem = {
   /** Short title shown under the poster, e.g. the piece or campaign name. */
@@ -27,14 +27,58 @@ export type WorkItem = {
 export const WORK_SLOTS = 6;
 
 export const WORK: WorkItem[] = [
-  // Example shape (keep commented until the files and links exist):
-  // {
-  //   title: "Comun",
-  //   kind: "Short-form reel",
-  //   poster: "/work/comun.webp",
-  //   posterAlt: "Still from the Comun reel",
-  //   posterWidth: 1080,
-  //   posterHeight: 1920,
-  //   href: "https://drive.google.com/file/d/<file-id>/view",
-  // },
+  {
+    title: "Great Ryrie Café: Fresh Berries",
+    kind: "Short-form reel",
+    poster: "/work/reel-01.webp",
+    posterAlt: "Thumbnail of the reel Great Ryrie Café: Fresh Berries",
+    posterWidth: 360,
+    posterHeight: 640,
+    href: "https://www.instagram.com/reel/DZ4ePzrieGS/",
+  },
+  {
+    title: "Hydrant Food Hall: Surf & Turf",
+    kind: "Short-form reel",
+    poster: "/work/reel-02.webp",
+    posterAlt: "Thumbnail of the reel Hydrant Food Hall: Surf & Turf",
+    posterWidth: 360,
+    posterHeight: 640,
+    href: "https://www.instagram.com/reel/DTT5j1-gUTh/",
+  },
+  {
+    title: "Great Ryrie Café: Chilli Prawn Scramble",
+    kind: "Short-form reel",
+    poster: "/work/reel-08.webp",
+    posterAlt: "Thumbnail of the reel Great Ryrie Café: Chilli Prawn Scramble",
+    posterWidth: 361,
+    posterHeight: 640,
+    href: "https://www.instagram.com/reel/DNI1N4mPBq1/",
+  },
+  {
+    title: "Growthscape: You Need a System",
+    kind: "Short-form reel",
+    poster: "/work/reel-03.webp",
+    posterAlt: "Thumbnail of the reel Growthscape: You Need a System",
+    posterWidth: 360,
+    posterHeight: 640,
+    href: "https://www.instagram.com/p/DYNV6Sxj6KI/",
+  },
+  {
+    title: "Growthscape: People Remember What They See",
+    kind: "Short-form reel",
+    poster: "/work/reel-04.webp",
+    posterAlt: "Thumbnail of the reel Growthscape: People Remember What They See",
+    posterWidth: 360,
+    posterHeight: 640,
+    href: "https://www.instagram.com/p/DbI-4uMiSiF/",
+  },
+  {
+    title: "Growthscape: Virality is an Algorithm",
+    kind: "Short-form reel",
+    poster: "/work/reel-06.webp",
+    posterAlt: "Thumbnail of the reel Growthscape: Virality is an Algorithm",
+    posterWidth: 360,
+    posterHeight: 640,
+    href: "https://www.instagram.com/p/DYIL_buiXrQ/",
+  },
 ];

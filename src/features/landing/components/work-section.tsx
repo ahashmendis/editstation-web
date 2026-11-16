@@ -16,13 +16,14 @@ function WorkCard({ item }: { item: WorkItem }) {
         rel="noopener noreferrer"
         className={`${focusRing} group grid gap-3 rounded-2xl`}
       >
-        <span className="bg-secondary relative block aspect-[4/5] overflow-hidden rounded-2xl border">
+        <span className="bg-secondary relative block aspect-[9/16] overflow-hidden rounded-2xl border">
           <Image
             src={item.poster}
             alt={item.posterAlt}
             width={item.posterWidth}
             height={item.posterHeight}
-            sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+            sizes="(min-width: 1024px) 360px, 50vw"
+            loading="lazy"
             className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         </span>
@@ -34,7 +35,7 @@ function WorkCard({ item }: { item: WorkItem }) {
             ) : null}
           </span>
           <ArrowUpRight aria-hidden className="text-muted-foreground mt-0.5 size-5 shrink-0" />
-          <span className="sr-only">(opens in a new tab)</span>
+          <span className="sr-only">Watch reel on Instagram (opens in a new tab)</span>
         </span>
       </a>
     </li>
@@ -54,7 +55,7 @@ export function WorkSection({ items = WORK }: { items?: WorkItem[] }) {
       <h2 id="work-title" className={`${sectionTitle} mt-4`}>
         More of our work.
       </h2>
-      <ul className="mt-12 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
         {shown.map((item) => (
           <WorkCard key={item.href} item={item} />
         ))}
