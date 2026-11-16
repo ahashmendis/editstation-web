@@ -8,6 +8,8 @@ import { AdminActionForm } from "@/features/applications/components/admin-action
 import { setBusinessTimezoneAction } from "@/features/billing/admin-actions";
 import { BillingForm } from "@/features/billing/components/billing-form";
 import { getBusinessTimezone } from "@/features/billing/queries";
+import { PayoutEnabledForm } from "@/features/payouts/components/payout-forms";
+import { getPayoutEnabled } from "@/features/payouts/queries";
 import { saveBudgetRangeAction, saveServiceTypeAction } from "@/features/inquiries/admin-actions";
 import { getSettingsLists } from "@/features/inquiries/queries";
 import { requireAdmin } from "@/lib/auth/access";
@@ -72,13 +74,39 @@ export default function SettingsPage() {
 
 async function SettingsContent() {
   await requireAdmin();
-  const [{ services, budgets }, timezone] = await Promise.all([
+  const [{ services, budgets }, timezone, payoutEnabled] = await Promise.all([
     getSettingsLists(),
     getBusinessTimezone(),
+    getPayoutEnabled(),
   ]);
 
   return (
     <AreaShell title="Settings" actions={<SignOutButton />}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Editor payout details</CardTitle>
+          <CardDescription>
+            Currently <strong>{payoutEnabled ? "ON" : "OFF (locked)"}</strong>. When on, editors can
+            enter their bank details in EDITSTATION and a payment can be marked paid only to
+            verified details. When off, no bank details can be stored, and you record &quot;payout
+            account verified outside the app&quot; on each editor&apos;s payout card instead.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div
+            role="note"
+            className="border-destructive/50 grid gap-1 rounded-md border p-3 text-sm"
+          >
+            <p className="font-medium">Keep this OFF until counsel confirms PDPA handling.</p>
+            <p className="text-muted-foreground">
+              Real bank details must not be stored until Sri Lankan PDPA requirements have been
+              reviewed with counsel (owner decision E). Every change to this setting is recorded in
+              the activity log.
+            </p>
+          </div>
+          <PayoutEnabledForm enabled={payoutEnabled} />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Business timezone</CardTitle>

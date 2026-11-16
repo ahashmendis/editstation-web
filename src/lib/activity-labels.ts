@@ -125,6 +125,10 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "client_milestone.extra_round_charged": "Extra round charged to the client",
   "project.cancellation_settled": "Cancellation settled",
   "payment_note.added": "Note added",
+  "payout_details.changed": "Payout details changed (unverified)",
+  "payout_details.verified": "Payout details verified",
+  "payout_details.revealed": "Full account number revealed",
+  "payout_attestation.recorded": "Payout account verified outside the app",
 
   "client.merged": "Client merged",
 };

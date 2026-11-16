@@ -5,17 +5,32 @@ Phase 11 added signed-in Playwright e2e, security headers, a local backup/restor
 `docs/RUNBOOKS.md` and the KB §16 evidence table (below). Full report:
 `docs/reports/editstation-system-report.html`. Owner flags still open from
 earlier phases: Phase 9 (a) F: ended assignments put unpaid payments on hold automatically (12D part 2 settles scheduled cancellations instead), (b) E:
-mark paid cannot check verified payout details (unbuilt by design until E is built), (c)
+mark paid now checks the payout account (12E, on branch: interim attestation while payout details stay locked), (c)
 suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmation before
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
-KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1), extra pay offers, scope quotes and cancellation settlement built on branch (12D part 2).
-**Last updated:** 2026-11-15
+KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1), extra pay offers, scope quotes and cancellation settlement built on branch (12D part 2). 2026-11-16: E built LOCKED with the interim attestation (12E, branch `phase12e-payout`).
+**Last updated:** 2026-11-16
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
 
 ## What exists
+
+- **Phase 12E payout details, LOCKED (branch `phase12e-payout`, uncommitted, pending owner review,
+  2026-11-16):** `editor_payout_details`, append-only `editor_payout_detail_versions` and
+  `editor_payout_attestations`, no API grants (functions only). `app_settings.payout_details_enabled`
+  is **false**: while off every payout write refuses (ES409) and a guard trigger refuses any insert,
+  so no bank data can be stored. Functions: `editor_save_payout_details` (any change -> unverified,
+  version row, admin notification `payout_details_changed`), `editor_get_payout_details` (masked),
+  `admin_get_payout_details_masked`, `admin_reveal_payout_details` (reason required, always
+  audited), `admin_verify_payout_details` (method + note, for the version shown),
+  `admin_set_payout_enabled`, `admin_attest_payout_outside_app` (call 1, only while off). Mark-paid
+  now requires a current attestation (off) or verified details (on). Audit rows hold ids and field
+  names only. App: payout card on `/editor/earnings`, admin payout card on `/admin/earnings/[id]`
+  and `/admin/earnings?editor=`, toggle with the PDPA warning on `/admin/settings`. pgTAP
+  `109`-`111`; older mark-paid tests seed an attestation. **Turn on only after counsel confirms PDPA
+  handling.** No field-level encryption yet (SECURITY_AND_PRIVACY S10).
 
 - **Phase 12D part 2 extra pay and settlement (branch `phase12d2-adjustments`, uncommitted,
   pending owner review, 2026-11-15):** `compensation_adjustments` (admin offers, editor accepts or
@@ -211,14 +226,15 @@ tested locally; nothing has run on hosted infrastructure.
 | Client rounds vs corrections vs scope; rounds tracked (F: per-project policy, not built) | 081                                                                                                                   | Met (tracking; pay for extra rounds is F, open)                                          |
 | Admin records/updates payment status                                                     | 073                                                                                                                   | Met                                                                                      |
 | Editors see only their own payments                                                      | 071, 075                                                                                                              | Met                                                                                      |
-| Only authorised admins mark paid                                                         | 074 (MFA admin); narrower permission A2 and payout check E open                                                       | Met with open items                                                                      |
+| Only authorised admins mark paid                                                         | 074 (MFA admin), 110 (payout check E, locked); A2 open                                                                | Met with open items                                                                      |
 | Transfer references and timestamps auditable                                             | 074, `activity_logs`, `/admin/activity` (e2e)                                                                         | Met                                                                                      |
 | Useful error states and activity history                                                 | error boundary, `userMessageFromDbError`, empty/loading states, `/admin/activity`                                     | Met                                                                                      |
 | Backups and recovery considered and tested                                               | `npm run db:restore-test` (local), `docs/RUNBOOKS.md` §1                                                              | **Partly met:** hosted backup tier and a hosted restore are untested (no hosted project) |
 | Documented cancellation, withdrawal, reassignment                                        | WORKFLOWS §6, RUNBOOKS §4                                                                                             | Met (pay consequences: F open)                                                           |
 
 **Unmet before real client work:** hosted backup/restore test; storage-provider access control
-(K, KB7); payout details (E) before real transfers; F (extra rounds, kill fees); CI has never run
+(K, KB7); payout details (E) built but locked until counsel confirms PDPA handling (interim
+attestation until then); F (extra rounds, kill fees); CI has never run
 (no remote); browser e2e for the offer, submission, review and payment screens.
 
 ## Decisions made (implementation)
@@ -234,9 +250,10 @@ tested locally; nothing has run on hosted infrastructure.
 
 ## Next task
 
-0. Owner review of Phase 12D part 1 (branch `phase12d-editor-pay`, uncommitted), incl. its
-   implementation calls in CHANGELOG. Then 12D part 2 (extra pay offers, scope quotes,
-   cancellation settlement and the `cancelled` payment status), then 12E.
+0. Owner review of Phase 12E (branch `phase12e-payout`, uncommitted), incl. its implementation
+   calls in CHANGELOG. Payout details stay OFF until counsel confirms PDPA handling; decide whether
+   field-level encryption is required before turning them on (S10). Follow-up: a two-session
+   test of the flag races (CHANGELOG).
 
 1. Owner decisions of 2026-11-15 (KB7 client Drive/Dropbox links, F per-project revision policy,
    KB9 50/50 client and editor milestones) are recorded in docs only; **code still reflects the old

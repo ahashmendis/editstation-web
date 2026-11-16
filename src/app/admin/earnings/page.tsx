@@ -17,6 +17,8 @@ import { SummaryCards, type SummaryCardSpec } from "@/features/payments/componen
 import { listAdminPayments, listProjectPrices } from "@/features/payments/queries";
 import { parseAdminEarningsFilter } from "@/features/payments/schemas";
 import { projectMargin, summariseByCurrency, summariseByEditor } from "@/features/payments/summary";
+import { AdminPayoutCard } from "@/features/payouts/components/payout-cards";
+import { getAdminPayout } from "@/features/payouts/queries";
 import { requireAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Earnings · Admin · EDITSTATION" };
@@ -58,6 +60,9 @@ async function EarningsContent({
     .map(([id, name]) => ({ id, name }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const currencies = [...new Set(all.map((r) => r.currency))].sort();
+  // Filtering by one editor (also where a payout_details_changed notification leads) shows their
+  // payout card.
+  const payout = filter.editor ? await getAdminPayout(filter.editor) : null;
 
   const prices = await listProjectPrices(all.map((r) => r.projectId));
   const margins: ProjectMarginRow[] = prices.map((p) => ({
@@ -76,6 +81,13 @@ async function EarningsContent({
       subtitle="What Lenscape owes and has paid editors."
       actions={<SignOutButton />}
     >
+      {payout && filter.editor ? (
+        <AdminPayoutCard
+          editorId={filter.editor}
+          editorName={names.get(filter.editor) ?? "Editor"}
+          payout={payout}
+        />
+      ) : null}
       {all.length === 0 ? (
         <Card>
           <CardContent>

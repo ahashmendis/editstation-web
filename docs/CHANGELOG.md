@@ -3,6 +3,48 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-16: Phase 12E payout details (locked), interim attestation, mark-paid gate
+
+- Branch `phase12e-payout`, **uncommitted, pending owner review**. Spec 4.8 and call 1; decision E
+  (2026-11-11 and the 2026-11-15 go-ahead); SECURITY_AND_PRIVACY S10.
+- Migrations `20261116103247` (notification kind `payout_details_changed`), `20261116103251`
+  (schema: `app_settings.payout_details_enabled` default false, `editor_payout_details`,
+  `editor_payout_detail_versions`, `editor_payout_attestations`, guard triggers, notifications
+  entity type `editor_profile`), `20261116103254` (functions; `admin_mark_payment_paid` replaced in
+  place with every Phase 9 check and the payments audit kept, gate added last).
+- **Locked:** while the flag is off every payout write function refuses (ES409) and the guard
+  trigger refuses inserts into the details and versions tables even for the table owner. pgTAP
+  turns the flag on only inside its own transaction with obviously fake values.
+- Implementation calls (flag for owner): verification methods are phone, in person or other, with a
+  required note; verification names the version the admin saw (a newer save refuses with ES409);
+  saving identical details is a no-op (no version, no notification); the account number allows
+  6-34 letters, digits, spaces or hyphens with at least 6 letters or digits and one digit (a
+  shorter stored value would mask as `****`); the editor sees holder, bank and
+  branch in full and the number masked to the last 4 (admins the same until they reveal); the
+  reveal reason is stored in the audit row and may not contain a run of 6+ digits; reveal is
+  refused while locked (masked reads stay); turning the flag off again re-locks writes and makes
+  attestations count again (stored details are not purged); an attestation is per editor, not per payment,
+  and is never revoked (append-only); every function acting on the flag holds the settings row `for share`
+  (lock order payment, settings, payout row); no field-level encryption (documented in S10).
+- Review fixes (2026-11-16, both reviews, no blockers): flag row held `for share`; reveal refused
+  while locked; digit runs refused in reveal reasons (UI warning); 6+ alphanumeric account
+  numbers; details guard enforces next version + unverified on any content change and no version
+  change otherwise (owner too); the revealed number travels in its own field, shown until Hide or
+  30 s, never in the message; the account number input clears after a save; "Payout account"
+  link per editor on `/admin/earnings`; e2e cleanup keeps `app_settings` rows (it used to delete
+  rows last changed by an e2e admin); e2e turns the flag on and straight back off (teardown
+  upserts false).
+- **Follow-up test (not built):** the flag races (enable vs. save/attest/mark-paid) need a
+  two-session test; pgTAP runs in one session, so the `for share` locking is reviewed, not tested.
+- Tests: pgTAP `109`-`111`; older tests seed an attestation before marking paid (073, 074, 076,
+  103, 107) and 099 counts two settings rows. Unit tests for payout schemas, notification links
+  and activity labels.
+- App: `/editor/earnings` payout card ("Not available yet" while locked; form with masked number
+  and verification status in words when on); admin payout card on `/admin/earnings/[id]` and on
+  `/admin/earnings?editor=<id>` (where the notification leads) with Attest (locked), Verify and
+  Reveal (reason required); the mark-paid action explains why it is blocked; `/admin/settings`
+  toggle with the PDPA warning and a confirmation box.
+
 ## 2026-11-15: Phase 12D part 2 extra pay, scope quotes, cancellation settlement
 
 - Branch `phase12d2-adjustments`, **uncommitted, pending owner review**. Spec 4.3 (`cancelled`),

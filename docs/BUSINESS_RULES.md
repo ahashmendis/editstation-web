@@ -125,7 +125,10 @@ paid and tracked here: OPEN_QUESTIONS G.
   verification status. All day counts above are defaults the admin may change per project before
   it starts; the agreed terms are kept as an auditable record. No amounts are defaulted.
 - A payment is marked paid only after an authorised admin verifies the transfer, and (E) only to a
-  verified payout account.
+  verified payout account. _(Built in Phase 12E: while payout details are locked pending counsel's
+  PDPA confirmation, the admin instead records per editor that the payout account was "verified
+  outside the app" (admin and date, no bank data; call 1); once payout details are turned on, that
+  attestation no longer counts and verified in-app details are required.)_
 - Only authorised admin users may mark a payment paid.
 - Never store online-banking passwords, PINs or auth codes. Store only necessary payment details.
 - Bank details (decision E, 2026-11-11): never collected in the application; entered by the editor

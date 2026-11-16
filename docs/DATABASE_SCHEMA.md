@@ -390,6 +390,45 @@ Phase 12 principles. Migrations `20261115093806_phase12d2_payment_cancelled.sql`
   is refused (ES409). Otherwise the plain cancel keeps the Phase 9 hold-on-close behaviour
   (unpaid rows on hold for the admin), e.g. backfilled terms without a schedule.
 
+## Payout details, locked _(Phase 12E, implemented on branch, pending owner review)_
+
+Decision E, spec 4.8 and call 1. **Locked:** `app_settings.payout_details_enabled` (jsonb boolean,
+default `false`, changed only by `admin_set_payout_enabled`, audited as `app_settings.changed`).
+While it is false every payout write function raises ES409 and guard triggers refuse inserts into
+`editor_payout_details` and `editor_payout_detail_versions` (also for the table owner), so no bank
+data can exist. It must stay off until counsel confirms PDPA handling.
+
+- **`editor_payout_details`** (one row per editor, pk `editor_id` -> `editor_profiles`, cascade):
+  `account_holder`, `bank`, `branch` (1-120 chars), `account_number` (6-34 letters, digits, spaces,
+  hyphens; at least 6 letters or digits), `version`, `verification_status` (`payout_verification_status`: `unverified |
+verified`), `verified_by/at`, `verified_method` (`phone | in_person | other`),
+  `verification_note`, `last_changed_at`. A check keeps the verification columns consistent with
+  the status. The guard trigger (owner too) makes any content change exactly the next version and
+  `unverified`, and refuses any other version change.
+- **`editor_payout_detail_versions`** (append-only): every saved version in full with
+  `changed_by/at`; `(editor_id, version)` unique; next version only; no update or delete except the
+  actor `on delete set null` and the cascade from deleting the editor.
+- **`editor_payout_attestations`** (append-only, call 1): `editor_id`, `note` (no bank data),
+  `attested_by`, `attested_at`. Counts only while the flag is off; once it is on it is retired and a
+  verified payout account is required.
+- **Access:** RLS on, **no grants to anon or authenticated and no policies** on all three tables.
+  Functions: `editor_save_payout_details`, `editor_get_payout_details` (own, number masked to the
+  last 4), `admin_get_payout_details_masked` (also the attestation and `mark_paid_block`),
+  `admin_reveal_payout_details` (refused while locked; reason required, no 6+ digit runs; always writes `payout_details.revealed` with
+  admin, editor and reason), `admin_verify_payout_details` (editor, version shown, method, note),
+  `admin_set_payout_enabled`, `admin_attest_payout_outside_app`. Helpers in `private`:
+  `payout_details_enabled`, `require_payout_enabled`, `mask_account_number`,
+  `payout_attestation_current`, `payout_block_reason`, `require_editor_exists`,
+  `admin_display_name`, the guard triggers.
+- **Audit and notifications:** `payout_details.changed` (editor id, version, changed field names),
+  `payout_details.verified`, `payout_details.revealed`, `payout_attestation.recorded`; never bank
+  values. Notification kind `payout_details_changed` to admins (entity type `editor_profile`, new
+  in the notifications check).
+- **Mark-paid gate:** `admin_mark_payment_paid` (replaced in place) keeps every Phase 9 check and
+  the payments audit, then holds the flag row and the editor's payout row `for share` (lock order:
+  payment, settings, payout row) and refuses with ES409 and a how-to-fix message unless the editor has a current
+  attestation (flag off) or verified details (flag on).
+
 ## Delivery, money, audit
 
 | Table               | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Created |
@@ -479,8 +518,7 @@ decision I; no client billing records beyond `project_internal.client_price`.
   check client money).
 - Editor visibility: editors may need to see that a milestone is waiting on client payment
   without seeing client amounts (KB9a).
-- Payout details (E): `editor_payout_details` + verification, needed before the first editor
-  milestone is marked paid.
+- Payout details (E): _built locked in Phase 12E_ (see "Payout details, locked").
 
 ### Additions from the second 2026-11-15 decisions (F2, KB9a, KB9b, KB7a, E go-ahead)
 
@@ -515,10 +553,8 @@ late_balance_protection | adjustment_accepted | cancellation_settlement`), and a
   Phase 12; both must be audited.
 - **Assets** (KB7a): _built in Phase 12B_ (`access_type` on `asset_access_grants` with the admin
   warning, removal requested/confirmed states, notification kind `asset_inaccessible`).
-- **Payout details** (E): design `editor_payout_details` (masked account number, verification
-  state, audited reads of the full number, admin phone-verification step) and the mark-paid check
-  for a verified account. **No real bank data may be stored until counsel confirms PDPA
-  handling**; build behind a disabled flag or with local test data only.
+- **Payout details** (E): _built in Phase 12E behind the disabled flag_ (see "Payout details,
+  locked"). **No real bank data may be stored until counsel confirms PDPA handling.**
 
 **Conflicts with what Phases 0-11 built** (to resolve in Phase 12 design):
 

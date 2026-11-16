@@ -13,6 +13,8 @@ import { StatusFilter } from "@/features/payments/components/status-filter";
 import { SummaryCards, type SummaryCardSpec } from "@/features/payments/components/summary-cards";
 import { listMyPayments } from "@/features/payments/queries";
 import { parseEditorEarningsFilter } from "@/features/payments/schemas";
+import { EditorPayoutCard } from "@/features/payouts/components/payout-cards";
+import { getMyPayout } from "@/features/payouts/queries";
 import { summariseByCurrency } from "@/features/payments/summary";
 import { requireActiveEditor } from "@/lib/auth/access";
 
@@ -41,7 +43,11 @@ async function EarningsContent({
 }) {
   await requireActiveEditor();
   const filter = parseEditorEarningsFilter(await searchParams);
-  const [rows, offers] = await Promise.all([listMyPayments(), listMyAdjustments()]);
+  const [rows, offers, payout] = await Promise.all([
+    listMyPayments(),
+    listMyAdjustments(),
+    getMyPayout(),
+  ]);
   const openOffers = offers.filter((o) => o.status === "offered");
   const shown = filter.status ? rows.filter((r) => r.status === filter.status) : rows;
 
@@ -52,6 +58,7 @@ async function EarningsContent({
       actions={<SignOutButton />}
     >
       <EditorAdjustmentOffers offers={openOffers} showProject />
+      <EditorPayoutCard payout={payout} />
       {rows.length === 0 ? (
         <EmptyState title="No earnings yet">
           Pay appears here once an admin confirms you on a project.

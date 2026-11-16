@@ -274,6 +274,53 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   ids and the enum reason, and only admins are notified. Lock order is project, assignments,
   payments everywhere the payable rules run.
 
+## Payout details controls (Phase 12E, LOCKED, implemented on branch, pending owner review)
+
+- **Locked by default.** `app_settings.payout_details_enabled` is `false`. While false, every
+  payout write function raises ES409 ("not enabled yet") and guard triggers refuse inserts into
+  `editor_payout_details` and `editor_payout_detail_versions` even for the table owner, so no bank
+  data can be stored (pgTAP `109`). Only `admin_set_payout_enabled` (MFA admin) changes it; each
+  change is audited. `/admin/settings` warns that it must stay off until counsel confirms PDPA
+  handling and needs a confirmation box. pgTAP enables it only inside its own rolled-back
+  transaction with obviously fake values.
+- **No API grants.** The three payout tables have RLS on, no policies and no privileges for anon,
+  authenticated or PUBLIC (pgTAP `109`). Every read and write is a `security definer` function
+  with an empty `search_path`, executable by anon and authenticated, revoked from PUBLIC, that
+  authorises in its body (pgTAP `111`).
+- **Masking and reveal.** Editors read only their own row through `editor_get_payout_details`
+  (account number masked to the last 4); editor B never sees editor A (pgTAP `110`). Admins see
+  the masked view; `admin_reveal_payout_details` requires a reason and always writes
+  `payout_details.revealed` (admin, editor, reason). The number is shown once in the action result
+  and never written to the page or logs.
+- **Payment-redirection protection.** Any change creates a version row, resets the status to
+  unverified, audits the changed field names and notifies admins (`payout_details_changed`).
+  Verification records method, note, admin and time for the exact version the admin saw.
+- **Mark-paid gate (E-1, call 1).** `admin_mark_payment_paid` refuses (ES409, with how to fix it)
+  unless the editor has verified details (flag on) or a current "payout account verified outside
+  the app" attestation (flag off; admin and date, no bank data; retired once the flag is on).
+- **Never logged.** Audit rows and notifications hold ids, versions and field names only; pgTAP
+  `110` asserts no fake bank value appears in `activity_logs` or `notifications`.
+- **Locked means no new data, not no data.** Turning the flag off again does not purge stored
+  rows: masked reads stay, but saving, verifying and revealing the full number are refused (ES409)
+  and attestations count again. Purging is a separate owner decision (retention, question P).
+- **Flag races.** Every function acting on the flag holds the settings row `for share`
+  (`private.lock_payout_flag`); `admin_set_payout_enabled` takes the row lock, so a save, attest,
+  verify, reveal or mark-paid cannot act on a stale value. Lock order: payment, settings, payout
+  row. Not covered by an automated test (needs two sessions; see CHANGELOG follow-up).
+- **Reveal reasons are logged**, so a reason with a run of 6+ digits is refused (ES422) and the UI
+  warns not to type bank details there.
+- **Backups and PITR.** Once the flag is on, bank values sit in plaintext in database backups,
+  point-in-time-recovery WAL and any `pg_dump` (including `npm run db:restore-test` dumps).
+  Restricting who can download backups, their retention, and that restored copies hold the same
+  data must be part of counsel's review; field-level encryption (below) is the main mitigation.
+- **No field-level encryption in this slice (decision recorded 2026-11-16).** Bank values are
+  protected by the absence of API grants, function-only access, audited reveals, Supabase disk
+  encryption at rest and TLS. Options if counsel or the owner require more before turning the
+  flag on: Supabase Vault / `pgsodium` column encryption (keys managed by Supabase; note pgsodium
+  is being deprecated in favour of Vault), or app-level encryption with a server-only key (the
+  database then never sees plaintext, but masking and reveal move to the server). Both need an
+  owner decision and a migration; neither is built.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                                                | Admin                                |
@@ -294,7 +341,7 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 | Submissions, revisions             | —                      | —                                                                   | own; submit via function; no review fields                                                                                                                   | full                                 |
 | Payments (Phase 9)                 | —                      | —                                                                   | no direct read (rows hold admin actor ids); own rows via `editor_list_payments` only (project, milestone, hold label; no reasons, actor ids or client money) | read; write via `admin_*` functions  |
 | Payment notes (Phase 9)            | —                      | —                                                                   | —                                                                                                                                                            | read; append via function            |
-| Payout details (E, not built)      | —                      | —                                                                   | own (planned)                                                                                                                                                | planned                              |
+| Payout details (E, 12E, locked)    | —                      | —                                                                   | own only via `editor_get_payout_details` (masked) and `editor_save_payout_details` (only when enabled)                                                       | masked via function; audited reveal  |
 | Activity logs                      | —                      | —                                                                   | —                                                                                                                                                            | read only (no one can update/delete) |
 
 `—` = no access. Editors B cannot see anything belonging to editor A.
@@ -315,7 +362,8 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 - Collect only operationally necessary data. Inquiries come from people without accounts, so the
   form must show a privacy notice and record which version they saw.
 - No ID documents without a documented reason (KB §7.3).
-- Bank details (decision E): never in the application. Collected after approval, before the
+- Bank details (decision E): built in Phase 12E but locked: nothing can be stored until counsel
+  confirms PDPA handling and the owner turns the setting on. Collected after approval, before the
   first payment: account holder name, bank, branch, account number. Owner editor + admins only;
   account number masked by default. Changes are audited, flagged to the admin and held as
   unverified until confirmed out of band (anti payment-redirection fraud); no payment to
@@ -339,18 +387,18 @@ The owner will run a separate security assessment with tools they provide. No se
 installed and no penetration testing has been done. Carry these known items into that assessment;
 none has been exploited or confirmed beyond local review.
 
-| #   | Finding                                                                                                                                                       | Where                                                                     | Severity (internal view) | Status                                                                                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
-| S1  | Some Phase 1-3 functions keep the default PUBLIC execute grant (access helpers such as `private.is_admin`, Phase 2-3 public functions, two trigger functions) | listed in `supabase/tests/database/046_phase4_function_security.test.sql` | Low-medium               | Needs an owner-approved migration; helpers are used by RLS policies                        |
-| S2  | Suspended or revoked users keep their session until their next request                                                                                        | auth/session handling                                                     | Low                      | Accepted for now; access is re-checked on every request                                    |
-| S3  | Only `frame-ancestors` is set in the CSP; no script CSP (nonces)                                                                                              | `next.config.ts`                                                          | Low-medium               | Follow-up; affects rendering under `cacheComponents`                                       |
-| S4  | A "permission denied for function" error crashes this Supabase Postgres image (17.6.1.106)                                                                    | database                                                                  | Medium (availability)    | Mitigated by the function placement rule and pgTAP guardrail; re-check on the hosted image |
-| S5  | Inquiry form protection is honeypot + rate limit only; Turnstile not yet added                                                                                | `/inquire`                                                                | Medium before launch     | Launch gate (decision O)                                                                   |
-| S6  | 7 moderate `npm audit` advisories in dev-only lint tooling                                                                                                    | dev dependencies                                                          | Low                      | Do not `npm audit fix --force`                                                             |
-| S7  | A revoked admin can still read notifications already received (fixed text and project titles only)                                                            | `notifications` RLS                                                       | Low                      | Accepted (Phase 10 review)                                                                 |
-| S8  | Hosted configuration untested: MFA plan, SMTP, backups, network restrictions, auth rate limits                                                                | hosted Supabase / Vercel                                                  | Unknown                  | No hosted project yet                                                                      |
-| S9  | Asset links are client-owned; Lenscape cannot revoke access or see who opened a link (KB7, KB7a)                                                              | process                                                                   | Medium (data exposure)   | Process controls: removal request and confirmation recorded (Phase 12B)                    |
-| S10 | Payout details (E) will hold bank account data once built                                                                                                     | future `editor_payout_details`                                            | High sensitivity         | Approved in principle; no real bank data stored until counsel confirms PDPA handling       |
+| #   | Finding                                                                                                                                                       | Where                                                                     | Severity (internal view) | Status                                                                                                                                                                                                                                                                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1  | Some Phase 1-3 functions keep the default PUBLIC execute grant (access helpers such as `private.is_admin`, Phase 2-3 public functions, two trigger functions) | listed in `supabase/tests/database/046_phase4_function_security.test.sql` | Low-medium               | Needs an owner-approved migration; helpers are used by RLS policies                                                                                                                                                                                                                                                          |
+| S2  | Suspended or revoked users keep their session until their next request                                                                                        | auth/session handling                                                     | Low                      | Accepted for now; access is re-checked on every request                                                                                                                                                                                                                                                                      |
+| S3  | Only `frame-ancestors` is set in the CSP; no script CSP (nonces)                                                                                              | `next.config.ts`                                                          | Low-medium               | Follow-up; affects rendering under `cacheComponents`                                                                                                                                                                                                                                                                         |
+| S4  | A "permission denied for function" error crashes this Supabase Postgres image (17.6.1.106)                                                                    | database                                                                  | Medium (availability)    | Mitigated by the function placement rule and pgTAP guardrail; re-check on the hosted image                                                                                                                                                                                                                                   |
+| S5  | Inquiry form protection is honeypot + rate limit only; Turnstile not yet added                                                                                | `/inquire`                                                                | Medium before launch     | Launch gate (decision O)                                                                                                                                                                                                                                                                                                     |
+| S6  | 7 moderate `npm audit` advisories in dev-only lint tooling                                                                                                    | dev dependencies                                                          | Low                      | Do not `npm audit fix --force`                                                                                                                                                                                                                                                                                               |
+| S7  | A revoked admin can still read notifications already received (fixed text and project titles only)                                                            | `notifications` RLS                                                       | Low                      | Accepted (Phase 10 review)                                                                                                                                                                                                                                                                                                   |
+| S8  | Hosted configuration untested: MFA plan, SMTP, backups, network restrictions, auth rate limits                                                                | hosted Supabase / Vercel                                                  | Unknown                  | No hosted project yet; once payout details are on, backups/PITR hold bank data in plaintext (restrict backup access and retention)                                                                                                                                                                                           |
+| S9  | Asset links are client-owned; Lenscape cannot revoke access or see who opened a link (KB7, KB7a)                                                              | process                                                                   | Medium (data exposure)   | Process controls: removal request and confirmation recorded (Phase 12B)                                                                                                                                                                                                                                                      |
+| S10 | Payout details (E) hold bank account data once enabled                                                                                                        | `editor_payout_details`, `editor_payout_detail_versions` (12E)            | High sensitivity         | Built locked (flag off, no rows possible); no API grants, masked reads, audited reveals; no field-level encryption yet (options in "Payout details controls"); stays off until counsel confirms PDPA handling; reveal refused while locked; rows are not purged when turned off; backups/PITR would hold plaintext bank data |
 
 Suggested scope for the assessment: RLS and function authorisation (all `public` functions),
 auth and MFA flows, server actions and route gates, headers/CSP, the public forms, the e2e helper

@@ -44,6 +44,9 @@ export function notificationHref(n: Pick<NotificationRow, "kind" | "entity_id">)
       return "/editor/earnings";
     case "late_balance_payable":
       return `/admin/earnings/${n.entity_id}`;
+    // The earnings page filtered to the editor shows their payout card.
+    case "payout_details_changed":
+      return `/admin/earnings?editor=${n.entity_id}`;
   }
 }
 

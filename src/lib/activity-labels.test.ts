@@ -52,6 +52,16 @@ describe("activityLabel", () => {
     expect(entityTypeLabel("adjustment")).toBe("Extra pay offer");
   });
 
+  it("maps Phase 12E payout codes", () => {
+    expect(activityLabel("payout_details.changed")).toBe("Payout details changed (unverified)");
+    expect(activityLabel("payout_details.verified")).toBe("Payout details verified");
+    expect(activityLabel("payout_details.revealed")).toBe("Full account number revealed");
+    expect(activityLabel("payout_attestation.recorded")).toBe(
+      "Payout account verified outside the app",
+    );
+    expect(entityTypeLabel("editor_profile")).toBe("Editor access");
+  });
+
   it("maps Phase 12A terms codes", () => {
     expect(activityLabel("project_terms.draft_saved")).toBe("Terms draft saved");
     expect(activityLabel("project_terms.agreed")).toBe("Terms agreed");

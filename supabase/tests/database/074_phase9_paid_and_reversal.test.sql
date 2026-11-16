@@ -66,6 +66,8 @@ insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data) values
   ('74000000-0000-0000-0000-000000000001', 'p9p-editor-a@test.local', '{}', '{}');
 select private.grant_admin_by_email('p9p-admin@test.local', 'test');
 update public.editor_profiles set access_status = 'active' where user_id = '74000000-0000-0000-0000-000000000001';
+-- Phase 12E: payout details stay locked, so mark-paid needs the interim attestation (call 1).
+insert into public.editor_payout_attestations (editor_id, note) values ('74000000-0000-0000-0000-000000000001', 'TEST attested outside the app');
 
 create temp table ids (kind text primary key, id uuid not null);
 grant select, insert on ids to authenticated;

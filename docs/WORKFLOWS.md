@@ -203,7 +203,8 @@ round's client charge comes from the terms with an admin due date._
    cancels. The balance is due 7 days after the completion/approval milestone.
 2. Start gate: editor accepted, pay agreed, brief confirmed **and** client deposit verified
    _(built in Phase 12C; the editor sees "Waiting for the client deposit")_.
-3. _(Built in Phase 12D part 1, pending owner review; the payout-account check is 12E. Due date =
+3. _(Built in Phase 12D part 1, pending owner review; the payout-account check is built in 12E: see
+   "Payout details" below. Due date =
    business date it became payable + editor pay days; the admin may still change it.)_ Editor milestone 1 (default 50%) becomes payable when the deposit is verified and the
    assignment confirmed; milestone 2 when the project is approved and the client balance is
    verified, or 14 days after the balance fell due if still unpaid (Lenscape carries the risk),
@@ -268,3 +269,20 @@ editor with live assignments needs an admin decision per assignment (reassign or
 should list them rather than act silently. _(Phase 12D part 2: a cancellation with a confirmed
 editor and an agreed schedule row for its stage goes through the cancellation settlement instead;
 see 3a, Payments step 6.)_
+
+## Payout details (decision E; Phase 12E, locked)
+
+1. **Locked (now):** `payout_details_enabled` is off until counsel confirms PDPA handling. Editors
+   see "Not available yet" on `/editor/earnings`; nothing can be saved. Before marking an editor's
+   payment paid, the admin confirms the payout account outside the app and records "verified
+   outside the app" on the payout card (admin and date, no bank data). Without it, mark-paid is
+   refused with that instruction.
+2. **Turning on (owner, after counsel):** an MFA admin turns the setting on in `/admin/settings`
+   (audited). Existing attestations stop counting at once.
+3. **Live:** the editor enters holder, bank, branch and account number (unverified; admins are
+   notified). The admin phones the editor on a number already held, confirms the details, and
+   records the verification (method and note). Mark-paid needs verified details.
+4. **Change:** any change makes a new version, resets to unverified and notifies admins again; no
+   payment can be marked paid until it is verified again.
+5. **Reveal:** the full number is shown to an MFA admin only with a reason (in words, no account
+   numbers) and only while payout details are on; every reveal is in the activity log.

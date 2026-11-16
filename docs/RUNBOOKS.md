@@ -137,3 +137,29 @@ push` is never run by an agent).
       inquiry and mark it spam.
 - [ ] Rollback plan: redeploy the previous Vercel deployment; database changes roll forward with a
       new migration, never by editing an applied one.
+
+## 7. Editor payout accounts (decision E, Phase 12E)
+
+**While payout details are locked (default):** before marking an editor's first payment paid,
+confirm their payout account outside the app (for example by phone on a number you already hold).
+Then, on the payment page's payout card, choose "Record: verified outside the app" and add a note
+on how and when you checked. Never type bank details into the note. One attestation per editor
+covers later payments while the setting stays off.
+
+**Turning payout details on (owner only, after counsel confirms PDPA handling):**
+
+1. Record counsel's confirmation and the owner's go-ahead in `docs/OPEN_QUESTIONS.md`.
+2. Decide whether field-level encryption is needed first (`SECURITY_AND_PRIVACY.md`, payout
+   details controls).
+3. In `/admin/settings`, tick the confirmation and turn payout details on (audited). Attestations
+   stop counting immediately: every editor needs verified in-app details before their next payment
+   is marked paid.
+4. Tell editors to add their details on `/editor/earnings`.
+
+**Verifying a new or changed account:** open the editor's payout card (the notification leads to
+`/admin/earnings?editor=<id>`), phone the editor on a number you already hold (never one given in
+the change itself), read back the masked number, bank and branch, then "Mark verified" with the
+method and a note. Reveal the full number only when needed, with a reason; every reveal is logged.
+
+**Suspected payment redirection:** do not mark anything paid; turn the setting off only if the
+problem is systemic (it locks all editors); follow section 5.

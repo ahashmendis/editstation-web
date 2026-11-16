@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { EditorFigures } from "../summary";
 import { Money } from "./money";
 
@@ -10,6 +12,19 @@ const COLUMNS: { key: FigureKey; label: string }[] = [
   { key: "paidThisMonth", label: "Paid this month" },
   { key: "paidAllTime", label: "Paid all time" },
 ];
+
+/** The earnings page filtered to one editor shows their payout card (Phase 12E). */
+function PayoutLink({ editorId, name }: { editorId: string; name: string }) {
+  return (
+    <Link
+      href={`/admin/earnings?editor=${editorId}`}
+      className="underline"
+      aria-label={`Payout account of ${name}`}
+    >
+      Payout account
+    </Link>
+  );
+}
 
 /** Figures per editor and currency; row cards below `sm`. */
 export function EditorBreakdown({
@@ -42,6 +57,7 @@ export function EditorBreakdown({
               <dt className="text-muted-foreground">Overdue</dt>
               <dd className="tabular-nums">{row.overdue}</dd>
             </dl>
+            <PayoutLink editorId={row.editorId} name={names.get(row.editorId) ?? "the editor"} />
           </li>
         ))}
       </ul>
@@ -55,7 +71,10 @@ export function EditorBreakdown({
                   {c.label}
                 </th>
               ))}
-              <th className="py-2 font-medium">Overdue</th>
+              <th className="py-2 pr-4 font-medium">Overdue</th>
+              <th className="py-2 font-medium">
+                <span className="sr-only">Payout account</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -67,7 +86,13 @@ export function EditorBreakdown({
                     <Money amount={row[c.key]} currency={row.currency} />
                   </td>
                 ))}
-                <td className="py-2 tabular-nums">{row.overdue}</td>
+                <td className="py-2 pr-4 tabular-nums">{row.overdue}</td>
+                <td className="py-2 whitespace-nowrap">
+                  <PayoutLink
+                    editorId={row.editorId}
+                    name={names.get(row.editorId) ?? "the editor"}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>

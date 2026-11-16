@@ -250,6 +250,8 @@ export function cleanupE2eData() {
           join pg_attribute pa on pa.attrelid = c.confrelid and pa.attnum = c.confkey[1]
           where c.contype = 'f' and cardinality(c.conkey) = 1
             and c.confrelid in (select distinct rel from doomed)
+            -- Settings rows are kept (an e2e admin may have changed one); see below.
+            and c.conrelid <> 'public.app_settings'::regclass
         loop
           execute format(
             'insert into doomed select %L::regclass, ch.ctid from %s ch join %s p on ch.%I = p.%I
@@ -274,6 +276,7 @@ export function cleanupE2eData() {
              and coalesce(to_jsonb(t) ->> ''id'', to_jsonb(t) ->> ''user_id'') is not null
            on conflict do nothing', r, r);
       end loop;
+      update public.app_settings set updated_by = null where updated_by::text in (select id from doomed_ids);
       delete from public.activity_logs where entity_id in (select id from doomed_ids)
         or actor_id::text in (select id from doomed_ids);
       for r in select distinct rel from doomed loop

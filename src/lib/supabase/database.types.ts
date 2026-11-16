@@ -1436,6 +1436,162 @@ export type Database = {
           },
         ];
       };
+      editor_payout_attestations: {
+        Row: {
+          attested_at: string;
+          attested_by: string | null;
+          editor_id: string;
+          id: string;
+          note: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attested_at?: string;
+          attested_by?: string | null;
+          editor_id: string;
+          id?: string;
+          note: string;
+        };
+        Update: {
+          attested_at?: string;
+          attested_by?: string | null;
+          editor_id?: string;
+          id?: string;
+          note?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_payout_attestations_attested_by_fkey";
+            columns: ["attested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_payout_attestations_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      editor_payout_detail_versions: {
+        Row: {
+          account_holder: string;
+          account_number: string;
+          bank: string;
+          branch: string;
+          changed_at: string;
+          changed_by: string | null;
+          editor_id: string;
+          id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_holder: string;
+          account_number: string;
+          bank: string;
+          branch: string;
+          changed_at?: string;
+          changed_by?: string | null;
+          editor_id: string;
+          id?: string;
+          version: number;
+        };
+        Update: {
+          account_holder?: string;
+          account_number?: string;
+          bank?: string;
+          branch?: string;
+          changed_at?: string;
+          changed_by?: string | null;
+          editor_id?: string;
+          id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_payout_detail_versions_changed_by_fkey";
+            columns: ["changed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "editor_payout_detail_versions_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      editor_payout_details: {
+        Row: {
+          account_holder: string;
+          account_number: string;
+          bank: string;
+          branch: string;
+          created_at: string;
+          editor_id: string;
+          last_changed_at: string;
+          verification_note: string | null;
+          verification_status: Database["public"]["Enums"]["payout_verification_status"];
+          verified_at: string | null;
+          verified_by: string | null;
+          verified_method: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_holder: string;
+          account_number: string;
+          bank: string;
+          branch: string;
+          created_at?: string;
+          editor_id: string;
+          last_changed_at?: string;
+          verification_note?: string | null;
+          verification_status?: Database["public"]["Enums"]["payout_verification_status"];
+          verified_at?: string | null;
+          verified_by?: string | null;
+          verified_method?: string | null;
+          version: number;
+        };
+        Update: {
+          account_holder?: string;
+          account_number?: string;
+          bank?: string;
+          branch?: string;
+          created_at?: string;
+          editor_id?: string;
+          last_changed_at?: string;
+          verification_note?: string | null;
+          verification_status?: Database["public"]["Enums"]["payout_verification_status"];
+          verified_at?: string | null;
+          verified_by?: string | null;
+          verified_method?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "editor_payout_details_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: true;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "editor_payout_details_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       editor_portfolio_links: {
         Row: {
           created_at: string;
@@ -2916,6 +3072,10 @@ export type Database = {
         Args: { p_archive: boolean; p_project_id: string };
         Returns: undefined;
       };
+      admin_attest_payout_outside_app: {
+        Args: { p_editor_id: string; p_note: string };
+        Returns: string;
+      };
       admin_charge_extra_round: {
         Args: { p_due_date: string; p_revision_request_id: string };
         Returns: string;
@@ -2960,6 +3120,7 @@ export type Database = {
         Args: { p_due_date: string; p_milestone_id: string; p_reason: string };
         Returns: undefined;
       };
+      admin_get_payout_details_masked: { Args: { p_editor_id: string }; Returns: Json };
       admin_grant_project_access: {
         Args: {
           p_editor_ids: string[];
@@ -3057,6 +3218,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_reveal_payout_details: {
+        Args: { p_editor_id: string; p_reason: string };
+        Returns: string;
+      };
       admin_reverse_payment: {
         Args: { p_payment_id: string; p_reason: string; p_reopen: boolean };
         Returns: string;
@@ -3117,6 +3282,7 @@ export type Database = {
         Args: { p_payment_id: string; p_reason?: string; p_status: string };
         Returns: undefined;
       };
+      admin_set_payout_enabled: { Args: { p_enabled: boolean }; Returns: undefined };
       admin_set_project_status: {
         Args: {
           p_note?: string;
@@ -3147,6 +3313,10 @@ export type Database = {
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
       admin_verify_asset: { Args: { p_asset_id: string }; Returns: undefined };
       admin_verify_client_payment: { Args: { p_milestone_id: string }; Returns: undefined };
+      admin_verify_payout_details: {
+        Args: { p_editor_id: string; p_method: string; p_note: string; p_version: number };
+        Returns: undefined;
+      };
       admin_withdraw_adjustment: { Args: { p_adjustment_id: string }; Returns: undefined };
       admin_withdraw_offer: {
         Args: { p_assignment_id: string; p_message?: string };
@@ -3167,6 +3337,7 @@ export type Database = {
         };
         Returns: string;
       };
+      editor_get_payout_details: { Args: Record<PropertyKey, never>; Returns: Json };
       editor_get_terms: {
         Args: { p_project_id: string };
         Returns: {
@@ -3238,6 +3409,15 @@ export type Database = {
         Returns: undefined;
       };
       editor_revision_gate: { Args: { p_revision_id: string }; Returns: string };
+      editor_save_payout_details: {
+        Args: {
+          p_account_holder: string;
+          p_account_number: string;
+          p_bank: string;
+          p_branch: string;
+        };
+        Returns: undefined;
+      };
       editor_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
       editor_submit_interpretation: {
         Args: {
@@ -3385,7 +3565,8 @@ export type Database = {
         | "project_auto_held"
         | "late_balance_payable"
         | "adjustment_offered"
-        | "adjustment_answered";
+        | "adjustment_answered"
+        | "payout_details_changed";
       payment_hold_label: "under_review" | "assignment_ended" | "waiting_for_client_payment";
       payment_kind: "assignment" | "reversal";
       payment_payable_reason:
@@ -3402,6 +3583,7 @@ export type Database = {
         | "paid"
         | "on_hold"
         | "cancelled";
+      payout_verification_status: "unverified" | "verified";
       profile_option_kind: "specialisation" | "software";
       project_access_reason: "invited" | "available";
       project_status:
@@ -3602,6 +3784,7 @@ export const Constants = {
         "late_balance_payable",
         "adjustment_offered",
         "adjustment_answered",
+        "payout_details_changed",
       ],
       payment_hold_label: ["under_review", "assignment_ended", "waiting_for_client_payment"],
       payment_kind: ["assignment", "reversal"],
@@ -3621,6 +3804,7 @@ export const Constants = {
         "on_hold",
         "cancelled",
       ],
+      payout_verification_status: ["unverified", "verified"],
       profile_option_kind: ["specialisation", "software"],
       project_access_reason: ["invited", "available"],
       project_status: [

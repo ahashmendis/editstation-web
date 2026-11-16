@@ -9,6 +9,7 @@ import {
   createProjectWithOffer,
   freshTotp,
   resetInquiryThrottle,
+  sql,
   TEST_PASSWORD,
   uniqueEmail,
   type TestUser,
@@ -294,6 +295,81 @@ test.describe("cancellation settlement (Phase 12D part 2)", () => {
       "aria-required",
       "true",
     );
+    await context.close();
+  });
+});
+
+test.describe("payout details (Phase 12E, locked)", () => {
+  // The turn-on path is exercised and immediately reversed; never leave the flag on.
+  test.afterEach(() => {
+    sql(
+      `insert into public.app_settings (key, value) values ('payout_details_enabled', 'false'::jsonb)
+       on conflict (key) do update set value = 'false'::jsonb`,
+    );
+  });
+
+  test("the editor sees 'not available yet'; the admin sees the PDPA warning and OFF", async ({
+    browser,
+  }) => {
+    test.setTimeout(120_000);
+    const admin = await createAdminWithTotp();
+    const editor = await createConfirmedUser("editor-payout");
+    activateEditor(editor.id);
+
+    const editorContext = await browser.newContext();
+    const editorPage = await editorContext.newPage();
+    await signIn(editorPage, editor);
+    await editorPage.goto("/editor/earnings");
+    await expect(editorPage.getByRole("heading", { name: "Payout details" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(editorPage.getByText("Not available yet")).toBeVisible();
+    await expect(editorPage.getByLabel("Account number")).toHaveCount(0);
+    await editorContext.close();
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await signIn(page, admin);
+    await page.goto("/mfa");
+    await page.waitForLoadState("networkidle");
+    await page
+      .getByLabel("6-digit code")
+      .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
+
+    await page.goto("/admin/settings");
+    await expect(page.getByText("Editor payout details")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("OFF (locked)")).toBeVisible();
+    await expect(
+      page.getByText("Keep this OFF until counsel confirms PDPA handling."),
+    ).toBeVisible();
+    // Turning it on needs the confirmation box (nothing is changed here).
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "Turn payout details on" }).click();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText("Tick the box to confirm.")).toBeVisible();
+    await expect(page.getByText("OFF (locked)")).toBeVisible();
+
+    // With the box ticked it turns on (no data is entered), then straight back off.
+    await page.getByLabel(/Counsel has confirmed/).check();
+    await page.getByRole("button", { name: "Turn payout details on" }).click();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText("Payout details are now ON.")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("ON", { exact: true })).toBeVisible();
+    await page.getByLabel("I want to lock payout details again.").check();
+    await page.getByRole("button", { name: "Turn payout details off" }).click();
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText("OFF (locked)", { exact: true })).toBeVisible({ timeout: 30_000 });
+
+    await page.goto(`/admin/earnings?editor=${editor.id}`);
+    await expect(page.getByRole("heading", { name: /^Payout account/ })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText("Marking paid:")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Record: verified outside the app" }),
+    ).toBeVisible();
     await context.close();
   });
 });

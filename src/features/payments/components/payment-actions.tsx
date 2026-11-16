@@ -151,11 +151,14 @@ export function PaymentActions({
   actions,
   dueDate,
   today,
+  markPaidBlock = null,
 }: {
   paymentId: string;
   actions: AdminPaymentAction[];
   dueDate: string | null;
   today: string;
+  /** Why the payout check (Phase 12E) blocks marking paid, with the fix; null when allowed. */
+  markPaidBlock?: string | null;
 }) {
   return (
     <div className="grid gap-6">
@@ -166,7 +169,14 @@ export function PaymentActions({
           case "to_processing":
             return <AdvanceForm key={action} paymentId={paymentId} action={action} />;
           case "mark_paid":
-            return <MarkPaidForm key={action} paymentId={paymentId} today={today} />;
+            return markPaidBlock ? (
+              <div key={action} role="status" className="grid gap-1 text-sm">
+                <p className="font-medium">Mark as paid is blocked</p>
+                <p className="text-muted-foreground">{markPaidBlock}</p>
+              </div>
+            ) : (
+              <MarkPaidForm key={action} paymentId={paymentId} today={today} />
+            );
           case "hold":
             return <HoldForm key={action} paymentId={paymentId} />;
           case "release":

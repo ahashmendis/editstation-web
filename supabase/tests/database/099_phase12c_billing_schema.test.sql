@@ -92,8 +92,8 @@ select is(pg_temp.visible('99000000-0000-0000-0000-000000000003', 'aal1', 'clien
   'the pending applicant reads none');
 select is(pg_temp.visible('99000000-0000-0000-0000-000000000004', 'aal1', 'client_milestones'), 0,
   'the suspended editor reads none');
-select is(pg_temp.visible('99000000-0000-0000-0000-00000000000a', 'aal2', 'app_settings'), 1,
-  'the admin reads the settings');
+select is(pg_temp.visible('99000000-0000-0000-0000-00000000000a', 'aal2', 'app_settings'), 2,
+  'the admin reads the settings (timezone; 12E adds payout_details_enabled)');
 select is(pg_temp.visible('99000000-0000-0000-0000-000000000001', 'aal1', 'app_settings'), 0,
   'an editor reads no settings');
 

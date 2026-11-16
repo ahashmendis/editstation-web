@@ -25,6 +25,8 @@ import { PaymentNotes } from "@/features/payments/components/payment-notes";
 import { PaymentStatusPill } from "@/features/payments/components/payment-status-pill";
 import { getAdminPayment } from "@/features/payments/queries";
 import { colomboDay } from "@/features/payments/summary";
+import { AdminPayoutCard } from "@/features/payouts/components/payout-cards";
+import { getAdminPayout } from "@/features/payouts/queries";
 import { requireAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Payment · Admin · EDITSTATION" };
@@ -55,6 +57,7 @@ async function PaymentContent({ params }: { params: PageProps<"/admin/earnings/[
   const p = await getAdminPayment(id);
   if (!p) notFound();
 
+  const payout = await getAdminPayout(p.editorId);
   const actions = nextAdminActions(p.status, p.kind, p.reversedById !== null);
   const splittable = canSplitForDispute(p);
 
@@ -183,9 +186,14 @@ async function PaymentContent({ params }: { params: PageProps<"/admin/earnings/[
               actions={actions}
               dueDate={p.dueDate}
               today={colomboDay(new Date())}
+              markPaidBlock={payout?.mark_paid_block ?? null}
             />
           </CardContent>
         </Card>
+      ) : null}
+
+      {payout && p.kind !== "reversal" ? (
+        <AdminPayoutCard editorId={p.editorId} editorName={p.editorName} payout={payout} />
       ) : null}
 
       {splittable ? (
