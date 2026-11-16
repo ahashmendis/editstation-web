@@ -395,3 +395,11 @@
     transform: translateX(-50%);
   }
 }
+
+/* Work reels strip: same loop as the clients strip, with card spacing. */
+.landing-marquee-cards .landing-marquee-copy {
+  align-items: flex-start;
+  column-gap: 1rem;
+  row-gap: 1.5rem;
+  padding-inline: 0.5rem;
+}
