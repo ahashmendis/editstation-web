@@ -3,8 +3,8 @@ import Image from "next/image";
 import { CLIENT_LOGOS, type ClientLogo } from "@/features/landing/clients";
 import { container } from "@/features/landing/styles";
 
-// Looping strip of client logos on a dark band (most logos are white marks). Grayscale until
-// hovered; the loop pauses on hover/focus and is replaced by a static wrapped row under reduced
+// Looping strip of client logos as black silhouettes (public/clients/*-black.webp) at reduced opacity on the page
+// background, no separate band; full strength on hover; the loop pauses on hover/focus and is replaced by a static wrapped row under reduced
 // motion (globals.css). The second copy exists only for the seamless loop and is hidden from
 // assistive technology.
 
@@ -28,11 +28,7 @@ function LogoList({ copy }: { copy: 0 | 1 }) {
 function Logo({ logo, decorative }: { logo: ClientLogo; decorative: boolean }) {
   const w = Math.round((logo.width / logo.height) * logo.displayHeight);
   return (
-    <span
-      className={`flex items-center opacity-75 grayscale transition-[filter,opacity] duration-300 hover:opacity-100 hover:grayscale-0 motion-reduce:transition-none ${
-        logo.plate ? "rounded-md bg-white/90 px-2.5 py-1.5" : ""
-      }`}
-    >
+    <span className="flex items-center opacity-50 transition-opacity duration-300 hover:opacity-90 motion-reduce:transition-none">
       <Image
         src={logo.src}
         alt={decorative ? "" : logo.name}
@@ -49,10 +45,10 @@ function Logo({ logo, decorative }: { logo: ClientLogo; decorative: boolean }) {
 export function ClientsMarquee() {
   return (
     <section aria-labelledby="clients-title" className={`${container} pb-6`}>
-      <div className="overflow-hidden rounded-3xl bg-[var(--landing-ink)] py-10 text-[var(--landing-ink-foreground)] sm:py-12">
+      <div className="overflow-hidden py-10 sm:py-12">
         <h2
           id="clients-title"
-          className="font-landing-ui px-6 text-center text-xs font-bold tracking-[0.14em] text-[var(--landing-ink-muted)] uppercase"
+          className="font-landing-ui text-muted-foreground px-6 text-center text-xs font-bold tracking-[0.14em] uppercase"
         >
           Brands we have worked with
         </h2>
