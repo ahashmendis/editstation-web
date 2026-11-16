@@ -30,6 +30,8 @@ function tokens(source: string) {
 
 const dark = tokens(block(":root {", "\n}\n"));
 const light = tokens(block("@media (prefers-color-scheme: light) {", "\n  }\n}\n"));
+// The landing page's light base (brand purple as --primary), applied only while .landing exists.
+const landing = tokens(block(":root:has(.landing) {", "\n}\n"));
 
 function luminance([L, C, h]: [number, number, number]) {
   const a = C * Math.cos((h * Math.PI) / 180);
@@ -89,5 +91,16 @@ describe.each([
 
   it.each(PAIRS)("%s on %s is at least %d:1", (fg, bg, min) => {
     expect(contrast(theme, fg, bg)).toBeGreaterThanOrEqual(min);
+  });
+});
+
+describe("landing page tokens", () => {
+  it.each([
+    ...PAIRS.filter(([fg, bg]) => !fg.startsWith("chart") && !bg.startsWith("chart")),
+    ["landing-ink-foreground", "landing-ink", 7],
+    ["landing-ink-muted", "landing-ink", 4.5],
+  ] as [string, string, number][])("%s on %s is at least %d:1", (fg, bg, min) => {
+    expect(landing.size).toBeGreaterThan(MIN_TOKENS);
+    expect(contrast(landing, fg, bg)).toBeGreaterThanOrEqual(min);
   });
 });

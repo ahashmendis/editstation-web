@@ -6,8 +6,26 @@ import { expect, test } from "@playwright/test";
 test.describe("public site", () => {
   test("home page offers two separate entry points", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator('main a[href="/inquire"]').first()).toBeVisible();
-    await expect(page.locator('main a[href="/sign-up"]').first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const main = page.getByRole("main");
+    await expect(main.getByRole("link", { name: "Join as an editor" }).first()).toHaveAttribute(
+      "href",
+      "/apply",
+    );
+    await expect(main.getByRole("link", { name: "Start a project" }).first()).toHaveAttribute(
+      "href",
+      "/inquire",
+    );
+  });
+
+  test("home page works at phone width without horizontal scroll", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    await expect(page.getByRole("list", { name: "Clients" })).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 
   test("inquiry form loads service types and lists missing fields on empty submit", async ({
