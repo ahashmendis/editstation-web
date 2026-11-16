@@ -10,12 +10,27 @@ suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmati
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
 KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1), extra pay offers, scope quotes and cancellation settlement built on branch (12D part 2). 2026-11-16: E built LOCKED with the interim attestation (12E, branch `phase12e-payout`).
-**Last updated:** 2026-11-16
+**Last updated:** 2026-11-16 (open opportunities on branch)
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.
 
 ## What exists
+
+- **Open opportunities (branch `open-opportunities`, uncommitted, pending owner review,
+  2026-11-16; B/C amended, spec approved with every recommended call):** admin-written summary
+  table `project_opportunities` (editor-visible, no client data; pay stored only when shown) and
+  append-style `opportunity_interests` (an editor reads only their own). Functions
+  `admin_publish_opportunity` (also reopens), `admin_update_opportunity`,
+  `admin_close_opportunity`, `editor_list_opportunities` (allow-list projection),
+  `editor_register_interest` (optional proposed rate and note; max 10 live; not after
+  declined/not selected/live offer), `editor_withdraw_interest`, `admin_list_interests`,
+  `admin_select_editor` (calls `admin_make_offer`, others not selected, opportunity filled). A
+  project leaving the open stage for good closes its opportunity. Notification kinds
+  `interest_registered`, `opportunity_selected`, `opportunity_not_selected`. App:
+  `/editor/opportunities` (nav link, confidentiality notice), "Open opportunity" card on
+  `/admin/projects/[id]`. pgTAP `112`-`114` (046 allow-list updated); e2e "open opportunities".
+  Owner calls to confirm are in `CHANGELOG.md`.
 
 - **Phase 12E payout details, LOCKED (branch `phase12e-payout`, uncommitted, pending owner review,
   2026-11-16):** `editor_payout_details`, append-only `editor_payout_detail_versions` and

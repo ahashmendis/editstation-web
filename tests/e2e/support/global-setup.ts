@@ -9,6 +9,7 @@ const WARM_PATHS = [
   "/mfa",
   "/admin",
   "/editor/earnings",
+  "/editor/opportunities",
   "/admin/earnings",
 ];
 

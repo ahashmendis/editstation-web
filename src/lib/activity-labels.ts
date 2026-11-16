@@ -129,6 +129,13 @@ const ACTIVITY_LABEL: Record<string, string> = {
   "payout_details.verified": "Payout details verified",
   "payout_details.revealed": "Full account number revealed",
   "payout_attestation.recorded": "Payout account verified outside the app",
+  "opportunity.published": "Published as an open opportunity",
+  "opportunity.updated": "Opportunity summary edited",
+  "opportunity.closed": "Opportunity closed",
+  "opportunity_interest.registered": "Editor registered interest",
+  "opportunity_interest.withdrawn": "Editor withdrew interest",
+  "opportunity_interest.selected": "Editor chosen from the opportunity",
+  "opportunity_interest.not_selected": "Editor not selected",
 
   "client.merged": "Client merged",
 };
@@ -169,6 +176,8 @@ export const ENTITY_TYPE_LABEL: Record<string, string> = {
   adjustment: "Extra pay offer",
   app_settings: "Setting",
   timed_rules: "Timed rules",
+  project_opportunity: "Opportunity",
+  opportunity_interest: "Opportunity interest",
 };
 
 export function entityTypeLabel(entityType: string): string {

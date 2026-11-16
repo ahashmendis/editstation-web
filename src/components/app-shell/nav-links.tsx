@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Briefcase,
   ClipboardCheck,
   FolderKanban,
   History,
@@ -30,6 +31,7 @@ const ICONS = {
   settings: Settings,
   earnings: Wallet,
   activity: History,
+  opportunities: Briefcase,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;

@@ -23,6 +23,9 @@ describe("notificationHref", () => {
     ["adjustment_offered", "/editor/earnings"],
     ["adjustment_answered", `/admin/projects/${id}`],
     ["payout_details_changed", `/admin/earnings?editor=${id}`],
+    ["interest_registered", `/admin/projects/${id}`],
+    ["opportunity_selected", `/editor/projects/${id}`],
+    ["opportunity_not_selected", "/editor/opportunities"],
   ])("%s links to %s", (kind, href) => {
     expect(notificationHref({ kind, entity_id: id })).toBe(href);
   });

@@ -8,7 +8,13 @@ requirements; enforce them in the database.
 - Registering an account grants **no** editor access _(2026-11-11)_. Editor access exists only
   after an explicit, server-side admin approval and activation, and ends on suspension/revocation.
 - Editors must be vetted and approved before accessing restricted work.
-- No public project listing, no open bidding, no direct client-to-editor hiring.
+- No public project listing, no open bidding, no direct client-to-editor hiring. _Amended B/C
+  (2026-11-16):_ active editors (only) may see admin-written **opportunity summaries** (no client
+  name, client price, brief text, files or links) and register interest with an optional proposed
+  rate; the admin chooses one editor manually (never first-come-first-served) and that becomes the
+  normal offer. The proposed rate is only a signal and never sets pay. At most 10 open interests (on opportunities still taking interest)
+  per editor; no interest on a project the editor declined or was not selected for. Pay shown to
+  editors is chosen per opportunity (default hidden).
 - One primary editor per project (initial release).
 - Do not expose client-sensitive details to editors unnecessarily.
 

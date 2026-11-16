@@ -429,6 +429,51 @@ verified`), `verified_by/at`, `verified_method` (`phone | in_person | other`),
   payment, settings, payout row) and refuses with ES409 and a how-to-fix message unless the editor has a current
   attestation (flag off) or verified details (flag on).
 
+## Open opportunities _(B/C amended 2026-11-16, implemented on branch, pending owner review)_
+
+Spec `docs/superpowers/specs/2026-11-16-open-opportunities-design.md`. Migrations
+`20261116152005` (notification kinds `interest_registered`, `opportunity_selected`,
+`opportunity_not_selected`), `20261116152008` (schema), `20261116152010` (functions).
+
+- **`project_opportunities`** (editor-visible, one per project, `project_id` unique, cascade):
+  admin-written `title` (1-120), `service_type_code` (-> `service_types`), `deliverables_summary`
+  (1-1000), `deadline`, `format_notes` (1-1000), `shown_pay_amount` + `shown_pay_currency` (both
+  or neither; null = pay hidden, so RLS never exposes a hidden amount), `closes_at` (stops new
+  interest only), `status` (`opportunity_status`: `open | closed | filled`), `close_reason`
+  (`selected | admin | project_closed`), `published_by/at`, `closed_by/at`, `updated_at`. A check
+  ties `closed_at` and `close_reason` to the status. **No client column** (pgTAP `112` pins the
+  column list). Guard: never deleted (except the project cascade), never moves project.
+- **`opportunity_interests`**: `opportunity_id` (cascade), `editor_id` (-> `editor_profiles`,
+  cascade), `proposed_amount` + `proposed_currency` (both or neither; a signal only),
+  `note` (1-500), `status` (`opportunity_interest_status`: `interested | withdrawn | selected |
+not_selected`), `created_at`, `decided_at` (set iff not `interested`). Partial unique index: one
+  live (`interested`/`selected`) row per editor per opportunity. Guard: inserts start
+  `interested`; only `status`/`decided_at` change, once, from `interested`; never deleted except by
+  cascade.
+- **Access:** RLS on; no write grants. Authenticated has a **column-level** `select` on
+  `project_opportunities` that omits `project_id`, `published_by` and `closed_by` (admins get those
+  through `admin_get_opportunity`, one round trip with the interests) and `select` on
+  `opportunity_interests`. Admin (MFA) reads
+  all; an active editor reads an opportunity that takes interest now (open, before `closes_at`,
+  project open and unarchived) or one they have an interest on
+  (`private.editor_can_see_opportunity`, executable by authenticated for the policy), and only
+  their own interest rows. Functions: `admin_publish_opportunity` (also reopens),
+  `admin_update_opportunity`, `admin_close_opportunity`, `editor_list_opportunities` (allow-list
+  projection with the caller's latest interest; the project id only once selected),
+  `editor_register_interest`, `editor_withdraw_interest`, `admin_list_interests`,
+  `admin_get_opportunity`, `admin_select_editor` (calls `admin_make_offer`). Helpers in `private`: `lock_opportunity`,
+  `opportunity_accepting`, `clean_opportunity`, `close_opportunity`, the guard triggers and the
+  `projects_close_opportunity` trigger (closes an open opportunity when the project leaves the
+  open stage for good). Notifications entity type `project_opportunity` added.
+- **Locks:** project, then the opportunity, then the chosen interest, then assignments (inside
+  `admin_make_offer`), then the other interest rows. The limit of 10 counts only `interested` rows
+  on opportunities still taking interest (closed, past the closing date, or a project in draft or
+  on hold do not count). Editors never lock projects: registering holds the opportunity row `for share` and
+  a per-editor advisory lock (the 10-interest limit); withdrawing locks only the editor's own row.
+- **Audit:** `opportunity.published|updated|closed`, `opportunity_interest.registered|withdrawn|
+selected|not_selected`; ids, field names, reason and counts only (never amounts, notes or
+  summary text).
+
 ## Delivery, money, audit
 
 | Table               | Purpose / key columns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Created |

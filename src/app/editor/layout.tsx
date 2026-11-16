@@ -7,6 +7,7 @@ import { requireActiveEditor } from "@/lib/auth/access";
 
 const EDITOR_NAV: NavItem[] = [
   { href: "/editor", label: "Dashboard", icon: "dashboard", exact: true },
+  { href: "/editor/opportunities", label: "Opportunities", icon: "opportunities" },
   { href: "/editor/earnings", label: "Earnings", icon: "earnings" },
 ];
 

@@ -29,6 +29,7 @@ export function notificationHref(n: Pick<NotificationRow, "kind" | "entity_id">)
     case "asset_inaccessible":
     case "project_auto_held":
     case "adjustment_answered":
+    case "interest_registered":
       return `/admin/projects/${n.entity_id}`;
     case "application_decision":
     case "application_request":
@@ -36,7 +37,12 @@ export function notificationHref(n: Pick<NotificationRow, "kind" | "entity_id">)
     case "invitation":
     case "assignment_confirmed":
     case "revision_requested":
+    // The chosen editor answers the offer on the project page.
+    case "opportunity_selected":
       return `/editor/projects/${n.entity_id}`;
+    // Not chosen: the entity is the opportunity, which the editor sees only on this page.
+    case "opportunity_not_selected":
+      return "/editor/opportunities";
     case "payment_paid":
     // Offers are answered on the earnings page (also for a cancelled project the editor no
     // longer sees) and on the project page.

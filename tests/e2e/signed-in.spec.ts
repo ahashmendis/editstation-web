@@ -6,8 +6,10 @@ import {
   confirmationLinkFor,
   createAdminWithTotp,
   createConfirmedUser,
+  createOpenProject,
   createProjectWithOffer,
   freshTotp,
+  registerInterestAs,
   resetInquiryThrottle,
   sql,
   TEST_PASSWORD,
@@ -371,5 +373,126 @@ test.describe("payout details (Phase 12E, locked)", () => {
       page.getByRole("button", { name: "Record: verified outside the app" }),
     ).toBeVisible();
     await context.close();
+  });
+});
+
+test.describe("open opportunities", () => {
+  test("publish, register interest, choose one editor; the other sees Not selected", async ({
+    browser,
+  }) => {
+    test.setTimeout(180_000);
+    const admin = await createAdminWithTotp();
+    const [editorA, editorB] = await Promise.all([
+      createConfirmedUser("editor-opp-a"),
+      createConfirmedUser("editor-opp-b"),
+    ]);
+    activateEditor(editorA.id);
+    activateEditor(editorB.id);
+    const suffix = Date.now();
+    // The project title stands in for client-identifying text: editors must never see it.
+    const projectTitle = `E2E project CLIENTNAME ${suffix}`;
+    const summaryTitle = `Promo cut ${suffix}`;
+    const projectId = createOpenProject(projectTitle);
+
+    // Admin publishes a summary (pay hidden).
+    const adminContext = await browser.newContext();
+    const page = await adminContext.newPage();
+    await signIn(page, admin);
+    await page.goto("/mfa");
+    await page.waitForLoadState("networkidle");
+    await page
+      .getByLabel("6-digit code")
+      .fill(await freshTotp(admin.totpSecret, admin.enrolledStep));
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
+    await page.goto(`/admin/projects/${projectId}`);
+    await expect(page.getByText("Open opportunity", { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Title editors see").fill(summaryTitle);
+    await page.getByLabel("Deliverables summary").fill("One 60 second cut and a 15 second teaser.");
+    // Retried for hydration; once published the form becomes the edit form ("Save summary").
+    const saveSummary = page.getByRole("button", { name: "Save summary" });
+    await expect(async () => {
+      if ((await saveSummary.count()) === 0) {
+        await page
+          .getByRole("button", { name: "Publish to active editors" })
+          .click({ timeout: 5_000 });
+        await page.getByRole("button", { name: "Confirm" }).click({ timeout: 5_000 });
+      }
+      await expect(saveSummary).toBeVisible({ timeout: 15_000 });
+    }).toPass({ timeout: 60_000 });
+    await expect(
+      page.getByText("Published. Active editors can now see the summary."),
+    ).toBeVisible();
+
+    // Editor A registers interest with a proposed rate; editor B registers without one.
+    const contextA = await browser.newContext();
+    const pageA = await contextA.newPage();
+    await signIn(pageA, editorA);
+    await pageA.goto("/editor/opportunities");
+    await expect(pageA.getByText(summaryTitle)).toBeVisible({ timeout: 30_000 });
+    await expect(pageA.getByText(/These summaries are confidential/)).toBeVisible();
+    await expect(pageA.getByText("CLIENTNAME")).toHaveCount(0);
+    await pageA.waitForLoadState("networkidle");
+    // Other runs may have open opportunities too: act only inside this one's card.
+    const cardA = pageA.getByRole("listitem").filter({ hasText: summaryTitle });
+    await cardA.getByLabel("Your proposed rate (optional)").fill("30000");
+    await cardA.getByLabel("Short note (optional)").fill("Cut similar promos last month.");
+    // Retried for hydration; once registered the form is replaced by the status and Withdraw.
+    const interested = cardA.getByText("Interested", { exact: true });
+    await expect(async () => {
+      if ((await interested.count()) === 0) {
+        await cardA.getByRole("button", { name: "Register interest" }).click({ timeout: 5_000 });
+      }
+      await expect(interested).toBeVisible({ timeout: 15_000 });
+    }).toPass({ timeout: 60_000 });
+    await expect(
+      cardA.getByText("Your interest: proposed 30,000 LKR", { exact: false }),
+    ).toBeVisible();
+    await expect(cardA.getByRole("button", { name: "Withdraw interest" })).toBeVisible();
+    registerInterestAs(editorB.id, projectId);
+
+    // Admin sees both and chooses editor A through the offer fields.
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Interested editors (2)" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText("Proposed 30,000 LKR (a signal only)")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    const firstChoose = page.getByRole("button", { name: "Choose this editor" }).first();
+    const chosen = page.getByText(/^An editor was chosen on/);
+    await expect(async () => {
+      if ((await chosen.count()) === 0) {
+        await firstChoose.click({ timeout: 5_000 });
+        await page.getByRole("button", { name: "Confirm" }).click({ timeout: 5_000 });
+      }
+      await expect(chosen).toBeVisible({ timeout: 15_000 });
+    }).toPass({ timeout: 60_000 });
+    await adminContext.close();
+
+    // The first listed interest is the earliest: editor A. A sees Selected, B sees Not selected.
+    await pageA.reload();
+    await expect(cardA.getByText("Selected", { exact: true })).toBeVisible({ timeout: 30_000 });
+    await cardA.getByRole("link", { name: "Open the project" }).click();
+    await expect(pageA).toHaveURL(new RegExp(`/editor/projects/${projectId}$`));
+    await contextA.close();
+
+    const contextB = await browser.newContext();
+    const pageB = await contextB.newPage();
+    await signIn(pageB, editorB);
+    await pageB.goto("/editor/opportunities");
+    await expect(pageB.getByText(summaryTitle)).toBeVisible({ timeout: 30_000 });
+    const cardB = pageB.getByRole("listitem").filter({ hasText: summaryTitle });
+    await expect(cardB.getByText("Not selected", { exact: true })).toBeVisible();
+    await expect(cardB.getByRole("button", { name: "Register interest" })).toHaveCount(0);
+    // Works at 375px without horizontal scroll.
+    await pageB.setViewportSize({ width: 375, height: 812 });
+    await expect(pageB.getByText(summaryTitle)).toBeVisible();
+    expect(
+      await pageB.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await contextB.close();
   });
 });

@@ -20,6 +20,7 @@ import { getProjectAccessData } from "@/features/access/queries";
 import { ClientBillingPanel } from "@/features/billing/components/billing-panel";
 import { getClientBilling } from "@/features/billing/queries";
 import { AdminConfirmationPanel } from "@/features/confirmation/components/admin-panel";
+import { AdminOpportunitySection } from "@/features/opportunities/components/admin-section";
 import { getConfirmationData } from "@/features/confirmation/queries";
 import { archiveProjectAction, setProjectStatusAction } from "@/features/projects/admin-actions";
 import {
@@ -290,6 +291,18 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
           />
         </CardContent>
       </Card>
+
+      <AdminOpportunitySection
+        projectId={p.id}
+        publishable={!archived && status === "open"}
+        services={options.services.filter((s) => s.active)}
+        project={{
+          serviceTypeCode: p.service_type_code,
+          deadline: p.deadline,
+          proposedAmount: p.proposed_amount,
+          currency: p.proposed_currency,
+        }}
+      />
 
       <AdminAccessPanels
         projectId={p.id}

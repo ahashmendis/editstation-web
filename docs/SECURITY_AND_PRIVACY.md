@@ -321,6 +321,32 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   database then never sees plaintext, but masking and reveal move to the server). Both need an
   owner decision and a migration; neither is built.
 
+## Open opportunity controls (B/C amended 2026-11-16, implemented on branch, pending owner review)
+
+- **Summary only, written separately.** `project_opportunities` holds only what the admin writes
+  for editors; it is never a filtered copy of brief or client columns. pgTAP `112` pins its column
+  list and refuses any client/price/brief/link column; `113` checks the editor projection never
+  contains the project title or the client price. Hidden pay is not stored (null), because RLS is
+  row-level and cannot hide a column.
+- **Active editors only.** Pending applicants, suspended or revoked editors, admins without MFA
+  and anon read no row and `editor_list_opportunities` refuses them (ES401/ES403); an editor reads
+  only their own interest rows (editor B never sees editor A's interest or proposed rate).
+- **No API writes.** Both tables have RLS on and no write grants. `project_opportunities` has a
+  column-level `select` for authenticated that omits `project_id`, `published_by` and `closed_by`
+  (pgTAP `112`); admins read those through `admin_get_opportunity`.
+  Every write is a security definer function with an empty `search_path`, executable by anon and
+  authenticated, revoked from PUBLIC, authorising in its body with ES401/403/409/422 only
+  (pgTAP `114`). Guard triggers keep interests append-style even for the table owner.
+- **Pay is unchanged.** Choosing an editor calls `admin_make_offer`; the proposed rate is never
+  used as the offer (pgTAP `113` compares the result with a direct offer field by field).
+- **Races.** Selection locks project, opportunity, then interests: a second selection, a
+  withdrawal, a cancelled or on-hold project, a suspended editor or an editor with a live offer
+  gets ES409 with a clear message. The limit uses a per-editor advisory lock. Concurrency is not
+  exercised by a two-session test (single-session pgTAP).
+- **Notifications** to editors use the opportunity title only, never the project title (pgTAP
+  `113`); audit rows hold ids and field names only.
+- **Confidentiality notice** on `/editor/opportunities` (call 7). It is a reminder, not a control.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                                                | Admin                                |
@@ -342,6 +368,7 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
 | Payments (Phase 9)                 | —                      | —                                                                   | no direct read (rows hold admin actor ids); own rows via `editor_list_payments` only (project, milestone, hold label; no reasons, actor ids or client money) | read; write via `admin_*` functions  |
 | Payment notes (Phase 9)            | —                      | —                                                                   | —                                                                                                                                                            | read; append via function            |
 | Payout details (E, 12E, locked)    | —                      | —                                                                   | own only via `editor_get_payout_details` (masked) and `editor_save_payout_details` (only when enabled)                                                       | masked via function; audited reveal  |
+| Open opportunities (B/C amended)   | —                      | —                                                                   | summaries taking interest now, or with own interest; own interest rows; register/withdraw via `editor_*` functions                                           | read; write via `admin_*` functions  |
 | Activity logs                      | —                      | —                                                                   | —                                                                                                                                                            | read only (no one can update/delete) |
 
 `—` = no access. Editors B cannot see anything belonging to editor A.

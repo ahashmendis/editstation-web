@@ -1,7 +1,11 @@
-# Open opportunities: design (for owner approval, nothing built)
+# Open opportunities: design
+
+**Status: approved by the owner 2026-11-16 with every recommended §7 call; built on branch
+`open-opportunities` (uncommitted, pending owner review). As built: docs/WORKFLOWS.md "Open
+opportunities", DATABASE_SCHEMA.md, SECURITY_AND_PRIVACY.md, CHANGELOG.md 2026-11-16.**
 
 Date: 2026-11-16. Concept approved by the owner the same day (decisions log "B/C amended").
-This document turns it into a buildable design and lists the calls that still need an answer.
+This document turns it into a buildable design.
 
 ## 1. What it is
 
@@ -68,7 +72,8 @@ brief, so nothing is exposed by accident (not a filtered copy of brief columns).
    hidden; if hidden the editor may propose a rate).
 2. **Who can see it?** Recommend: all active editors; no level or specialisation filtering in the
    first version (later option).
-3. **Limits.** Recommend: an editor has at most 10 live interests at once, and cannot register on
+3. **Limits.** Recommend: an editor has at most 10 live interests at once (as built: `interested`
+   rows on opportunities still taking interest; stale rows never block), and cannot register on
    a project they were previously not selected for or declined.
 4. **Proposed rate is only a signal.** Recommend: it never sets pay; pay is still agreed through
    the offer flow and admin approval.

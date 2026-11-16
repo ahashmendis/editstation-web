@@ -3,6 +3,48 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-16: Open opportunities (B/C amended)
+
+- Branch `open-opportunities`, **uncommitted, pending owner review**. Spec
+  `docs/superpowers/specs/2026-11-16-open-opportunities-design.md`, approved with every
+  recommended §7 call.
+- Migrations `20261116152005` (notification kinds `interest_registered`, `opportunity_selected`,
+  `opportunity_not_selected`), `20261116152008` (types, `project_opportunities`,
+  `opportunity_interests`, guard triggers, RLS helper `private.editor_can_see_opportunity`,
+  notifications entity type `project_opportunity`), `20261116152010` (functions and the
+  `projects_close_opportunity` trigger). `admin_make_offer` is unchanged and reused.
+- Tests: pgTAP `112` (34, schema/RLS as admin, admin without MFA, editors A/B, another editor,
+  applicant, suspended), `113` (77, workflow, limits, races and states, selection equals a direct
+  offer field by field), `114` (10, function security); `046` allow-list gains the RLS helper.
+  Vitest: `src/features/opportunities/schemas.test.ts`, notification href and activity label
+  cases. e2e: "open opportunities" (publish, interest, choose, not selected, 375px); cleanup also
+  deletes notifications pointing at e2e entities.
+- Implementation calls (flag for owner): the pay shown is stored only when shown (hidden pay is
+  never saved, so editors cannot read it through RLS); the closing date stops new interest only
+  and is the end of that day in Sri Lanka time (the admin can still choose afterwards; there is no
+  scheduled job); admin close and a project leaving the open stage for good (confirmed directly,
+  cancelled, completed, archived) make every interested editor "not selected"; draft and on hold
+  only hide the opportunity; publishing a closed or filled opportunity reopens it, and editors not
+  selected before cannot register again (rule 3 applied literally); "previously declined" means a
+  `declined` or `not_selected` assignment or a `not_selected` interest on that project
+  (`withdrawn`/`reassigned` assignments do not block); an editor with a live offer on the project
+  cannot register and cannot be chosen (continue in the Editors card); an editor may withdraw
+  while interested and register again (a new row); only `interested` rows on opportunities still taking interest count towards the 10;
+  the chosen editor gets `opportunity_selected` plus the existing `invitation` bell when the offer
+  creates their access row (two bells); editor bells use the opportunity title, admin bells the
+  project title; the "Choose this editor" offer form is prefilled with the shown pay or the
+  project's editor pay, never the proposed rate; the selected interest stays "Selected" even if
+  the editor later declines the offer; there is no editor profile page to link to, so the admin
+  list shows the editor's name and access status only.
+- Review fixes (2026-11-16, db-security PASS and code-reviewer APPROVE, notes only): column-level
+  `select` on `project_opportunities` (no `project_id`, `published_by`, `closed_by` via the API;
+  admins use the new `admin_get_opportunity`, one round trip); stale interests no longer count
+  towards the limit; project-triggered closes record `closed_by_project_change` and the changed
+  project field names; lock-order comment corrected; the admin card loads in its own Suspense
+  boundary; impossible dates refused; the typed rate currency survives an error.
+- Not verified: true concurrency (two sessions) for the races; the locks and ES409 paths are
+  exercised sequentially in pgTAP `113`.
+
 ## 2026-11-16: Phase 12E payout details (locked), interim attestation, mark-paid gate
 
 - Branch `phase12e-payout`, **uncommitted, pending owner review**. Spec 4.8 and call 1; decision E
@@ -492,3 +534,9 @@ withdraw, practical-test result recording.
 
 Next.js 16.4 (App Router, `src/`, TS strict), Tailwind v4, shadcn/ui (base-ui), ESLint + Prettier,
 Vitest, local Supabase config, pgTAP, CI workflow, split docs, `CLAUDE.md`.
+
+### Open opportunities: owner approval and verification (2026-11-16)
+
+Owner approved all calls: closing date ends new interest at the end of that day in Asia/Colombo (admin can still select, no job); admin close or project cancelled, completed, archived or confirmed directly marks interested editors Not selected; draft and on-hold only hide; republishing reopens and previously Not selected editors cannot register; previously declined = declined or not_selected assignment or a not_selected interest (withdrawn and reassigned do not count); an editor with a live offer cannot register or be selected; withdraw and re-register allowed; the chosen editor gets `opportunity_selected` plus the usual invitation; Choose this editor prefills shown pay or the project's editor pay, never the proposed rate; Selected stays Selected if the offer is later declined; the admin list shows name and access status only.
+
+Verification: db:test 2,297 pass, advisors clean, `npm run check` pass; final full `npm run test:e2e`: 27 passed, 3 flaky (passed on retry: client inquiry, pending applicant, payout details), 0 failed. Not resolved: real two-session concurrency for the race cases (tested one step at a time only); the billing (12C) e2e test failed in earlier parallel runs with or without this feature and passes alone. Local only; not pushed.

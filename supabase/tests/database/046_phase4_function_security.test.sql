@@ -39,7 +39,7 @@ insert into exc_invoker values
 create temp table allow_private_exec (name text primary key);
 insert into allow_private_exec values
   ('private.is_admin'), ('private.is_admin_account'), ('private.is_active_editor'),
-  ('private.editor_project_stage');
+  ('private.editor_project_stage'), ('private.editor_can_see_opportunity');
 
 -- ---------------------------------------------------------------------------
 -- Catalogue rules
@@ -73,7 +73,8 @@ select is_empty($$ select sig from fns where schema = 'private'
   and schema || '.' || name not in (select name from allow_private_exec) $$,
   'private functions are executable by no API role (except the RLS helpers)');
 
-select is_empty($$ select sig from fns where schema = 'private' and name not in ('is_admin', 'is_admin_account', 'is_active_editor', 'editor_project_stage')
+select is_empty($$ select sig from fns where schema = 'private' and name not in ('is_admin', 'is_admin_account', 'is_active_editor', 'editor_project_stage',
+    'editor_can_see_opportunity')
   and exists (select 1 from aclexplode(acl) a where pg_get_userbyid(a.grantee) in ('anon', 'authenticated', 'service_role')) $$,
   'no private function has an explicit grant to an API role (except the RLS helpers)');
 

@@ -1909,6 +1909,58 @@ export type Database = {
           },
         ];
       };
+      opportunity_interests: {
+        Row: {
+          created_at: string;
+          decided_at: string | null;
+          editor_id: string;
+          id: string;
+          note: string | null;
+          opportunity_id: string;
+          proposed_amount: number | null;
+          proposed_currency: string | null;
+          status: Database["public"]["Enums"]["opportunity_interest_status"];
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          decided_at?: string | null;
+          editor_id: string;
+          id?: string;
+          note?: string | null;
+          opportunity_id: string;
+          proposed_amount?: number | null;
+          proposed_currency?: string | null;
+          status?: Database["public"]["Enums"]["opportunity_interest_status"];
+        };
+        Update: {
+          created_at?: string;
+          decided_at?: string | null;
+          editor_id?: string;
+          id?: string;
+          note?: string | null;
+          opportunity_id?: string;
+          proposed_amount?: number | null;
+          proposed_currency?: string | null;
+          status?: Database["public"]["Enums"]["opportunity_interest_status"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_interests_editor_id_fkey";
+            columns: ["editor_id"];
+            isOneToOne: false;
+            referencedRelation: "editor_profiles";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "opportunity_interests_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "project_opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payment_notes: {
         Row: {
           author_id: string | null;
@@ -2462,6 +2514,96 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "projects";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_opportunities: {
+        Row: {
+          close_reason: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
+          closes_at: string | null;
+          deadline: string | null;
+          deliverables_summary: string;
+          format_notes: string | null;
+          id: string;
+          project_id: string;
+          published_at: string;
+          published_by: string | null;
+          service_type_code: string | null;
+          shown_pay_amount: number | null;
+          shown_pay_currency: string | null;
+          status: Database["public"]["Enums"]["opportunity_status"];
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          close_reason?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closes_at?: string | null;
+          deadline?: string | null;
+          deliverables_summary: string;
+          format_notes?: string | null;
+          id?: string;
+          project_id: string;
+          published_at?: string;
+          published_by?: string | null;
+          service_type_code?: string | null;
+          shown_pay_amount?: number | null;
+          shown_pay_currency?: string | null;
+          status?: Database["public"]["Enums"]["opportunity_status"];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          close_reason?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closes_at?: string | null;
+          deadline?: string | null;
+          deliverables_summary?: string;
+          format_notes?: string | null;
+          id?: string;
+          project_id?: string;
+          published_at?: string;
+          published_by?: string | null;
+          service_type_code?: string | null;
+          shown_pay_amount?: number | null;
+          shown_pay_currency?: string | null;
+          status?: Database["public"]["Enums"]["opportunity_status"];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_opportunities_closed_by_fkey";
+            columns: ["closed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_opportunities_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_opportunities_published_by_fkey";
+            columns: ["published_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_opportunities_service_type_code_fkey";
+            columns: ["service_type_code"];
+            isOneToOne: false;
+            referencedRelation: "service_types";
+            referencedColumns: ["code"];
           },
         ];
       };
@@ -3084,6 +3226,7 @@ export type Database = {
         Args: { p_reason: string; p_revision_id: string; p_type: string };
         Returns: undefined;
       };
+      admin_close_opportunity: { Args: { p_opportunity_id: string }; Returns: undefined };
       admin_complete_project: { Args: { p_project_id: string }; Returns: undefined };
       admin_confirm_access_removal: { Args: { p_grant_id: string }; Returns: undefined };
       admin_confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
@@ -3120,6 +3263,7 @@ export type Database = {
         Args: { p_due_date: string; p_milestone_id: string; p_reason: string };
         Returns: undefined;
       };
+      admin_get_opportunity: { Args: { p_project_id: string }; Returns: Json };
       admin_get_payout_details_masked: { Args: { p_editor_id: string }; Returns: Json };
       admin_grant_project_access: {
         Args: {
@@ -3130,6 +3274,21 @@ export type Database = {
         Returns: number;
       };
       admin_issue_client_invoice: { Args: { p_milestone_id: string }; Returns: string };
+      admin_list_interests: {
+        Args: { p_opportunity_id: string };
+        Returns: {
+          created_at: string;
+          decided_at: string;
+          editor_access_status: Database["public"]["Enums"]["editor_access_status"];
+          editor_id: string;
+          editor_name: string;
+          interest_id: string;
+          note: string;
+          proposed_amount: number;
+          proposed_currency: string;
+          status: Database["public"]["Enums"]["opportunity_interest_status"];
+        }[];
+      };
       admin_make_offer: {
         Args: {
           p_amount: number;
@@ -3172,6 +3331,20 @@ export type Database = {
         }[];
       };
       admin_preview_cancellation_settlement: { Args: { p_project_id: string }; Returns: Json };
+      admin_publish_opportunity: {
+        Args: {
+          p_closes_at?: string;
+          p_deadline?: string;
+          p_deliverables_summary: string;
+          p_format_notes?: string;
+          p_project_id: string;
+          p_service_type_code?: string;
+          p_shown_pay_amount?: number;
+          p_shown_pay_currency?: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
       admin_reassign: { Args: { p_assignment_id: string; p_message?: string }; Returns: undefined };
       admin_record_assessment_result: {
         Args: {
@@ -3252,6 +3425,10 @@ export type Database = {
       admin_save_assets: { Args: { p_items: Json; p_project_id: string }; Returns: undefined };
       admin_save_brief: { Args: { p_input: Json; p_project_id: string }; Returns: number };
       admin_save_terms_draft: { Args: { p_input: Json; p_project_id: string }; Returns: string };
+      admin_select_editor: {
+        Args: { p_amount: number; p_currency?: string; p_interest_id: string; p_message?: string };
+        Returns: string;
+      };
       admin_send_scope_quote: { Args: { p_quote_id: string }; Returns: undefined };
       admin_set_asset_early_access: {
         Args: { p_asset_id: string; p_value: boolean };
@@ -3310,6 +3487,20 @@ export type Database = {
       admin_start_application_review: { Args: { p_application_id: string }; Returns: undefined };
       admin_start_work: { Args: { p_assignment_id: string }; Returns: undefined };
       admin_update_client: { Args: { p_client_id: string; p_input: Json }; Returns: undefined };
+      admin_update_opportunity: {
+        Args: {
+          p_closes_at?: string;
+          p_deadline?: string;
+          p_deliverables_summary: string;
+          p_format_notes?: string;
+          p_opportunity_id: string;
+          p_service_type_code?: string;
+          p_shown_pay_amount?: number;
+          p_shown_pay_currency?: string;
+          p_title: string;
+        };
+        Returns: undefined;
+      };
       admin_update_project: { Args: { p_input: Json; p_project_id: string }; Returns: undefined };
       admin_verify_asset: { Args: { p_asset_id: string }; Returns: undefined };
       admin_verify_client_payment: { Args: { p_milestone_id: string }; Returns: undefined };
@@ -3366,6 +3557,28 @@ export type Database = {
           withdrawn_at: string;
         }[];
       };
+      editor_list_opportunities: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          accepting_interest: boolean;
+          closes_at: string;
+          deadline: string;
+          deliverables_summary: string;
+          format_notes: string;
+          interest_id: string;
+          interest_status: Database["public"]["Enums"]["opportunity_interest_status"];
+          note: string;
+          opportunity_id: string;
+          proposed_amount: number;
+          proposed_currency: string;
+          published_at: string;
+          selected_project_id: string;
+          service_type: string;
+          shown_pay_amount: number;
+          shown_pay_currency: string;
+          title: string;
+        }[];
+      };
       editor_list_payments: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -3389,6 +3602,15 @@ export type Database = {
           transfer_date: string;
           waiting_on_client: boolean;
         }[];
+      };
+      editor_register_interest: {
+        Args: {
+          p_note?: string;
+          p_opportunity_id: string;
+          p_proposed_amount?: number;
+          p_proposed_currency?: string;
+        };
+        Returns: string;
       };
       editor_report_asset_inaccessible: {
         Args: { p_asset_id: string; p_note: string };
@@ -3438,6 +3660,7 @@ export type Database = {
         };
         Returns: string;
       };
+      editor_withdraw_interest: { Args: { p_interest_id: string }; Returns: undefined };
       get_assignment_gate: {
         Args: { p_assignment_id: string };
         Returns: {
@@ -3566,7 +3789,12 @@ export type Database = {
         | "late_balance_payable"
         | "adjustment_offered"
         | "adjustment_answered"
-        | "payout_details_changed";
+        | "payout_details_changed"
+        | "interest_registered"
+        | "opportunity_selected"
+        | "opportunity_not_selected";
+      opportunity_interest_status: "interested" | "withdrawn" | "selected" | "not_selected";
+      opportunity_status: "open" | "closed" | "filled";
       payment_hold_label: "under_review" | "assignment_ended" | "waiting_for_client_payment";
       payment_kind: "assignment" | "reversal";
       payment_payable_reason:
@@ -3785,7 +4013,12 @@ export const Constants = {
         "adjustment_offered",
         "adjustment_answered",
         "payout_details_changed",
+        "interest_registered",
+        "opportunity_selected",
+        "opportunity_not_selected",
       ],
+      opportunity_interest_status: ["interested", "withdrawn", "selected", "not_selected"],
+      opportunity_status: ["open", "closed", "filled"],
       payment_hold_label: ["under_review", "assignment_ended", "waiting_for_client_payment"],
       payment_kind: ["assignment", "reversal"],
       payment_payable_reason: [

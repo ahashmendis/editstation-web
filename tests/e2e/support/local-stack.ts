@@ -175,6 +175,32 @@ export function createProjectWithOffer(adminId: string, editorId: string, title:
   return projectId;
 }
 
+/** Creates an open project with no editors yet (title must start with `E2E project `). */
+export function createOpenProject(title: string): string {
+  const projectId = randomUUID();
+  sql(`
+    insert into public.projects (id, title, brief_type, status, first_opened_at, proposed_amount)
+    values (${lit(projectId)}, ${lit(title)}, 'fully_instructed', 'open', now(), 20000);
+  `);
+  return projectId;
+}
+
+/** Registers `editorId`'s interest in the project's opportunity through the real function. */
+export function registerInterestAs(editorId: string, projectId: string) {
+  // Looked up as postgres: the API role cannot read project_id (column-level grant).
+  const opportunityId = sql(
+    `select id from public.project_opportunities where project_id = ${lit(projectId)};`,
+  );
+  sql(`
+    begin;
+    select set_config('request.jwt.claims',
+      json_build_object('sub', ${lit(editorId)}, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+    set local role authenticated;
+    select public.editor_register_interest(${lit(opportunityId)});
+    commit;
+  `);
+}
+
 /**
  * Phase 12C: takes a project from createProjectWithOffer to a confirmed assignment whose brief the
  * editor has confirmed, with agreed terms and a client price, so only the client deposit is
@@ -279,6 +305,9 @@ export function cleanupE2eData() {
       update public.app_settings set updated_by = null where updated_by::text in (select id from doomed_ids);
       delete from public.activity_logs where entity_id in (select id from doomed_ids)
         or actor_id::text in (select id from doomed_ids);
+      -- Notifications point at entities by id too (e.g. interest_registered to every admin about
+      -- an e2e project, opportunity_not_selected about an e2e opportunity).
+      delete from public.notifications where entity_id::text in (select id from doomed_ids);
       for r in select distinct rel from doomed loop
         execute format('delete from %s where ctid in (select row_ctid from doomed where rel = %L::regclass)', r, r);
       end loop;

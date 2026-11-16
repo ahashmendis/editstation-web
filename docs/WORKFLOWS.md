@@ -270,6 +270,35 @@ should list them rather than act silently. _(Phase 12D part 2: a cancellation wi
 editor and an agreed schedule row for its stage goes through the cancellation settlement instead;
 see 3a, Payments step 6.)_
 
+## Open opportunities (B/C amended 2026-11-16; branch `open-opportunities`, pending owner review)
+
+Spec: `docs/superpowers/specs/2026-11-16-open-opportunities-design.md` (approved with every
+recommended §7 call). Direct invitations (Editors card) still work without publishing.
+
+1. **Publish:** on an `open`, unarchived project an MFA admin writes a separate editor summary
+   (neutral title, deliverables summary, optional service type, deadline, format notes, optional
+   shown editor pay, optional closing date). Default: pay hidden. Nothing is copied from the brief
+   or client columns.
+2. **Interest:** every active editor sees open opportunities on `/editor/opportunities` (with a
+   confidentiality notice) and may register interest with an optional proposed rate and short
+   note. At most 10 `interested` rows per editor on opportunities still taking interest; no interest on a project where the editor declined
+   an offer, was not selected, or already has a live offer. An editor may withdraw while
+   `interested` and register again later (a new row). Each new interest notifies admins
+   (`interest_registered`).
+3. **Choose:** the admin chooses one interested, active editor with the usual offer fields. This
+   calls `admin_make_offer` with the admin's amount (the proposed rate never sets pay), so
+   negotiation, terms, deposit gate and confirmation are unchanged. The interest becomes
+   `selected` (bell `opportunity_selected`), every other interested editor `not_selected` (bell
+   `opportunity_not_selected`), and the opportunity `filled`.
+4. **Close:** the admin closes it (interested editors become not selected), or the project leaves
+   the open stage for good (editor confirmed directly, cancelled, completed, archived), which
+   closes it the same way. Draft and on hold only hide it. A passed closing date stops new
+   interest; the admin can still choose. Publishing again reopens it with a new summary (editors
+   not selected before cannot register again).
+
+Opportunity: `open` → `filled` (editor chosen) | `closed` (admin or project) → `open` (republish).
+Interest: `interested` → `withdrawn` | `selected` | `not_selected` (final; rows are never deleted).
+
 ## Payout details (decision E; Phase 12E, locked)
 
 1. **Locked (now):** `payout_details_enabled` is off until counsel confirms PDPA handling. Editors

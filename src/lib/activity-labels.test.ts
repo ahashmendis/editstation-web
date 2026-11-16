@@ -62,6 +62,16 @@ describe("activityLabel", () => {
     expect(entityTypeLabel("editor_profile")).toBe("Editor access");
   });
 
+  it("maps open opportunity codes", () => {
+    expect(activityLabel("opportunity.published")).toBe("Published as an open opportunity");
+    expect(activityLabel("opportunity_interest.registered")).toBe("Editor registered interest");
+    expect(activityLabel("opportunity_interest.selected")).toBe(
+      "Editor chosen from the opportunity",
+    );
+    expect(activityLabel("opportunity_interest.not_selected")).toBe("Editor not selected");
+    expect(entityTypeLabel("project_opportunity")).toBe("Opportunity");
+  });
+
   it("maps Phase 12A terms codes", () => {
     expect(activityLabel("project_terms.draft_saved")).toBe("Terms draft saved");
     expect(activityLabel("project_terms.agreed")).toBe("Terms agreed");
