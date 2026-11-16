@@ -124,7 +124,7 @@ async function AdminContent() {
           />
           <MetricCard
             label="Client revision rounds"
-            value={metrics.revisions.average_client_rounds ?? "�"}
+            value={metrics.revisions.average_client_rounds ?? "—"}
             hint="Average per project with a submission."
           />
           <MetricCard
