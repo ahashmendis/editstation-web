@@ -7,6 +7,7 @@ import { UserMenu } from "@/features/profile/components/user-menu";
 
 import { MobileNav } from "./mobile-nav";
 import { NavLinks, type NavEntry } from "./nav-links";
+import { isNavGroup } from "./nav-sections";
 
 // Shared shell for the signed-in work areas (admin and editor): sidebar on large screens, top bar
 // with a menu sheet on small ones. Navigation only; pages keep their own heading via AreaShell.
@@ -27,6 +28,12 @@ export function AppShell({
   profileHref: string;
   children: ReactNode;
 }) {
+  // The sidebar bell is only for areas whose nav has no Notifications row of its own.
+  const hasNotificationsItem = items.some((entry) =>
+    isNavGroup(entry)
+      ? entry.items.some((item) => item.href === "/notifications")
+      : entry.href === "/notifications",
+  );
   return (
     <div data-app-shell className="flex min-h-full flex-1 flex-col lg:flex-row">
       <aside className="bg-sidebar text-sidebar-foreground hidden w-60 shrink-0 border-r lg:block">
@@ -42,7 +49,7 @@ export function AppShell({
             <p className="text-muted-foreground text-sm">{area}</p>
           </div>
           <NavLinks items={items} label={area} />
-          <NotificationBell withLabel />
+          {hasNotificationsItem ? null : <NotificationBell withLabel />}
           <UserMenu profileHref={profileHref} withLabel />
           <Link
             href="/"

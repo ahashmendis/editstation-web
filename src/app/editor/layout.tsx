@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import type { NavEntry } from "@/components/app-shell/nav-links";
 import { Loading } from "@/components/auth-shell";
+import { UnreadNavBadge } from "@/features/notifications/components/notification-bell";
 import { requireActiveEditor } from "@/lib/auth/access";
 import { NO_INDEX } from "@/lib/seo/site";
 import type { Metadata } from "next";
@@ -30,8 +31,15 @@ const EDITOR_NAV: NavEntry[] = [
   },
   {
     group: "Account",
-    // Notifications live in the shell's bell (with the unread count), so there is no nav item.
-    items: [{ href: "/editor/profile", label: "Profile", icon: "profile" }],
+    items: [
+      { href: "/editor/profile", label: "Profile", icon: "profile" },
+      {
+        href: "/notifications",
+        label: "Notifications",
+        icon: "notifications",
+        badge: <UnreadNavBadge />,
+      },
+    ],
   },
 ];
 

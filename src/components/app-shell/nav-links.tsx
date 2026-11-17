@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,8 @@ const ICONS = {
 } as const;
 
 export type NavIcon = keyof typeof ICONS;
-export type NavItem = BaseNavItem<NavIcon>;
+/** `badge` is a server-rendered element (for example an unread count) shown at the row end. */
+export type NavItem = BaseNavItem<NavIcon> & { badge?: ReactNode };
 export type NavEntry = NavItem | NavGroup<NavItem>;
 export function NavLinks({
   items,
@@ -78,6 +79,7 @@ export function NavLinks({
             >
               <Icon aria-hidden className="size-4 shrink-0" />
               {item.label}
+              {item.badge}
             </Link>
           </li>
         );

@@ -27,6 +27,26 @@ async function BellWithCount({ withLabel }: { withLabel: boolean }) {
   return <BellLink count={count} withLabel={withLabel} />;
 }
 
+/** Unread count pill for a nav row. Streams in its own Suspense boundary; renders nothing at 0. */
+export function UnreadNavBadge() {
+  return (
+    <Suspense fallback={null}>
+      <UnreadNavBadgeCount />
+    </Suspense>
+  );
+}
+
+async function UnreadNavBadgeCount() {
+  const badge = unreadBadge(await countUnreadNotifications());
+  if (!badge) return null;
+  return (
+    <span className="bg-primary text-primary-foreground ml-auto min-w-5 rounded-full px-1 text-center text-[11px] leading-5 font-semibold tabular-nums">
+      {badge}
+      <span className="sr-only"> unread</span>
+    </span>
+  );
+}
+
 function BellLink({ count, withLabel }: { count: number; withLabel: boolean }) {
   const badge = unreadBadge(count);
   const label = count === 0 ? "Notifications" : `Notifications, ${count} unread`;
