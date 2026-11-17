@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Wordmark } from "@/components/wordmark";
+import { HeaderAccountLink } from "@/features/landing/components/header-account-link";
 import { container, ctaPrimary, ctaSecondary, ctaSize, focusRing } from "@/features/landing/styles";
 
 const navLink = `${focusRing} font-landing-ui text-muted-foreground hover:text-foreground px-1 py-1 text-[0.8125rem] font-bold transition-colors`;
@@ -31,9 +32,7 @@ export function LandingHeader({ showWork }: { showWork: boolean }) {
           <a href="#process" className={navLink}>
             Process
           </a>
-          <Link href="/sign-in" className={navLink}>
-            Sign in
-          </Link>
+          <HeaderAccountLink className={navLink} />
         </nav>
 
         <div className="flex items-center gap-2">
