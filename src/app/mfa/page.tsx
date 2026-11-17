@@ -7,8 +7,12 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { MfaEnrollForm, MfaVerifyForm } from "@/features/authentication/components/mfa-forms";
 import { requireAdminAccount } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
+import { NO_INDEX } from "@/lib/seo/site";
 
-export const metadata: Metadata = { title: "Two-step verification · EDITSTATION" };
+export const metadata: Metadata = {
+  title: "Two-step verification · EDITSTATION",
+  robots: NO_INDEX,
+};
 
 export default function MfaPage() {
   return (

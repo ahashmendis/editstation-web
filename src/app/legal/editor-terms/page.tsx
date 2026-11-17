@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 
 import { AuthShell } from "@/components/auth-shell";
+import { legalPagesPublished, NO_INDEX } from "@/lib/seo/site";
 import { EDITOR_TERMS_VERSION } from "@/features/applications/constants";
 
-export const metadata: Metadata = { title: "Editor terms · EDITSTATION" };
+// Out of search until real text replaces the placeholder version (see legalPagesPublished).
+export const metadata: Metadata = {
+  title: "Editor terms · EDITSTATION",
+  robots: legalPagesPublished() ? undefined : NO_INDEX,
+};
 
 // Placeholder. The editor agreement must be drafted and reviewed by a Sri Lankan lawyer
 // (KB §12.2, OPEN_QUESTIONS KB8). Do not write legal terms here.

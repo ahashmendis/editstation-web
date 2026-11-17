@@ -3,8 +3,12 @@ import Link from "next/link";
 
 import { AuthShell } from "@/components/auth-shell";
 import { SignUpForm } from "@/features/authentication/components/auth-forms";
+import { NO_INDEX } from "@/lib/seo/site";
 
-export const metadata: Metadata = { title: "Join the editor network · EDITSTATION" };
+export const metadata: Metadata = {
+  title: "Join the editor network · EDITSTATION",
+  robots: NO_INDEX,
+};
 
 export default function SignUpPage() {
   return (

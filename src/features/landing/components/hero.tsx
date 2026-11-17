@@ -116,8 +116,9 @@ export function Hero() {
             className="hero-fade text-muted-foreground mt-6 max-w-[44ch] text-lg font-light text-pretty"
             style={at(420)}
           >
-            EditStation matches each project with a vetted editor and runs the work from brief to
-            final delivery. Pay is agreed and the brief confirmed before any editing starts.
+            EditStation matches each video editing project with a vetted editor and runs the work
+            from brief to final delivery. Pay is agreed and the brief confirmed before any editing
+            starts.
           </p>
           <div
             className="hero-fade mt-9 flex w-full flex-col items-stretch gap-3 min-[420px]:w-auto min-[420px]:flex-row"

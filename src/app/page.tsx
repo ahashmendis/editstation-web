@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { ClientsMarquee } from "@/features/landing/components/clients-marquee";
 import { ClosingCta } from "@/features/landing/components/closing-cta";
 import { Hero } from "@/features/landing/components/hero";
@@ -9,6 +11,15 @@ import { Transparency } from "@/features/landing/components/transparency";
 import { WorkSection } from "@/features/landing/components/work-section";
 import { landingFontVariables } from "@/features/landing/fonts";
 import { WORK } from "@/features/landing/work";
+import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
+import { pageMetadata } from "@/lib/seo/site";
+
+export const metadata: Metadata = pageMetadata({
+  title: "EDITSTATION: professional video editing, managed end to end",
+  description:
+    "EDITSTATION, a Lenscape Studios production network, matches video editing projects with vetted freelance editors and manages the work from brief to delivery.",
+  path: "/",
+});
 
 // Public home (plan docs/superpowers/plans/2026-11-15-landing-page-upgrade.md, section 10).
 // Light base with the brand purple whatever the system theme (`.landing` scopes the tokens in
@@ -21,6 +32,7 @@ export default function Home() {
     <div
       className={`landing ${landingFontVariables} bg-background text-foreground font-landing-sans flex min-h-full flex-1 flex-col`}
     >
+      <JsonLd data={organizationJsonLd()} />
       <LandingHeader showWork={hasWork} />
       <main id="main" className="flex-1">
         <Hero />

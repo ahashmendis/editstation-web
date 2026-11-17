@@ -4,6 +4,11 @@ import { AppShell } from "@/components/app-shell/app-shell";
 import type { NavItem } from "@/components/app-shell/nav-links";
 import { Loading } from "@/components/auth-shell";
 import { requireActiveEditor } from "@/lib/auth/access";
+import { NO_INDEX } from "@/lib/seo/site";
+import type { Metadata } from "next";
+
+// Private area: never indexed (access control is sign-in, MFA for admins, and RLS).
+export const metadata: Metadata = { robots: NO_INDEX };
 
 const EDITOR_NAV: NavItem[] = [
   { href: "/editor", label: "Dashboard", icon: "dashboard", exact: true },

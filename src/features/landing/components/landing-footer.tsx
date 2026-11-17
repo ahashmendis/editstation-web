@@ -17,7 +17,8 @@ export function LandingFooter() {
             <Wordmark />
           </Link>
           <p className="text-muted-foreground max-w-[40ch] text-sm font-light">
-            EditStation, a Lenscape Studios production network.
+            EditStation, a Lenscape Studios production network, starting with clients and editors in
+            Sri Lanka.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-10 text-sm sm:gap-16">
@@ -25,6 +26,9 @@ export function LandingFooter() {
             <p className="font-landing-ui text-xs font-bold tracking-[0.14em] uppercase">Start</p>
             <Link href="/apply" className={link}>
               Join as an editor
+            </Link>
+            <Link href="/editors" className={link}>
+              How editor applications work
             </Link>
             <Link href="/inquire" className={link}>
               Start a project

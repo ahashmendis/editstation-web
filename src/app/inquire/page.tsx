@@ -4,17 +4,22 @@ import { Suspense } from "react";
 import { Loading } from "@/components/auth-shell";
 import { PublicPage } from "@/components/site-chrome";
 import { Card, CardContent } from "@/components/ui/card";
+import { JsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { pageMetadata } from "@/lib/seo/site";
 import { InquiryForm } from "@/features/inquiries/components/inquiry-form";
 import { getInquiryFormOptions } from "@/features/inquiries/queries";
 
-export const metadata: Metadata = {
-  title: "Send us a project · EDITSTATION",
-  description: "Tell Lenscape Studios about your video editing project.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Send us your video editing project · EDITSTATION",
+  description:
+    "Tell us about your video editing project. No account needed. A vetted editor is matched and the work is managed from brief to delivery.",
+  path: "/inquire",
+});
 
 export default function InquirePage() {
   return (
     <PublicPage>
+      <JsonLd data={breadcrumbJsonLd("Send a project", "/inquire")} />
       <div className="mx-auto grid w-full max-w-3xl gap-6 px-4 py-12">
         <div className="grid gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">Send us a project</h1>

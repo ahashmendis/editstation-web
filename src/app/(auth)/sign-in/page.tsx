@@ -6,8 +6,9 @@ import { Suspense } from "react";
 import { AuthShell, Loading } from "@/components/auth-shell";
 import { SignInForm } from "@/features/authentication/components/auth-forms";
 import { getAccess, homePathFor } from "@/lib/auth/access";
+import { NO_INDEX } from "@/lib/seo/site";
 
-export const metadata: Metadata = { title: "Sign in · EDITSTATION" };
+export const metadata: Metadata = { title: "Sign in · EDITSTATION", robots: NO_INDEX };
 
 export default function SignInPage() {
   return (

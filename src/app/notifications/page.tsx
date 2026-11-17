@@ -13,8 +13,9 @@ import {
 import { notificationHref } from "@/features/notifications/constants";
 import { listNotifications } from "@/features/notifications/queries";
 import { homePathFor, requireSignedIn } from "@/lib/auth/access";
+import { NO_INDEX } from "@/lib/seo/site";
 
-export const metadata: Metadata = { title: "Notifications · EDITSTATION" };
+export const metadata: Metadata = { title: "Notifications · EDITSTATION", robots: NO_INDEX };
 
 // Any signed-in account (admin, editor, applicant). RLS returns only the caller's own rows.
 export default function NotificationsPage() {

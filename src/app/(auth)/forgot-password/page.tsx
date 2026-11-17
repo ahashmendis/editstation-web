@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { AuthShell } from "@/components/auth-shell";
 import { ForgotPasswordForm } from "@/features/authentication/components/auth-forms";
+import { NO_INDEX } from "@/lib/seo/site";
 
-export const metadata: Metadata = { title: "Reset password · EDITSTATION" };
+export const metadata: Metadata = { title: "Reset password · EDITSTATION", robots: NO_INDEX };
 
 export default function ForgotPasswordPage() {
   return (

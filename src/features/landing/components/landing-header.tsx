@@ -32,6 +32,9 @@ export function LandingHeader({ showWork }: { showWork: boolean }) {
           <a href="#process" className={navLink}>
             Process
           </a>
+          <Link href="/editors" className={navLink}>
+            For editors
+          </Link>
           <HeaderAccountLink className={navLink} />
         </nav>
 
