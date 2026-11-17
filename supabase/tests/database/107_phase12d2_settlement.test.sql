@@ -157,7 +157,7 @@ select throws_ok($$ select public.admin_set_payment_status((select id from publi
   where assignment_id = pg_temp.a('s') and milestone_seq = 1), 'approved') $$, 'ES409', null,
   'a cancelled row cannot be approved');
 select throws_ok($$ select public.admin_mark_payment_paid((select id from public.payments
-  where assignment_id = pg_temp.a('s') and milestone_seq = 1), 'REF', current_date) $$, 'ES409', null,
+  where assignment_id = pg_temp.a('s') and milestone_seq = 1), 'REF', (now() at time zone 'Asia/Colombo')::date) $$, 'ES409', null,
   'nor marked paid');
 select throws_ok($$ select public.admin_release_payment_hold((select id from public.payments
   where assignment_id = pg_temp.a('s') and milestone_seq = 1)) $$, 'ES409', null, 'nor released');
@@ -197,7 +197,7 @@ select pg_temp.admin();
 select public.admin_set_payment_status((select id from public.payments where assignment_id = pg_temp.a('o')
   and milestone_seq = 1), 'approved');
 select public.admin_mark_payment_paid((select id from public.payments where assignment_id = pg_temp.a('o')
-  and milestone_seq = 1), 'TEST-PAY', current_date);
+  and milestone_seq = 1), 'TEST-PAY', (now() at time zone 'Asia/Colombo')::date);
 select public.admin_record_client_payment(pg_temp.cm('o', 'balance'), 'TEST-BAL');
 select throws_ok($$ select public.admin_settle_cancellation(pg_temp.project('o')) $$, 'ES409',
   'Verify or correct the recorded client payments before settling.', 'an unverified client payment blocks settling');
@@ -269,7 +269,7 @@ select pg_temp.extra_round('ea1', 1000);
 select pg_temp.admin();
 select public.admin_set_payment_status((select id from public.payments where adjustment_id = pg_temp.a('ea1')), 'approved');
 select public.admin_mark_payment_paid((select id from public.payments where adjustment_id = pg_temp.a('ea1')),
-  'TEST-EXTRA', current_date);
+  'TEST-EXTRA', (now() at time zone 'Asia/Colombo')::date);
 reset role;
 select pg_temp.extra_round('ea2', 500);
 select pg_temp.admin();
