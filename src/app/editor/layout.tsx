@@ -30,10 +30,8 @@ const EDITOR_NAV: NavEntry[] = [
   },
   {
     group: "Account",
-    items: [
-      { href: "/editor/profile", label: "Profile", icon: "profile" },
-      { href: "/notifications", label: "Notifications", icon: "notifications" },
-    ],
+    // Notifications live in the shell's bell (with the unread count), so there is no nav item.
+    items: [{ href: "/editor/profile", label: "Profile", icon: "profile" }],
   },
 ];
 
