@@ -247,11 +247,26 @@ content_path = "./supabase/templates/confirmation.html"
 subject = "Reset your EDITSTATION password"
 content_path = "./supabase/templates/recovery.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+# Security notifications (sent to the account owner; no links, no tokens).
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Your EDITSTATION password was changed"
+content_path = "./supabase/templates/password_changed_notification.html"
+
+[auth.email.notification.email_changed]
+enabled = true
+subject = "Your EDITSTATION email address was changed"
+content_path = "./supabase/templates/email_changed_notification.html"
+
+[auth.email.notification.mfa_factor_enrolled]
+enabled = true
+subject = "Two-step verification was set up on your EDITSTATION account"
+content_path = "./supabase/templates/mfa_enrolled_notification.html"
+
+[auth.email.notification.mfa_factor_unenrolled]
+enabled = true
+subject = "Two-step verification was removed from your EDITSTATION account"
+content_path = "./supabase/templates/mfa_unenrolled_notification.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
