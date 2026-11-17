@@ -23,6 +23,7 @@ const PRIVATE_SOURCES = [
   "/editor/:path*",
   "/apply/:path*",
   "/auth/:path*",
+  "/go",
   "/mfa",
   "/notifications",
   "/sign-in",
