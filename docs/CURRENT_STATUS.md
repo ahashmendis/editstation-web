@@ -1,6 +1,6 @@
 # Current Status
 
-**Phase:** Phases 0-11 are built and on `main`, pushed to GitHub with CI green (2026-11-15).
+**Phase:** Phases 0-11, Phase 12 (12A-12E), the landing page upgrade and open opportunities are built and merged into `main`, pushed to GitHub with CI green on `12c4d84` (2026-11-17). Older bullets below that say "branch ... uncommitted" are historical: every one of those branches is merged. Launch readiness (milestones, blockers, owner actions): `docs/LAUNCH_READINESS.md`.
 Phase 11 added signed-in Playwright e2e, security headers, a local backup/restore drill,
 `docs/RUNBOOKS.md` and the KB §16 evidence table (below). Full report:
 `docs/reports/editstation-system-report.html`. Owner flags still open from
@@ -10,7 +10,7 @@ suspended/revoked editors lose the earnings screen; Phase 7 (1) admin confirmati
 interpretation, (2) deadline/pay drift requires re-confirmation; Phase 8 spec calls §7.
 Development machine: Windows. Decisions applied: A, D, E, H, J, L, M, N, O, R, S, T, U, V, I,
 KB10; KB3 placeholder list (OPEN_QUESTIONS). Recorded 2026-11-15: F partly built (12A terms), KB7/KB7a built on branch (12B), KB9 client side built (12C), editor milestones, late-balance protection and dispute splits built on branch (12D part 1), extra pay offers, scope quotes and cancellation settlement built on branch (12D part 2). 2026-11-16: E built LOCKED with the interim attestation (12E, branch `phase12e-payout`).
-**Last updated:** 2026-11-16 (open opportunities on branch)
+**Last updated:** 2026-11-17 (decisions adopted, launch readiness report)
 
 Per-phase implementation details and verification history: `docs/CHANGELOG.md` (read only when
 needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-briefs-design.md`.

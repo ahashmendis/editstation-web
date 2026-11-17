@@ -14,32 +14,32 @@ Question IDs: **A–K** from the architecture review, **L–V** raised by the 20
 
 Open items first. Read a question's full section only when it becomes relevant.
 
-| ID   | Topic                                       | Status                      | Blocks                    |
-| ---- | ------------------------------------------- | --------------------------- | ------------------------- |
-| W    | Re-application after withdrawal             | Open (conservative default) | Nothing; confirm any time |
-| G    | Practical tests: paid? tracked?             | Open                        | Phase 9 (payment)         |
-| P    | Data retention and privacy notice           | Open                        | Public launch             |
-| KB1  | Legal registration and entity               | Open                        | Public launch             |
-| KB2  | Final brand (trademark/domain)              | Open                        | Launch, production email  |
-| KB3  | Services and deliverables at launch         | Partly (placeholder list)   | Launch content            |
-| KB8  | Editor contract and portfolio permission    | Open                        | Launch of registration    |
-| A2   | Narrower "mark paid" permission             | Deferred                    | Phase 9 (if second admin) |
-| B    | Editor visibility before assignment         | Resolved 2026-11-14         | —                         |
-| C    | Several editors accepting the same project  | Resolved 2026-11-14         | —                         |
-| F    | Client revision policy (per project)        | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| F2   | Editor pay: chargeable rounds, scope, kills | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| F3   | "No included" vs "paid from round 1"        | Resolved 2026-11-15 (same)  | —                         |
-| I    | Canonical payment statuses                  | Resolved 2026-11-14         | —                         |
-| K    | Asset sharing: per-account vs link          | Resolved 2026-11-14         | —                         |
-| KB4  | Client prices and editor pay ranges         | Open                        | Pilot                     |
-| KB5  | Turnaround and late-delivery rules          | Open                        | Phase 8; policy for pilot |
-| KB6  | Project communication                       | Resolved 2026-11-14 (pilot) | —                         |
-| KB7  | Storage provider                            | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB7a | Client link sharing: limits and clean-up    | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB9  | Payment schedule (client and editor)        | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB9a | Late/unpaid client balance: editor impact   | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB9b | 50/50 fixed or per project; payment terms   | Resolved 2026-11-15 (owner) | Phase 12 (not built)      |
-| KB10 | Notification events for release 1           | Resolved 2026-11-14         | Phase 10                  |
+| ID   | Topic                                       | Status                                                            | Blocks                        |
+| ---- | ------------------------------------------- | ----------------------------------------------------------------- | ----------------------------- |
+| W    | Re-application after withdrawal             | Adopted 2026-11-17 (keep)                                         | —                             |
+| G    | Practical tests: paid? tracked?             | Adopted 2026-11-17 (direction)                                    | Assessment payments not built |
+| P    | Data retention and privacy notice           | Partly: technical adopted; periods and notice need counsel        | Public launch                 |
+| KB1  | Legal registration and entity               | Open                                                              | Public launch                 |
+| KB2  | Final brand (trademark/domain)              | Name and domain chosen 2026-11-17; not registered; trademark open | Launch, production email      |
+| KB3  | Services and deliverables at launch         | Structure adopted; list needed                                    | Launch content                |
+| KB8  | Editor contract and portfolio permission    | Open                                                              | Launch of registration        |
+| A2   | Narrower "mark paid" permission             | Adopted 2026-11-17 (defer)                                        | Second admin only             |
+| B    | Editor visibility before assignment         | Resolved 2026-11-14                                               | —                             |
+| C    | Several editors accepting the same project  | Resolved 2026-11-14                                               | —                             |
+| F    | Client revision policy (per project)        | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| F2   | Editor pay: chargeable rounds, scope, kills | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| F3   | "No included" vs "paid from round 1"        | Resolved 2026-11-15 (same)                                        | —                             |
+| I    | Canonical payment statuses                  | Resolved 2026-11-14                                               | —                             |
+| K    | Asset sharing: per-account vs link          | Resolved 2026-11-14                                               | —                             |
+| KB4  | Client prices and editor pay ranges         | Adopted 2026-11-17 (per project); figures needed                  | Pilot                         |
+| KB5  | Turnaround and late-delivery rules          | Partly: flags adopted; policy numbers needed                      | Policy for pilot              |
+| KB6  | Project communication                       | Resolved 2026-11-14 (pilot)                                       | —                             |
+| KB7  | Storage provider                            | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| KB7a | Client link sharing: limits and clean-up    | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| KB9  | Payment schedule (client and editor)        | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| KB9a | Late/unpaid client balance: editor impact   | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| KB9b | 50/50 fixed or per project; payment terms   | Resolved 2026-11-15 (owner)                                       | Phase 12 (not built)          |
+| KB10 | Notification events for release 1           | Resolved 2026-11-14                                               | Phase 10                      |
 
 Resolved (see decisions log): A, B, C, D, E, F, H, I, J, K, KB6, KB7, KB9, L, M, N, O, R, S, T,
 U, V.
@@ -87,6 +87,16 @@ Format: date, question: decision.
 - 2026-11-11, **KB3** Service list: Not supplied yet: admin-managed list seeded with placeholder categories taken from KB §7.1, editable in the admin settings screen. The final list remains open.
 
 - 2026-11-16, **B/C amended** Open opportunities: Owner approved the concept of an "Open opportunities" page for active editors only: summary only (no client names, client pricing or files), editors register interest with an optional proposed rate, the admin chooses one editor manually (no first-come-first-served) and that becomes the existing invitation and negotiation flow; others see "not selected". This relaxes the earlier no-listing rule only to this summary-only form. Details, limits and calls are in docs/superpowers/specs/2026-11-16-open-opportunities-design.md (awaiting owner approval before any build).
+- 2026-11-17, **Adopt recommendations** (owner): The owner approved adopting the assistant's existing documented or previously presented recommendations, only where no counsel input or missing information is needed. Adopted below as W, G, P (technical part only), KB2 (process), KB3 (structure), KB4, KB5 (stored deadlines and flags only) and A2. Not adopted, still open: KB1, KB8, the retention periods and privacy notice text in P, the actual KB3 service list, KB4 figures and KB5 turnaround numbers, trademark clearance, production email sender.
+- 2026-11-17, **W** Re-application after withdrawal: Adopted the recommendation: keep the current behaviour. A withdrawn applicant cannot reapply on their own; an admin must reopen the application (same as rejection, decision M).
+- 2026-11-17, **G** Practical tests: Adopted the recommendation: track practical tests in the app (instructions, submission link, result; assessment results exist since Phase 2). If a test is paid, record the payment with type `assessment` and no project. Not built yet: assessment-type payments. Whether tests are paid at all is an owner commercial choice still to state.
+- 2026-11-17, **P** Data retention and privacy notice: Adopted only the technical recommendation: store the privacy-notice version accepted on each record (already stored) and plan a scheduled deletion/anonymisation job. Still pending counsel: the retention periods, how far audit entries must be scrubbed after account deletion, and the privacy notice text. Blocks limited public launch.
+- 2026-11-17, **KB2** Brand and domain (owner): Final public brand name is EDITSTATION. Selected domain is editstation.work; the promotional price shown was EUR 2.71 per year. The domain is NOT confirmed registered; nothing was purchased and no DNS, hosting or email is configured. Adopted process recommendation: build with EDITSTATION and run the trademark checks (KB section 2.2) before launch. Still open: registration, trademark clearance, production email sender domain, Turnstile setup (all depend on the domain).
+- 2026-11-17, **KB3** Services and deliverables: Adopted the structural recommendation (admin-managed `service_types` list, already built). The real launch list is still owner information to supply.
+- 2026-11-17, **KB4** Client prices and editor pay ranges: Adopted the previously presented recommendation: quote per project for the pilot, no published ranges. No figures are invented; any guide ranges remain the owner's to supply.
+- 2026-11-17, **KB5** Turnaround and late delivery: Adopted the recommendation: the app stores deadlines and flags late submissions; penalties are not automated. Standard turnaround per service, extension handling and the late-delivery consequences remain owner policy to state.
+- 2026-11-17, **A2** Narrower mark-paid permission: Adopted the recommendation: stay deferred until there is a second admin.
+- 2026-11-17, **Landing page** (owner): Use the previously recommended direction already built (light base, landing-only fonts, client strip, reels strip, no testimonials). Items needing the owner's separate permission are listed in docs/LAUNCH_READINESS.md section 3.
 
 ---
 
