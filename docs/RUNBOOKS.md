@@ -129,7 +129,8 @@ Nothing is deployed yet. Before the first production deploy and before each late
 push` is never run by an agent).
 - [ ] Hosted env vars set in Vercel: `NEXT_PUBLIC_SUPABASE_URL`,
       `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` only in the browser bundle; no secret key in any
-      `NEXT_PUBLIC_*` variable.
+      `NEXT_PUBLIC_*` variable. Server-only: `SUPABASE_SECRET_KEY`, `CRON_SECRET`, `BREVO_API_KEY`,
+      `EMAIL_FROM` (notification emails, section 8).
 - [ ] Hosted Supabase: MFA (TOTP) enabled, email confirmations on, SMTP configured, site URL and
       redirect URLs set to the production domain. **TODO (owner):** production domain (KB2).
 - [ ] Re-check the "permission denied for function" crash on the hosted Postgres image
@@ -166,3 +167,103 @@ method and a note. Reveal the full number only when needed, with a reason; every
 
 **Suspected payment redirection:** do not mark anything paid; turn the setting off only if the
 problem is systemic (it locks all editors); follow section 5.
+
+## 8. Notification emails
+
+Editors and applicants get one email per notification; each active admin gets at most one
+summary per Sri Lanka (Asia/Colombo) calendar day with counts per kind. Emails carry only the
+notification title, fixed text and a link to `/notifications`: never the notification body,
+client data, prices, briefs or amounts. Spec: `docs/superpowers/specs/2026-11-17-notification-emails-and-avatars-design.md` §A.
+
+How it runs: a hosted `pg_cron` job calls `POST https://www.editstation.work/api/cron/send-emails`
+every 5 minutes through `pg_net` with `Authorization: Bearer <CRON_SECRET>`. The route
+(service key, server-only) claims queued rows with `worker_claim_admin_digest` and
+`worker_claim_emails`, sends through Brevo's transactional API, and reports each result with
+`worker_mark_email`. At most 25 emails per run (free-plan daily limit); the rest wait, oldest
+first. A failed send is retried on later runs; after 3 attempts the row is `failed`. Recipients
+without a confirmed email are skipped; their rows wait, and are failed after 14 days
+(`no confirmed address`), as are summary rows for an admin who is no longer active
+(`recipient inactive`). Everything still queued when the migration was applied was failed as
+`pre-launch backlog`, so the first run never emails old notifications.
+
+**Delivery is at least once, not exactly once.** Each claim is a 15-minute lease, and the route
+reports every result with the row's `claimed_at` (a report from an expired lease is refused). If
+Brevo accepted an email but the run died before reporting it (timeout, crash, deploy), the lease
+expires and the email is sent again on a later run (up to 3 attempts in total). A rare duplicate
+email is the accepted cost; no email is silently dropped while attempts remain. Runs stop
+starting new sends after about 45 seconds; rows claimed but not sent are retried after their lease.
+
+**Setup (owner, once, after the migration `20261117143615_notification_email_worker` is applied
+to hosted and the code is deployed).** The agent's permission check blocks it from running these.
+
+1. Generate a secret: `openssl rand -hex 32`. Keep it only in Vercel and the Supabase Vault.
+2. Vercel > Project > Settings > Environment Variables (Production), then redeploy:
+   - `CRON_SECRET` = the secret from step 1
+   - `SUPABASE_SECRET_KEY` = Supabase > Project Settings > API Keys > a secret key (`sb_secret_...`)
+   - `BREVO_API_KEY` = Brevo > SMTP & API > API keys (a new key for this purpose)
+   - `EMAIL_FROM` = `EDITSTATION <no-reply@editstation.work>` (optional; this is the default; the
+     domain must stay verified in Brevo)
+   - None of these may have a `NEXT_PUBLIC_` prefix.
+3. Check the route answers before scheduling (expect `401` without the header, then counts):
+   `curl -i -X POST https://www.editstation.work/api/cron/send-emails`
+   `curl -s -X POST -H "Authorization: Bearer <secret>" https://www.editstation.work/api/cron/send-emails`
+   (`503 not configured` means `BREVO_API_KEY` or `SUPABASE_SECRET_KEY` is missing.)
+4. Supabase > SQL editor (hosted), run:
+
+```sql
+-- Extensions (Database > Extensions shows the same switches).
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+-- Store the bearer secret in Vault (encrypted at rest; not visible in cron.job).
+select vault.create_secret('<paste CRON_SECRET here>', 'email_cron_secret',
+  'Bearer secret for /api/cron/send-emails');
+
+-- Every 5 minutes.
+select cron.schedule(
+  'send-notification-emails',
+  '*/5 * * * *',
+  $job$
+  select net.http_post(
+    url := 'https://www.editstation.work/api/cron/send-emails',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets
+                                     where name = 'email_cron_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000
+  );
+  $job$
+);
+```
+
+**Checking it works:**
+
+```sql
+-- Recent runs of the job (status succeeded means the HTTP request was queued by pg_net).
+select jobid, status, return_message, start_time, end_time
+from cron.job_run_details
+where jobid = (select jobid from cron.job where jobname = 'send-notification-emails')
+order by start_time desc limit 20;
+
+-- The HTTP responses (status 200 with {"sent":..,"failed":..,"digests":..}).
+select id, status_code, content, created from net._http_response order by created desc limit 20;
+
+-- Queue health (counts only).
+select status, digest, count(*) from private.notification_outbox group by 1, 2 order by 1, 2;
+select kind, last_error, count(*) from private.notification_outbox where status = 'failed'
+group by 1, 2 order by 3 desc;
+```
+
+A `401` response means the Vault secret and Vercel `CRON_SECRET` differ. Many `provider 401`
+errors mean the Brevo key is wrong or revoked; `provider 400` usually means the sender domain is
+not verified in Brevo.
+
+**Rotating the secret:** set the new value in Vercel and redeploy, then
+`select vault.update_secret((select id from vault.secrets where name = 'email_cron_secret'), '<new>');`.
+
+**Pausing emails:** `select cron.unschedule('send-notification-emails');` (rows keep queueing;
+re-run the `cron.schedule` above to resume). **Retrying failed rows** (after fixing the cause; never re-queue `pre-launch backlog` rows):
+`update private.notification_outbox set status = 'queued', attempts = 0, last_error = null,
+claimed_at = null where status = 'failed' and last_error <> 'pre-launch backlog'
+and created_at > now() - interval '2 days';`

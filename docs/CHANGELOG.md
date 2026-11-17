@@ -3,6 +3,41 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-17: Notification emails (feature A)
+
+- **Uncommitted, pending review.** Spec `docs/superpowers/specs/2026-11-17-notification-emails-and-avatars-design.md`
+  §A (owner approved 2026-11-17). Feature B (profile pictures) not started.
+- Migration `20261117143615_notification_email_worker`: outbox columns `attempts`, `last_error`,
+  `claimed_at`, `digest` (set by trigger from `private.email_is_digest(kind)`, existing rows
+  backfilled); helpers `private.require_service_role()`, `private.fail_exhausted_emails()`;
+  public `worker_claim_emails`, `worker_claim_admin_digest`, `worker_mark_email` (service_role
+  only, ES403 otherwise; anon + authenticated + service_role executable per the guardrail).
+- App: `src/lib/supabase/service.ts` (server-only secret-key client);
+  `src/features/notifications/email/` (layout, individual and admin-summary templates with plain
+  text, Brevo sender over `fetch`, worker run, constant-time bearer check);
+  `POST /api/cron/send-emails` (25 per run, counts only, `maxDuration` 60). `next.config.ts`:
+  `X-Robots-Tag: noindex` on `/api/:path*`. `.env.example`: `CRON_SECRET`, `BREVO_API_KEY`,
+  `EMAIL_FROM`. No new dependency.
+- Tests: pgTAP `115` (columns, every kind mapped, catalogue rules, no API role on the outbox,
+  ES403 as anon/admin aal1/admin aal2/editor A/editor B/applicant, service_role passes, confirmed
+  recipients only, no body returned, no double claim, sent/retry/failed after 3, exhausted lease,
+  one summary per Colombo day and the next day's summary). Vitest: templates (escaping, fixed
+  text, no body, link from `SITE_URL`) and the route (auth, unset secret, not configured, counts,
+  provider and network failures, no echo/log of details).
+- Review fixes (db-security, code-reviewer): the migration fails the pre-launch queue
+  (`pre-launch backlog`); summary day judged by the Colombo date of `claimed_at`;
+  `worker_mark_email` takes `p_claimed_at` (stale report ES409; claims return `claimed_at`);
+  rows queued over 14 days for unconfirmed or inactive recipients are failed; the service check
+  also requires the database role `service_role`; the worker stops new sends after 45 s and keeps
+  summaries already sent if the individual claim fails. Delivery is at least once (RUNBOOKS §8).
+  pgTAP `115` now 38 tests.
+- Implementation calls (flag for owner): attempts are counted when a row is claimed and a claim
+  is a 15-minute lease, so a crashed run retries later and a row stuck at 3 attempts is failed;
+  rows for unconfirmed recipients wait up to 14 days (sent if they confirm in time); the admin summary uses
+  a non-blocking transaction advisory lock so overlapping runs cannot both send one; summaries are
+  claimed before individual emails and count toward the 25 cap; hosted scheduling is documented in
+  `RUNBOOKS.md` section 8 for the owner to run.
+
 ## 2026-11-16: Open opportunities (B/C amended)
 
 - Branch `open-opportunities`, **uncommitted, pending owner review**. Spec

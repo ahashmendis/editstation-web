@@ -489,8 +489,22 @@ recipient (profile), `kind` (`notification_kind`: 5 admin, 2 applicant, 4 editor
 `entity_type` (`client_inquiry`/`editor_application`/`project`/`payment`) + `entity_id`, `title`,
 `body` (no client data), `created_at`, `read_at`. Written only by `private.notify_from_activity()`
 (after insert on `activity_logs`); admin kinds fan out to every non-revoked admin.
-`private.notification_outbox`: one `queued` email row per notification (not sent until production
-SMTP). Functions: `mark_notification_read(uuid)`, `mark_all_notifications_read()`,
+`private.notification_outbox`: one email row per notification: `status` (`queued`/`sent`/`failed`),
+`attempts` (0..3, counted at claim), `last_error` (≤200, short machine reason, no PII),
+`claimed_at` (15-minute lease; rows of one admin summary share it), `digest` (set on insert by
+`private.email_is_digest(kind)`: admin kinds true, editor/applicant kinds false; mapping documented
+in migration `20261117143615`). Worker functions (service_role only, ES403 for every other caller,
+including admins): `worker_claim_emails(p_limit int default 25)` (individual rows, oldest first,
+`for update skip locked`, confirmed recipients only; returns id, email, title, kind,
+claimed_at, never the body), `worker_claim_admin_digest(p_now timestamptz)` (one row per active
+confirmed admin per Asia/Colombo day, judged by the Colombo date of a sent summary's `claimed_at`:
+handle id, email, per-kind `counts`, `total`, claimed_at; one non-blocking transaction advisory
+lock), `worker_mark_email(p_id bigint, p_ok boolean, p_error text, p_claimed_at timestamptz)`
+(sent, retry, or failed after 3 attempts; ES409 not claimed or `p_claimed_at` differs, ES422
+unknown). Caller check `private.require_service_role()`: database role and JWT role claim must
+both be `service_role`. Housekeeping before each claim fails exhausted leases and rows queued
+over 14 days with no confirmed address or an inactive admin recipient. The migration failed the
+pre-launch queue (`pre-launch backlog`, `private.fail_prelaunch_backlog()`). Functions: `mark_notification_read(uuid)`, `mark_all_notifications_read()`,
 `admin_dashboard_metrics()` (jsonb, KB §14, computed live).
 
 Possible later additions, pending decisions: compensation adjustments (F), project communication

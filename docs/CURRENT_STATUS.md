@@ -168,7 +168,11 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   ap-south-1) with all 55 migrations applied, and a Vercel production deployment at
   https://editstation.vercel.app (CLI deploys; GitHub auto-deploy not connected). First admin
   created with MFA. Auth config pushed from `supabase/config.toml` `[remotes.production]` (site URL,
-  redirect, password rules). Email templates not pushed (free tier, default sender, org members only).
+  redirect, password rules). Brevo SMTP is configured on hosted Supabase (sender `no-reply@editstation.work`) and the branded
+  auth and security-notification emails are pushed. Notification emails (feature A, 2026-11-17):
+  built and tested locally (migration `20261117143615`, worker route `/api/cron/send-emails`);
+  NOT applied to hosted and NOT scheduled; the owner steps are in `docs/RUNBOOKS.md` section 8.
+  Profile pictures (feature B) are designed, not built.
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens

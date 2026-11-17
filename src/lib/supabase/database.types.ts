@@ -3726,6 +3726,30 @@ export type Database = {
         Returns: string;
       };
       withdraw_editor_application: { Args: Record<PropertyKey, never>; Returns: string };
+      worker_claim_admin_digest: {
+        Args: { p_now?: string };
+        Returns: {
+          claimed_at: string;
+          counts: Json;
+          email: string;
+          id: number;
+          total: number;
+        }[];
+      };
+      worker_claim_emails: {
+        Args: { p_limit?: number };
+        Returns: {
+          claimed_at: string;
+          email: string;
+          id: number;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          title: string;
+        }[];
+      };
+      worker_mark_email: {
+        Args: { p_claimed_at?: string; p_error?: string; p_id: number; p_ok: boolean };
+        Returns: undefined;
+      };
     };
     Enums: {
       adjustment_kind: "extra_round" | "scope_change" | "cancellation";

@@ -19,6 +19,7 @@ const indexingEnabled = () => process.env.SEO_INDEXING === "on";
 const NOINDEX_HEADER = { key: "X-Robots-Tag", value: "noindex, nofollow" };
 const PRIVATE_SOURCES = [
   "/admin/:path*",
+  "/api/:path*",
   "/editor/:path*",
   "/apply/:path*",
   "/auth/:path*",

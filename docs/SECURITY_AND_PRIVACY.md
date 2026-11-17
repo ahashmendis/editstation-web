@@ -160,8 +160,21 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   already received (content is ids-free fixed text and project titles only).
 - Rows are written by a security-definer trigger on `activity_logs`; text is generic and uses at most
   the project title (already editor-visible). No client names, contacts, prices or inquiry content.
-- `private.notification_outbox`: no API access (private schema, all privileges revoked). Nothing
-  sends email yet; production SMTP is a launch gate.
+- `private.notification_outbox`: no API access (private schema, all privileges revoked from
+  anon, authenticated and service_role). Read and changed only through the three `worker_*`
+  functions, which authorise in their body that both the database role and the JWT role claim are
+  `service_role` (ES403 for anon, every signed-in account and admins, MFA or not).
+- **Service key (`SUPABASE_SECRET_KEY`)**: used by exactly one server route,
+  `/api/cron/send-emails`, through `src/lib/supabase/service.ts` (`import "server-only"`, never
+  `NEXT_PUBLIC_`). The route requires `Authorization: Bearer <CRON_SECRET>` (constant-time compare;
+  every request is rejected when `CRON_SECRET` is unset), returns counts only, sends `noindex`
+  (`X-Robots-Tag` on `/api/:path*`) and has no CORS. Logs carry database error codes only: no
+  addresses, keys or provider responses. Hosted scheduling is `pg_cron` + `pg_net` with the bearer
+  in Supabase Vault (`RUNBOOKS.md` section 8).
+- **No client data in emails.** An email carries the notification title (escaped), fixed text and
+  a link to `/notifications`; the notification body (which can name a project) is never read by
+  the worker. Admin summaries carry counts per kind only. No email goes to an unconfirmed address.
+  Brevo (the email processor) receives the recipient address, subject and this fixed content.
 - `admin_dashboard_metrics()` and `/admin/activity` are admin-only (MFA `aal2` via
   `private.require_admin()` / `activity_logs` RLS). The activity view is read-only and accepts
   only known filter values. pgTAP `090`-`092`.
