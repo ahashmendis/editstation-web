@@ -1,12 +1,14 @@
 "use client";
 
 import {
+  Bell,
   Briefcase,
   ClipboardCheck,
   FolderKanban,
   History,
   Inbox,
   LayoutDashboard,
+  MessageSquareText,
   Settings,
   UserRound,
   ShieldCheck,
@@ -15,10 +17,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId } from "react";
 
 import { cn } from "@/lib/utils";
 
 import { isCurrent } from "./is-current";
+import { toSections, type BaseNavItem, type NavGroup } from "./nav-sections";
 
 // Icons are looked up by name because server components cannot pass component functions to
 // client components.
@@ -34,55 +38,70 @@ const ICONS = {
   activity: History,
   opportunities: Briefcase,
   profile: UserRound,
+  feedback: MessageSquareText,
+  notifications: Bell,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;
-export type NavItem = {
-  href: string;
-  label: string;
-  icon: NavIcon;
-  /** Only the exact path is "current" (for an area's overview page). */
-  exact?: boolean;
-};
-
+export type NavItem = BaseNavItem<NavIcon>;
+export type NavEntry = NavItem | NavGroup<NavItem>;
 export function NavLinks({
   items,
   label,
   onNavigate,
 }: {
-  items: NavItem[];
+  items: NavEntry[];
   label: string;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const id = useId();
+
+  const list = (sectionItems: NavItem[], labelledBy?: string) => (
+    <ul className="grid gap-1" aria-labelledby={labelledBy}>
+      {sectionItems.map((item) => {
+        const Icon = ICONS[item.icon];
+        const current = isCurrent(pathname, item);
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={onNavigate}
+              aria-current={current ? "page" : undefined}
+              className={cn(
+                "relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors",
+                "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                current
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground before:bg-primary font-medium before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <Icon aria-hidden className="size-4 shrink-0" />
+              {item.label}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   return (
-    <nav aria-label={label}>
-      <ul className="grid gap-1">
-        {items.map((item) => {
-          const Icon = ICONS[item.icon];
-          const current = isCurrent(pathname, item);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                aria-current={current ? "page" : undefined}
-                className={cn(
-                  "relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors",
-                  "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
-                  current
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground before:bg-primary font-medium before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full"
-                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                )}
-              >
-                <Icon aria-hidden className="size-4 shrink-0" />
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+    <nav aria-label={label} className="grid gap-4">
+      {toSections(items).map((section, i) =>
+        section.title ? (
+          <div key={section.title} className="grid gap-1">
+            <p
+              id={`${id}-${i}`}
+              className="text-muted-foreground px-3 text-xs font-medium tracking-wide uppercase"
+            >
+              {section.title}
+            </p>
+            {list(section.items, `${id}-${i}`)}
+          </div>
+        ) : (
+          <div key={`plain-${i}`}>{list(section.items)}</div>
+        ),
+      )}
     </nav>
   );
 }

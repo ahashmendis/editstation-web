@@ -48,6 +48,7 @@ async function ApplyContent() {
     <AreaShell
       title="Your editor application"
       subtitle={access.email ?? undefined}
+      homeHref="/apply"
       actions={
         <div className="flex items-center gap-2">
           <NotificationBell />

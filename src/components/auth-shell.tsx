@@ -38,20 +38,33 @@ export function AreaShell({
   title,
   subtitle,
   actions,
+  homeHref,
   children,
 }: {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  /** Outside the app shell (e.g. /apply): the wordmark links to the user's own dashboard. */
+  homeHref?: string;
   children: ReactNode;
 }) {
   return (
     <main className="mx-auto grid w-full max-w-4xl gap-6 px-4 py-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase in-data-[app-shell]:hidden">
-            EDITSTATION
-          </p>
+          {homeHref ? (
+            <Link
+              href={homeHref}
+              aria-label="EDITSTATION dashboard"
+              className="text-muted-foreground focus-visible:ring-ring block w-fit rounded-sm text-xs font-medium tracking-widest uppercase focus-visible:ring-2 focus-visible:outline-none in-data-[app-shell]:hidden"
+            >
+              EDITSTATION
+            </Link>
+          ) : (
+            <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase in-data-[app-shell]:hidden">
+              EDITSTATION
+            </p>
+          )}
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {subtitle ? <p className="text-muted-foreground text-sm">{subtitle}</p> : null}
         </div>

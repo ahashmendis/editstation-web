@@ -15,9 +15,20 @@ import {
   type BriefType,
   type ProjectStatus,
 } from "@/features/projects/constants";
+import { listNotifications } from "@/features/notifications/queries";
+import {
+  QuickActions,
+  RecentNotifications,
+  WorkSummary,
+} from "@/features/workspace/components/dashboard-sections";
+import { getEditorWorkspace } from "@/features/workspace/queries";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { requireActiveEditor } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Editor dashboard · EDITSTATION" };
+
+// "Today" for overdue deadlines, in the studio's time zone (same zone as the earnings figures).
+const TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Colombo" });
 
 // Own Suspense boundary: per-request data must not block navigation into this page.
 export default function EditorPage() {
@@ -80,7 +91,12 @@ function ProjectList({
 
 async function EditorContent() {
   const access = await requireActiveEditor();
-  const { opportunities, myProjects, truncated, limit } = await getEditorDashboard();
+  // The workspace summary and notifications fail on their own, without hiding the offers.
+  const [{ opportunities, truncated, limit }, workspace, notifications] = await Promise.all([
+    getEditorDashboard(),
+    getEditorWorkspace().catch(() => null),
+    listNotifications(5).catch(() => null),
+  ]);
 
   return (
     <AreaShell
@@ -88,6 +104,7 @@ async function EditorContent() {
       subtitle={access.email ?? undefined}
       actions={<SignOutButton />}
     >
+      <QuickActions />
       {truncated ? (
         <p className="text-muted-foreground text-sm">Showing the most recent {limit} projects.</p>
       ) : null}
@@ -110,21 +127,17 @@ async function EditorContent() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>My projects</CardTitle>
-          <CardDescription>Projects where the studio has confirmed you.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProjectList
-            items={myProjects}
-            empty={{
-              title: "No confirmed projects yet",
-              body: "Once you accept an offer and the studio confirms you, the project appears here with its full brief.",
-            }}
-          />
-        </CardContent>
-      </Card>
+      {workspace === null ? (
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>
+            Your work summary could not be loaded. Reload the page to try again.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <WorkSummary workspace={workspace} today={TODAY.format(new Date())} />
+      )}
+
+      <RecentNotifications rows={notifications} />
     </AreaShell>
   );
 }

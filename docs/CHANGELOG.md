@@ -3,6 +3,26 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-17: Editor workspace Phase 1 (workspace foundation)
+
+- **Uncommitted, pending owner review.** Plan: `docs/EDITOR_WORKSPACE_ARCHITECTURE.md` (Phase 1).
+  No migration, no schema change, no new dependency.
+- New routes: `/editor/projects` (list with filters, title search, sort, paging) and
+  `/editor/feedback` (change requests across projects). `/editor/projects/[id]` now has
+  server-rendered tabs (`?tab=overview|brief|submissions|feedback|files|activity`; no param =
+  Overview); existing content, queries and actions are unchanged, only split across tabs.
+  `EditorSubmissionsPanel` gained an optional `show` prop (default renders everything as before).
+- Dashboard: quick actions, active projects, confirmed deadlines, awaiting review, open change
+  requests, recent submissions, outstanding own pay milestones, recent notifications; the
+  Opportunities card is unchanged.
+- Navigation: grouped editor nav (`NavEntry` = item or `{ group, items }`, `toSections` in
+  `src/components/app-shell/nav-sections.ts`); admin nav unchanged. The shell logo links to the
+  user's dashboard (`homeHref`: `/admin`, `/editor`; `/apply` through `AreaShell`).
+- Code: `src/features/workspace/` (`model.ts` pure stage mapping, filters, sort, paging, pending
+  action, pay milestone, activity; `queries.ts` RLS reads; components).
+- Tests: `model.test.ts` (32), `nav-sections.test.ts` (2); e2e "active editors" extended (My
+  projects filter/search, 375px, tabs, activity, feedback empty state, logo link).
+
 ## 2026-11-17: Profile pictures (feature B)
 
 - **Uncommitted, pending review.** Spec `docs/superpowers/specs/2026-11-17-notification-emails-and-avatars-design.md`

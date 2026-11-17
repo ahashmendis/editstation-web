@@ -14,17 +14,20 @@ import {
 } from "@/components/ui/sheet";
 import { Wordmark } from "@/components/wordmark";
 
-import { NavLinks, type NavItem } from "./nav-links";
+import { NavLinks, type NavEntry } from "./nav-links";
 
 // Phone and tablet navigation: a top bar with a menu button that opens the same links in a sheet.
 export function MobileNav({
   area,
   items,
+  homeHref,
   bell,
   userMenu,
 }: {
   area: string;
-  items: NavItem[];
+  items: NavEntry[];
+  /** The signed-in user's own dashboard (the logo link). */
+  homeHref: string;
   /** Server-rendered notification link (an element, not a function). */
   bell?: ReactNode;
   /** Server-rendered account menu (an element, not a function). */
@@ -34,20 +37,25 @@ export function MobileNav({
 
   return (
     <div className="bg-background sticky top-0 z-40 flex items-center justify-between gap-3 border-b px-4 py-2 lg:hidden">
-      <Link href="/" aria-label="EDITSTATION home">
+      <Link
+        href={homeHref}
+        aria-label="EDITSTATION dashboard"
+        className="focus-visible:ring-ring min-w-0 shrink rounded-md focus-visible:ring-2 focus-visible:outline-none"
+      >
         <Wordmark />
       </Link>
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         {bell}
         {userMenu}
         <Button
           variant="outline"
-          className="min-h-11"
+          className="min-h-11 min-w-11"
           onClick={() => setOpen(true)}
           aria-label={`Open ${area} menu`}
         >
           <Menu aria-hidden />
-          Menu
+          {/* Icon only on the narrowest phones so the bar fits 375px with the account menu. */}
+          <span className="max-[420px]:sr-only">Menu</span>
         </Button>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>

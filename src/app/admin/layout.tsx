@@ -35,7 +35,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 async function AdminGate({ children }: { children: ReactNode }) {
   await requireAdmin();
   return (
-    <AppShell area="Admin" items={ADMIN_NAV} profileHref="/admin/settings#profile-picture">
+    <AppShell
+      area="Admin"
+      items={ADMIN_NAV}
+      homeHref="/admin"
+      profileHref="/admin/settings#profile-picture"
+    >
       {children}
     </AppShell>
   );

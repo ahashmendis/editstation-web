@@ -177,6 +177,11 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   a real email send has not been proven yet. Profile pictures (feature B): built, reviewed and
   tested locally (migration `20261117150324`, `/editor/profile`); NOT on hosted yet, so the
   code must not be pushed before the migration is applied there.
+- Editor workspace Phase 1 (2026-11-17, local only, uncommitted pending owner approval): My projects,
+  Feedback & revisions, project tabs, dashboard sections and grouped nav; no schema change. Plan and
+  decisions: `docs/EDITOR_WORKSPACE_ARCHITECTURE.md`. Phases 2 to 6 (video review with a Google Drive
+  player, moderation, calendar, WhatsApp, AI) are not started. Also local: signed-in visitors on `/`
+  go to their own area (`/go`), and the app logo links to the user's dashboard.
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens

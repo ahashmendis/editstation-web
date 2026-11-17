@@ -118,6 +118,36 @@ Capabilities: update permitted profile fields; view only eligible projects and o
 accept/decline/counteroffer; ask questions via the project's communication mechanism (KB §17.6);
 confirm brief and pay; submit work and revisions; view own payments.
 
+**Editor workspace (Phase 1 of the workspace expansion, 2026-11-17, uncommitted):** navigation is
+grouped as Workspace (Dashboard, My projects, Opportunities), Production (Feedback & revisions),
+Financials (Earnings) and Account (Profile, Notifications); the logo in the signed-in shell links
+to the user's own dashboard (`/admin`, `/editor`, `/apply`), not the public site.
+
+- `/editor/projects`: every project the editor holds an assignment on (offers included; plain
+  opportunities stay on Opportunities). Filters map onto real states: awaiting acceptance (offer,
+  counteroffer or accepted, not yet confirmed), active (confirmed, in progress, in review,
+  revision requested), in progress, submitted/in review (one state: submitting sets the project
+  `in_review`), revision requested, approved or completed, on hold, cancelled. Search by title,
+  sort by last activity, deadline or title, 20 per page. Each row shows a short reference (first
+  8 characters of the project id; there is no separate reference column), stage, deadline (the
+  confirmed one once the brief is confirmed, otherwise the planned one marked "not confirmed"),
+  last activity, the pending action and who owns it, latest submission and outcome, change-request
+  count and the editor's own next pay milestone status (label only).
+- `/editor/projects/[id]?tab=`: Overview (offer or assignment, terms, start checklist, extra pay
+  offers, summary and deliverables), Brief (full brief once confirmed, references), Submissions,
+  Feedback & revisions, Files (assets) and Activity (offers and replies without amounts,
+  confirmation, brief confirmations, submissions, reviews and change-request steps). A link
+  without `tab` opens Overview.
+- `/editor/feedback`: the editor's change requests across projects (type, round, status, version,
+  reason) filtered as open (requested or under discussion), acknowledged/in progress, resubmitted,
+  resolved; each links to the project's Feedback tab.
+- Dashboard: quick actions, offers (unchanged), active projects, confirmed deadlines (overdue in
+  Asia/Colombo time), awaiting review, open change requests, recent submissions, outstanding own
+  pay milestones and recent notifications.
+
+All of it reads existing tables through the editor's RLS and `editor_list_payments`; no schema
+change, no client data, client prices, billing or internal notes.
+
 ## Excluded from MVP
 
 Client portal/accounts/dashboard · public marketplace · open bidding · automatic inquiry-to-project

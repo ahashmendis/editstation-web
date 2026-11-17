@@ -6,7 +6,7 @@ import { NotificationBell } from "@/features/notifications/components/notificati
 import { UserMenu } from "@/features/profile/components/user-menu";
 
 import { MobileNav } from "./mobile-nav";
-import { NavLinks, type NavItem } from "./nav-links";
+import { NavLinks, type NavEntry } from "./nav-links";
 
 // Shared shell for the signed-in work areas (admin and editor): sidebar on large screens, top bar
 // with a menu sheet on small ones. Navigation only; pages keep their own heading via AreaShell.
@@ -14,11 +14,15 @@ import { NavLinks, type NavItem } from "./nav-links";
 export function AppShell({
   area,
   items,
+  homeHref,
   profileHref,
   children,
 }: {
   area: string;
-  items: NavItem[];
+  /** Plain items, or labelled groups (each group renders under its own heading). */
+  items: NavEntry[];
+  /** The signed-in user's own dashboard: the logo links here, never to the public site. */
+  homeHref: string;
   /** Where the user manages their own picture (linked from the account menu). */
   profileHref: string;
   children: ReactNode;
@@ -28,7 +32,11 @@ export function AppShell({
       <aside className="bg-sidebar text-sidebar-foreground hidden w-60 shrink-0 border-r lg:block">
         <div className="sticky top-0 flex h-svh flex-col gap-6 overflow-y-auto p-4">
           <div className="grid gap-1 px-3 pt-2">
-            <Link href="/" aria-label="EDITSTATION home">
+            <Link
+              href={homeHref}
+              aria-label="EDITSTATION dashboard"
+              className="focus-visible:ring-ring rounded-md focus-visible:ring-2 focus-visible:outline-none"
+            >
               <Wordmark />
             </Link>
             <p className="text-muted-foreground text-sm">{area}</p>
@@ -48,6 +56,7 @@ export function AppShell({
         <MobileNav
           area={area}
           items={items}
+          homeHref={homeHref}
           bell={<NotificationBell />}
           userMenu={<UserMenu profileHref={profileHref} />}
         />

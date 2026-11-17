@@ -85,7 +85,7 @@ test.describe("active editors", () => {
     const suffix = Date.now();
     const titleA = `E2E project A ${suffix}`;
     const titleB = `E2E project B ${suffix}`;
-    createProjectWithOffer(admin.id, editorA.id, titleA);
+    const projectA = createProjectWithOffer(admin.id, editorA.id, titleA);
     const projectB = createProjectWithOffer(admin.id, editorB.id, titleB);
 
     const context = await browser.newContext();
@@ -94,6 +94,37 @@ test.describe("active editors", () => {
     await expect(page).toHaveURL(/\/editor$/);
     await expect(page.getByRole("link", { name: titleA })).toBeVisible();
     await expect(page.getByText(titleB)).toHaveCount(0);
+    // The logo leads to the editor's own dashboard, not the public site.
+    await expect(page.getByRole("link", { name: "EDITSTATION dashboard" }).first()).toHaveAttribute(
+      "href",
+      "/editor",
+    );
+
+    // Workspace: My projects lists only the editor's own offer, with its stage in words.
+    await page.goto("/editor/projects?filter=awaiting_acceptance");
+    await expect(page.getByRole("link", { name: titleA })).toBeVisible();
+    await expect(page.getByText("You: Reply to the offer")).toBeVisible();
+    await expect(page.getByText(titleB)).toHaveCount(0);
+    await page.goto(`/editor/projects?q=${encodeURIComponent(titleB)}`);
+    await expect(page.getByText("No projects match")).toBeVisible();
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/editor/projects");
+    await expect(page.getByRole("link", { name: titleA })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    // Project tabs: an old link opens Overview; Activity shows the offer without its amount.
+    await page.goto(`/editor/projects/${projectA}`);
+    await expect(page.getByRole("link", { name: "Overview" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await page.goto(`/editor/projects/${projectA}?tab=activity`);
+    await expect(page.getByText("The studio made an offer")).toBeVisible();
+    await page.goto("/editor/feedback");
+    await expect(page.getByText("No change requests")).toBeVisible();
 
     // Another editor's project by direct URL: not found, never its data.
     // (The page streams inside <Suspense>, so notFound() renders the 404 UI with a 200 status.)

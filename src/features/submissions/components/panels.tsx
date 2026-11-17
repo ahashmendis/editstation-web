@@ -100,6 +100,7 @@ export function EditorSubmissionsPanel({
   projectStatus,
   data,
   gates = {},
+  show = "all",
 }: {
   projectId: string;
   assignmentId: string;
@@ -107,7 +108,11 @@ export function EditorSubmissionsPanel({
   data: SubmissionData;
   /** Gate codes of requests not yet begun (extra pay or scope approval pending). */
   gates?: Record<string, RevisionGate | "unknown">;
+  /** Workspace tabs show submissions and change requests separately; default shows both. */
+  show?: "all" | "submissions" | "revisions";
 }) {
+  const withSubmissions = show !== "revisions";
+  const withRevisions = show !== "submissions";
   const submissions = data.submissions.filter((s) => s.assignmentId === assignmentId);
   const revisions = data.revisions.filter((r) => r.assignmentId === assignmentId);
   const pending = submissions.some((s) => s.outcome === null);
@@ -122,9 +127,11 @@ export function EditorSubmissionsPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Submissions</CardTitle>
+        <CardTitle>{show === "revisions" ? "Change requests" : "Submissions"}</CardTitle>
         <CardDescription>
-          Each submission is kept as a numbered version with the studio&apos;s feedback.
+          {show === "revisions"
+            ? "What the studio asked you to change, one request per round."
+            : "Each submission is kept as a numbered version with the studio's feedback."}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
@@ -145,7 +152,7 @@ export function EditorSubmissionsPanel({
             The studio is discussing the last review. You can resubmit once it is classified.
           </p>
         ) : null}
-        {canSubmit ? (
+        {canSubmit && withSubmissions ? (
           <section className="grid gap-3">
             <h3 className="text-sm font-medium">
               {open ? "Submit your revised work" : "Submit work"}
@@ -154,42 +161,51 @@ export function EditorSubmissionsPanel({
           </section>
         ) : null}
 
-        <section className="grid gap-3">
-          <h3 className="text-sm font-medium">Change requests</h3>
-          {revisions.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No change requests.</p>
-          ) : (
-            <ul className="grid gap-4">
-              {revisions.map((r) => (
-                <li key={r.id} className="grid gap-2">
-                  <RevisionHeading r={r} />
-                  <p className="text-sm whitespace-pre-wrap">{r.reason}</p>
-                  {r.status === "requested" && editorGateNotice(gates[r.id]) ? (
-                    <p role="status" className="bg-muted rounded-md p-3 text-sm">
-                      {editorGateNotice(gates[r.id])}
-                    </p>
-                  ) : r.status === "requested" || r.status === "acknowledged" ? (
-                    <div className="flex flex-wrap gap-2">
-                      {r.status === "requested" ? (
-                        <AcknowledgeRevisionForm
-                          projectId={projectId}
-                          revisionId={r.id}
-                          start={false}
-                        />
-                      ) : null}
-                      <AcknowledgeRevisionForm projectId={projectId} revisionId={r.id} start />
-                    </div>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {withRevisions ? (
+          <section className="grid gap-3">
+            <h3 className="text-sm font-medium">Change requests</h3>
+            {revisions.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No change requests.</p>
+            ) : (
+              <ul className="grid gap-4">
+                {revisions.map((r) => (
+                  <li key={r.id} className="grid gap-2">
+                    <RevisionHeading r={r} />
+                    <p className="text-sm whitespace-pre-wrap">{r.reason}</p>
+                    {r.status === "requested" && editorGateNotice(gates[r.id]) ? (
+                      <p role="status" className="bg-muted rounded-md p-3 text-sm">
+                        {editorGateNotice(gates[r.id])}
+                      </p>
+                    ) : r.status === "requested" || r.status === "acknowledged" ? (
+                      <div className="flex flex-wrap gap-2">
+                        {r.status === "requested" ? (
+                          <AcknowledgeRevisionForm
+                            projectId={projectId}
+                            revisionId={r.id}
+                            start={false}
+                          />
+                        ) : null}
+                        <AcknowledgeRevisionForm projectId={projectId} revisionId={r.id} start />
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : null}
 
-        <section className="grid gap-3">
-          <h3 className="text-sm font-medium">History</h3>
-          <SubmissionHistory rows={submissions} />
-        </section>
+        {withSubmissions ? (
+          <section className="grid gap-3">
+            <h3 className="text-sm font-medium">History</h3>
+            <SubmissionHistory rows={submissions} />
+          </section>
+        ) : null}
+        {canSubmit && !withSubmissions ? (
+          <p className="text-muted-foreground text-sm">
+            Submit your revised work on the Submissions tab.
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
