@@ -274,7 +274,7 @@ and created_at > now() - interval '2 days';`
   email > Invite client user. The server creates a password-less, confirmed Supabase Auth account
   marked `app_metadata.client_invite = true`, then links it. No email is sent by EDITSTATION in C1:
   tell the person to sign in at `/client/sign-in` with that address; they receive an 8-digit code
-  (valid 10 minutes locally; check the hosted Auth settings before launch).
+  (8 digits, valid 15 minutes, set locally and on hosted 2026-11-17).
 - **Squatting account:** if someone already self-registered (editor sign-up) with the client's
   email, the invitation is refused ("already has a self-registered EDITSTATION account"). Check
   with the client that the account is not theirs in use as an editor, then delete that user in

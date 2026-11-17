@@ -418,8 +418,8 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   with the client's address) is never linked: `admin_invite_client_user` requires the
   service-only app_metadata flag and a confirmed email (user_metadata is ignored).
 - **Sign-in:** emailed one-time code (`signInWithOtp` with `shouldCreateUser: false`, then
-  `verifyOtp` type `email`); locally 8 digits valid for 10 minutes (`[auth.email]` otp_length 8,
-  otp_expiry 600; hosted not changed, needs approval). The same Auth setting also bounds the
+  `verifyOtp` type `email`); 8 digits valid for 15 minutes locally and on hosted (`[auth.email]` otp_length 8,
+  otp_expiry 900; pushed to hosted 2026-11-17, owner chose 15 minutes over 10). The same Auth setting also bounds the
   confirmation and password-reset links. The code request always shows the same message, so it
   does not reveal whether an email is invited; the per-email send limit (only reachable for an
   existing account) gets that same message, and only the per-IP request limit differs. The e2e test proves an unknown email

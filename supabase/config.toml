@@ -226,7 +226,7 @@ max_frequency = "1s"
 # Number of characters used in the email OTP (8 for client area sign-in codes, 2026-11-18).
 otp_length = 8
 # Number of seconds before the email OTP expires (10 minutes for client area sign-in codes).
-otp_expiry = 600
+otp_expiry = 900
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
