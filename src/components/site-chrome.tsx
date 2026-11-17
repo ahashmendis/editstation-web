@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Wordmark } from "@/components/wordmark";
+import { SUPPORT_EMAIL } from "@/lib/site-contact";
 
 // Public site chrome. Copy is placeholder until brand (KB2) and services (KB3) are settled
 // (decision S: English only). Link labels match the home page CTAs ("Send a project",
@@ -43,7 +44,12 @@ export function SiteFooter() {
   return (
     <footer className="mt-auto border-t">
       <div className="text-muted-foreground mx-auto flex w-full max-w-6xl flex-wrap justify-between gap-3 px-4 py-6 text-sm md:px-6">
-        <p>EDITSTATION, a Lenscape Studios production network</p>
+        <p>
+          EDITSTATION, a Lenscape Studios production network.{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline underline-offset-4">
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
         <nav aria-label="Legal" className="flex gap-4">
           <Link href="/legal/privacy" className={navLink}>
             Privacy notice

@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from "@/lib/site-contact";
+
 import { absoluteUrl, SITE_NAME } from "./site";
 
 type JsonLdValue = Record<string, unknown>;
@@ -30,6 +32,11 @@ export function organizationJsonLd(): JsonLdValue {
         description:
           "A production network that matches video editing projects with vetted freelance editors and manages the work from brief to delivery.",
         parentOrganization: { "@type": "Organization", name: "Lenscape Studios" },
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          email: SUPPORT_EMAIL,
+        },
       },
       {
         "@type": "WebSite",

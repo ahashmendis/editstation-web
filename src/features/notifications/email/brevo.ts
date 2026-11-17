@@ -1,5 +1,7 @@
 import "server-only";
 
+import { SUPPORT_EMAIL } from "@/lib/site-contact";
+
 /**
  * Brevo transactional email over plain fetch (no SDK dependency). Returns only whether Brevo
  * accepted the message and a short machine reason; never the response body, the address or the key.
@@ -38,6 +40,8 @@ export function createBrevoSender(apiKey: string, from: string | undefined): Sen
         },
         body: JSON.stringify({
           sender,
+          // Replies go to the support inbox, not the unmonitored no-reply sender.
+          replyTo: { email: SUPPORT_EMAIL, name: "EDITSTATION Support" },
           to: [{ email: email.to }],
           subject: email.subject,
           htmlContent: email.html,

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/wordmark";
 import { container, focusRing } from "@/features/landing/styles";
+import { SUPPORT_EMAIL } from "@/lib/site-contact";
 
 // The only place "Lenscape Studios" appears on the landing page (owner decision 10). Legal pages
 // are placeholders until counsel's text exists; their wording is not decided here.
@@ -20,6 +21,9 @@ export function LandingFooter() {
             EditStation, a Lenscape Studios production network, starting with clients and editors in
             Sri Lanka.
           </p>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className={`${link} w-fit text-sm`}>
+            {SUPPORT_EMAIL}
+          </a>
         </div>
         <div className="grid grid-cols-2 gap-10 text-sm sm:gap-16">
           <nav aria-label="Get started" className="grid content-start gap-3">
