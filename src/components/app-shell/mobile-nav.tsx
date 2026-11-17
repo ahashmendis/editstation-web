@@ -15,6 +15,7 @@ import {
 import { Wordmark } from "@/components/wordmark";
 
 import { NavLinks, type NavEntry } from "./nav-links";
+import { PUBLIC_SITE_PATH } from "@/lib/auth/enter-area";
 
 // Phone and tablet navigation: a top bar with a menu button that opens the same links in a sheet.
 export function MobileNav({
@@ -67,7 +68,7 @@ export function MobileNav({
           <div className="grid gap-4 px-4 pb-4">
             <NavLinks items={items} label={area} onNavigate={() => setOpen(false)} />
             <Link
-              href="/"
+              href={PUBLIC_SITE_PATH}
               className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex min-h-11 items-center rounded-md px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
             >
               Public site

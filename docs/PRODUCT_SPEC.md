@@ -22,7 +22,7 @@ direct client-to-editor hiring. Lenscape owns client relationships, pricing, QC 
 | Admin dashboard     | Authorised admins                 | Manage inquiries, editors and projects |
 | Editor dashboard    | **Approved, active editors only** | Manage authorised work                 |
 
-No client portal, client accounts or client dashboard in the MVP.
+No client portal in the original MVP. **Superseded 2026-11-17 by the owner:** a limited client area (`/client`) is being added; see the decisions log (Client area) and `docs/superpowers/specs/2026-11-17-client-area-design.md`.
 
 ## Account types
 

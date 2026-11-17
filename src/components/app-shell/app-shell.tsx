@@ -8,6 +8,7 @@ import { UserMenu } from "@/features/profile/components/user-menu";
 import { MobileNav } from "./mobile-nav";
 import { NavLinks, type NavEntry } from "./nav-links";
 import { isNavGroup } from "./nav-sections";
+import { PUBLIC_SITE_PATH } from "@/lib/auth/enter-area";
 
 // Shared shell for the signed-in work areas (admin and editor): sidebar on large screens, top bar
 // with a menu sheet on small ones. Navigation only; pages keep their own heading via AreaShell.
@@ -17,6 +18,7 @@ export function AppShell({
   items,
   homeHref,
   profileHref,
+  showNotifications = true,
   children,
 }: {
   area: string;
@@ -24,12 +26,14 @@ export function AppShell({
   items: NavEntry[];
   /** The signed-in user's own dashboard: the logo links here, never to the public site. */
   homeHref: string;
-  /** Where the user manages their own picture (linked from the account menu). */
-  profileHref: string;
+  /** Where the user manages their own picture (linked from the account menu). Omit to hide. */
+  profileHref?: string;
+  /** False for areas with no notifications (the client area). */
+  showNotifications?: boolean;
   children: ReactNode;
 }) {
   // The sidebar bell is only for areas whose nav has no Notifications row of its own.
-  const hasNotificationsItem = items.some((entry) =>
+  const hasNotificationsItem = !showNotifications || items.some((entry) =>
     isNavGroup(entry)
       ? entry.items.some((item) => item.href === "/notifications")
       : entry.href === "/notifications",
@@ -52,7 +56,7 @@ export function AppShell({
           {hasNotificationsItem ? null : <NotificationBell withLabel />}
           <UserMenu profileHref={profileHref} withLabel />
           <Link
-            href="/"
+            href={PUBLIC_SITE_PATH}
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mt-auto rounded-md px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
           >
             Public site
@@ -64,7 +68,7 @@ export function AppShell({
           area={area}
           items={items}
           homeHref={homeHref}
-          bell={<NotificationBell />}
+          bell={showNotifications ? <NotificationBell /> : undefined}
           userMenu={<UserMenu profileHref={profileHref} />}
         />
         {children}

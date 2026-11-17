@@ -22,8 +22,11 @@ const PRIVATE_SOURCES = [
   "/api/:path*",
   "/editor/:path*",
   "/apply/:path*",
+  "/client",
+  "/client/:path*",
   "/auth/:path*",
   "/go",
+  "/site",
   "/mfa",
   "/notifications",
   "/sign-in",
@@ -33,6 +36,11 @@ const PRIVATE_SOURCES = [
 ];
 
 const nextConfig: NextConfig = {
+  // Signed-in users are redirected away from "/", so "Public site" links use /site, which serves the
+  // same public home page (noindex: the canonical page is "/").
+  async rewrites() {
+    return [{ source: "/site", destination: "/" }];
+  },
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

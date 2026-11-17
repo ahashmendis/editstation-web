@@ -9,7 +9,15 @@ describe("shouldEnterArea", () => {
   });
 
   it("leaves every other page alone, including the redirect target itself", () => {
-    for (const path of ["/go", "/editors", "/inquire", "/legal/privacy", "/sign-in", "/admin"]) {
+    for (const path of [
+      "/site",
+      "/go",
+      "/editors",
+      "/inquire",
+      "/legal/privacy",
+      "/sign-in",
+      "/admin",
+    ]) {
       expect(shouldEnterArea(path, true)).toBe(false);
     }
   });
