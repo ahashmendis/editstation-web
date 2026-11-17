@@ -8,6 +8,7 @@ import {
   Inbox,
   LayoutDashboard,
   Settings,
+  UserRound,
   ShieldCheck,
   Users,
   Wallet,
@@ -32,6 +33,7 @@ const ICONS = {
   earnings: Wallet,
   activity: History,
   opportunities: Briefcase,
+  profile: UserRound,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;

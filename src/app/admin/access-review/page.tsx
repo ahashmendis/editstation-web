@@ -15,6 +15,8 @@ import {
 } from "@/features/access/constants";
 import { listPendingRevocations } from "@/features/access/queries";
 import { formatDateTime } from "@/features/applications/components/status-badge";
+import { UserAvatar } from "@/features/profile/components/user-avatar";
+import { getAvatarUrlsForUsers } from "@/features/profile/queries";
 import { requireAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Access review · Admin · EDITSTATION" };
@@ -30,6 +32,7 @@ export default function AccessReviewPage() {
 async function AccessReviewContent() {
   await requireAdmin();
   const rows = await listPendingRevocations();
+  const avatars = await getAvatarUrlsForUsers(rows.map((r) => r.editorId));
 
   return (
     <AreaShell
@@ -56,7 +59,10 @@ async function AccessReviewContent() {
               {rows.map((r) => (
                 <li key={r.grantId} className="grid gap-3 rounded-lg border p-3 text-sm">
                   <div className="flex flex-wrap justify-between gap-2">
-                    <span className="font-medium">{r.editorName}</span>
+                    <span className="flex min-w-0 items-center gap-2 font-medium">
+                      <UserAvatar url={avatars.get(r.editorId)} name={r.editorName} size="sm" />
+                      {r.editorName}
+                    </span>
                     <span className="text-muted-foreground tabular-nums">
                       Shared {formatDateTime(r.sharedAt)}
                     </span>

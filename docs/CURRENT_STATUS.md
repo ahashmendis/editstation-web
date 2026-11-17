@@ -170,9 +170,13 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   created with MFA. Auth config pushed from `supabase/config.toml` `[remotes.production]` (site URL,
   redirect, password rules). Brevo SMTP is configured on hosted Supabase (sender `no-reply@editstation.work`) and the branded
   auth and security-notification emails are pushed. Notification emails (feature A, 2026-11-17):
-  built and tested locally (migration `20261117143615`, worker route `/api/cron/send-emails`);
-  NOT applied to hosted and NOT scheduled; the owner steps are in `docs/RUNBOOKS.md` section 8.
-  Profile pictures (feature B) are designed, not built.
+  migration `20261117143615` and worker route `/api/cron/send-emails` (owner steps in
+  `docs/RUNBOOKS.md` section 8).
+  Notification emails are live on hosted since 2026-11-17: migration applied, pg_cron job
+  `send-notification-emails` every 5 minutes (Vault secret), Brevo API key and secrets in Vercel;
+  a real email send has not been proven yet. Profile pictures (feature B): built, reviewed and
+  tested locally (migration `20261117150324`, `/editor/profile`); NOT on hosted yet, so the
+  code must not be pushed before the migration is applied there.
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens

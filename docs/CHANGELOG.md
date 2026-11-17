@@ -3,6 +3,41 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-17: Profile pictures (feature B)
+
+- **Uncommitted, pending review.** Spec `docs/superpowers/specs/2026-11-17-notification-emails-and-avatars-design.md`
+  §B (owner approved 2026-11-17).
+- Migration `20261117150324_profile_avatars`: `profiles.avatar_path`; private bucket `avatars`
+  (2 MB, jpeg/png/webp); four `storage.objects` policies (owner-only writes in their own folder
+  with the fixed object name; read for owner or MFA admin); `public.set_my_avatar(text)`,
+  `public.clear_my_avatar()` (security definer, empty search_path, anon + authenticated, audited
+  with the field name only).
+- App: `src/features/profile/` (`avatar.ts` limits, magic-byte detection, initials,
+  `signAvatarPaths` with 5-minute signed URLs; `schemas.ts` Zod upload check; `actions.ts` upload /
+  replace / remove with the user's own session; `queries.ts` own summary and admin-only URLs by
+  user id; components `UserAvatar`, `AvatarForm`, `ProfilePictureCard`, `UserMenu`). shadcn
+  `avatar` and `dropdown-menu` added (base-ui, no new npm dependency). Account menu (picture,
+  "Profile picture" link, sign out) in the app shell sidebar and mobile top bar; picture card on
+  `/apply`, new `/editor/profile` (nav "Profile"), `/admin/settings`; read-only pictures on the
+  admin application review page and the access review list. `next.config.ts`: server action body
+  limit 2 MB + 64 KB (default 1 MB would refuse a 2 MB picture).
+- Local stack: `npm run db:start` still excludes storage-api; the `storage` schema exists without
+  it, so pgTAP covers the policies by default. Uploads need storage-api (`npm run db:start:full`,
+  or `supabase start` without `storage-api` in `-x`); without it the UI falls back to initials and
+  uploads show a generic failure.
+- Tests: pgTAP `116` (50 assertions). Vitest `avatar.test.ts`, `schemas.test.ts`,
+  `actions.test.ts` (magic bytes, limits, initials, stale clean-up, safe messages, signed-URL
+  helper incl. the stored content-type allow-list).
+- Review fixes (db-security, code-reviewer): the signed-URL helper signs only objects whose stored
+  content type is JPEG/PNG/WebP (direct Storage uploads skip the magic-byte check); policies are
+  dropped before being created (re-runnable); the action always removes the other-extension
+  objects after a successful save; more pgTAP cases (owner update and refused rename, applicant
+  and admin `set_my_avatar`, anon delete, admin aal1 cannot read another `avatar_path`); docs on
+  the app-wide body limit, rate limiting as a follow-up, and unaudited direct Storage deletes. One-off local checks with storage-api running: a
+  supabase-js smoke script and a temporary Playwright run (applicant upload at 375px with a fake
+  PNG refused, admin sees the picture on the review page, editor account menu, remove); the
+  temporary spec was not kept.
+
 ## 2026-11-17: Notification emails (feature A)
 
 - **Uncommitted, pending review.** Spec `docs/superpowers/specs/2026-11-17-notification-emails-and-avatars-design.md`

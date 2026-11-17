@@ -25,6 +25,8 @@ import { SafeLink, SnapshotView } from "@/features/applications/components/snaps
 import { formatDateTime, StatusBadge } from "@/features/applications/components/status-badge";
 import { ASSESSMENT_RESULTS, LEVELS, OPEN_STATUSES } from "@/features/applications/constants";
 import { getApplicationDetail } from "@/features/applications/queries";
+import { UserAvatar } from "@/features/profile/components/user-avatar";
+import { getAvatarUrlsForUsers } from "@/features/profile/queries";
 import { requireAdmin } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Application · Admin · EDITSTATION" };
@@ -74,6 +76,7 @@ async function ApplicationContent({
   if (!detail) notFound();
 
   const { app, person, editor, requests, notes, attempts, activity, isLatestAttempt } = detail;
+  const avatarUrl = (await getAvatarUrlsForUsers([app.editor_id])).get(app.editor_id) ?? null;
   const isOpen = OPEN_STATUSES.includes(app.status);
   const canDecide = app.status === "submitted" || app.status === "under_review";
   const openRequests = requests.filter((r) => !r.responded_at).length;
@@ -87,6 +90,19 @@ async function ApplicationContent({
       <Link href="/admin/applications" className="text-muted-foreground text-sm underline">
         ← All applications
       </Link>
+
+      <div className="flex items-center gap-3">
+        <UserAvatar
+          url={avatarUrl}
+          name={person.full_name}
+          email={person.email}
+          size="xl"
+          label={avatarUrl ? "Applicant's profile picture" : "No profile picture"}
+        />
+        <p className="text-muted-foreground text-sm">
+          {avatarUrl ? "Profile picture (admins and the applicant only)." : "No profile picture."}
+        </p>
+      </div>
 
       <Card>
         <CardHeader>

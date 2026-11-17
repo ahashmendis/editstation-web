@@ -21,11 +21,14 @@ export function MobileNav({
   area,
   items,
   bell,
+  userMenu,
 }: {
   area: string;
   items: NavItem[];
   /** Server-rendered notification link (an element, not a function). */
   bell?: ReactNode;
+  /** Server-rendered account menu (an element, not a function). */
+  userMenu?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -36,6 +39,7 @@ export function MobileNav({
       </Link>
       <div className="flex items-center gap-1">
         {bell}
+        {userMenu}
         <Button
           variant="outline"
           className="min-h-11"

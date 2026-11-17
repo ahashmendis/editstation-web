@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { Wordmark } from "@/components/wordmark";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import { UserMenu } from "@/features/profile/components/user-menu";
 
 import { MobileNav } from "./mobile-nav";
 import { NavLinks, type NavItem } from "./nav-links";
@@ -13,10 +14,13 @@ import { NavLinks, type NavItem } from "./nav-links";
 export function AppShell({
   area,
   items,
+  profileHref,
   children,
 }: {
   area: string;
   items: NavItem[];
+  /** Where the user manages their own picture (linked from the account menu). */
+  profileHref: string;
   children: ReactNode;
 }) {
   return (
@@ -31,6 +35,7 @@ export function AppShell({
           </div>
           <NavLinks items={items} label={area} />
           <NotificationBell withLabel />
+          <UserMenu profileHref={profileHref} withLabel />
           <Link
             href="/"
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mt-auto rounded-md px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
@@ -40,7 +45,12 @@ export function AppShell({
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileNav area={area} items={items} bell={<NotificationBell />} />
+        <MobileNav
+          area={area}
+          items={items}
+          bell={<NotificationBell />}
+          userMenu={<UserMenu profileHref={profileHref} />}
+        />
         {children}
       </div>
     </div>

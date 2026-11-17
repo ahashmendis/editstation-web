@@ -2199,6 +2199,7 @@ export type Database = {
       };
       profiles: {
         Row: {
+          avatar_path: string | null;
           created_at: string;
           email: string;
           full_name: string | null;
@@ -2208,6 +2209,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          avatar_path?: string | null;
           created_at?: string;
           email: string;
           full_name?: string | null;
@@ -2216,6 +2218,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          avatar_path?: string | null;
           created_at?: string;
           email?: string;
           full_name?: string | null;
@@ -3513,6 +3516,7 @@ export type Database = {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
       };
+      clear_my_avatar: { Args: Record<PropertyKey, never>; Returns: undefined };
       editor_acknowledge_revision: {
         Args: { p_revision_id: string; p_start?: boolean };
         Returns: undefined;
@@ -3703,6 +3707,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_my_avatar: { Args: { p_path: string }; Returns: undefined };
       submit_client_inquiry: {
         Args: {
           p_budget_range_id: string;

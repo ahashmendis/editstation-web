@@ -528,6 +528,24 @@ assignments 1─* negotiation_offers (Phase 6), editor_interpretations, brief_co
 brief_versions 1─* editor_interpretations, brief_confirmations (restrict); brief_confirmations.carried_from_id ─> brief_confirmations
 ```
 
+## Profile pictures _(2026-11-17, `20261117150324_profile_avatars`, uncommitted, pending review)_
+
+- **`profiles.avatar_path`** (text, nullable): the object name in the private `avatars` bucket,
+  `<user_id>/avatar.<jpg|png|webp>`. Read through the existing `profiles` policy (own row or MFA
+  admin). No column grant: written only by `public.set_my_avatar(p_path)` (path must be the
+  caller's own folder with an allowed extension and the object must exist; ES401/ES422) and
+  `public.clear_my_avatar()` (own row only). Both audited as `profile.avatar_set` /
+  `profile.avatar_cleared` with `{"fields": ["avatar_path"]}` only.
+- **Storage bucket `avatars`**: private, `file_size_limit` 2 MB, `allowed_mime_types`
+  jpeg/png/webp. The image bytes live in Storage, never in Postgres.
+- **`storage.objects` policies** (authenticated only): `avatars_select_own_or_admin` (own folder,
+  or `private.is_admin()`), `avatars_insert_own` / `avatars_update_own` (own folder and exactly
+  `<uuid>/avatar.<ext>`), `avatars_delete_own` (own folder). Admins cannot write other users'
+  pictures.
+- The `storage` schema is present in the local stack's initial schema even when `npm run db:start`
+  excludes storage-api, so the migration has no guard and pgTAP `116` runs in CI's
+  Postgres-only job.
+
 ## RLS summary
 
 See SECURITY_AND_PRIVACY.md for the full model and the per-identity access matrix.

@@ -360,6 +360,49 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   `113`); audit rows hold ids and field names only.
 - **Confidentiality notice** on `/editor/opportunities` (call 7). It is a reminder, not a control.
 
+## Profile picture controls (2026-11-17, uncommitted, pending review)
+
+- **Who sees it:** the owner and admins with an MFA session only. Never clients, other editors or
+  the public. Enforced twice: `profiles` RLS for `avatar_path`, and `storage.objects` RLS on the
+  private `avatars` bucket. There is no public URL; the app shows pictures through signed URLs
+  that expire after 5 minutes, created server-side per request with the viewer's own session
+  (owner after `requireSignedIn()`, admin after `requireAdmin()`), never cached across requests
+  or users, and never through the secret key.
+- **Writes:** any signed-in account may upload only into its own folder (`<user_id>/avatar.<ext>`;
+  other names, renames, sub-folders and other users' folders are refused by RLS, admins
+  included). `profiles.avatar_path` has no column grant: `set_my_avatar` requires the caller's own
+  path and an existing object; `clear_my_avatar` touches only the caller's row. Errors are
+  ES401/ES422 only; the UI shows only `userMessageFromDbError` messages and a fixed
+  upload-failure message.
+- **File checks: two paths, different strength.**
+  - _App path (the server action):_ declared type and size (Zod), then the file's real type from
+    its magic bytes, so SVG/HTML or other content renamed as an image is refused; the object is
+    stored with the detected content type. No server-side image processing (no new dependency).
+  - _Direct Storage API path:_ a signed-in user can call the Storage API with their own session
+    and bypass the server action. That path is limited only by the bucket's declared-type and size
+    limits (JPEG/PNG/WebP content type, 2 MB, enforced by storage-api) and by the folder policies;
+    the magic-byte check does **not** apply, so the bytes may not be an image.
+  - _Mitigation on read:_ before signing, the app reads the object's stored content type
+    (`info()`, same session) and signs only `image/jpeg`, `image/png` or `image/webp`; anything
+    else is treated as no picture. Pictures are only ever rendered as `<img>` elements, never
+    linked or opened as documents. A failed or refused signed URL, or an image that fails to load,
+    shows the initials fallback.
+- **Audit:** set and clear through the functions are logged with ids and the field name only (no
+  path). A delete made directly through the Storage API is **not** audited (it leaves
+  `avatar_path` pointing at a missing object, which then shows as no picture).
+- **Server action body limit (accepted knowingly):** `next.config.ts` raises
+  `serverActions.bodySizeLimit` app-wide to 2 MB + 64 KB so a 2 MB picture fits. Next.js has no
+  per-action limit, so every server action, including the public inquiry and sign-up actions,
+  now accepts bodies up to that size (default was 1 MB). Each action still validates its own
+  fields. **Follow-up:** rate limiting for uploads and public actions (not built).
+- **Tests:** pgTAP `116` (admin with and without MFA, editor A, editor B, pending applicant,
+  anon). Bucket size/MIME limits are enforced by storage-api, so they are covered by a local
+  storage-api smoke run (own-folder upload and replace, cross-folder refused, gif/html and
+  over-2 MB refused, stored content type readable by the owner only, signed URL for owner only,
+  no public URL, cross-user delete refused), not by pgTAP. Vitest covers the action (magic bytes,
+  size, stale clean-up, safe messages) and the signed-URL helper (type allow-list, failures).
+- **Out of scope now:** moderation queue; admin removal of someone else's picture.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                                                | Admin                                |

@@ -8,6 +8,7 @@ import { AdminActionForm } from "@/features/applications/components/admin-action
 import { setBusinessTimezoneAction } from "@/features/billing/admin-actions";
 import { BillingForm } from "@/features/billing/components/billing-form";
 import { getBusinessTimezone } from "@/features/billing/queries";
+import { ProfilePictureCard } from "@/features/profile/components/profile-picture-card";
 import { PayoutEnabledForm } from "@/features/payouts/components/payout-forms";
 import { getPayoutEnabled } from "@/features/payouts/queries";
 import { saveBudgetRangeAction, saveServiceTypeAction } from "@/features/inquiries/admin-actions";
@@ -82,6 +83,7 @@ async function SettingsContent() {
 
   return (
     <AreaShell title="Settings" actions={<SignOutButton />}>
+      <ProfilePictureCard />
       <Card>
         <CardHeader>
           <CardTitle>Editor payout details</CardTitle>

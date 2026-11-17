@@ -209,6 +209,7 @@ export type PendingRevocation = {
   grantId: string;
   projectId: string;
   projectTitle: string;
+  editorId: string;
   editorName: string;
   sharedWithEmail: string;
   provider: string;
@@ -236,6 +237,7 @@ export async function listPendingRevocations(): Promise<PendingRevocation[]> {
     grantId: r.grant_id,
     projectId: r.project_id,
     projectTitle: titles.get(r.project_id) ?? "Project",
+    editorId: r.editor_id,
     editorName: names.get(r.editor_id)?.name ?? "Unknown editor",
     sharedWithEmail: r.shared_with_email,
     provider: r.provider,

@@ -14,6 +14,7 @@ const EDITOR_NAV: NavItem[] = [
   { href: "/editor", label: "Dashboard", icon: "dashboard", exact: true },
   { href: "/editor/opportunities", label: "Opportunities", icon: "opportunities" },
   { href: "/editor/earnings", label: "Earnings", icon: "earnings" },
+  { href: "/editor/profile", label: "Profile", icon: "profile" },
 ];
 
 // Editor area: only accounts with access_status = 'active' (decision L).
@@ -29,7 +30,7 @@ export default function EditorLayout({ children }: { children: ReactNode }) {
 async function EditorGate({ children }: { children: ReactNode }) {
   await requireActiveEditor();
   return (
-    <AppShell area="Editor" items={EDITOR_NAV}>
+    <AppShell area="Editor" items={EDITOR_NAV} profileHref="/editor/profile">
       {children}
     </AppShell>
   );

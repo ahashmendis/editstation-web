@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
         : [{ source: "/(.*)", headers: [NOINDEX_HEADER] }]),
     ];
   },
+  // Profile pictures are uploaded through a server action (max 2 MB, checked again in the
+  // action and by the private avatars bucket). The default 1 MB body limit would refuse them, so
+  // allow 2 MB plus multipart overhead.
+  experimental: {
+    serverActions: { bodySizeLimit: 2 * 1024 * 1024 + 64 * 1024 },
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

@@ -17,6 +17,7 @@ import { formatDateTime, StatusBadge } from "@/features/applications/components/
 import { OPEN_STATUSES } from "@/features/applications/constants";
 import { getApplicantView } from "@/features/applications/queries";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import { ProfilePictureCard } from "@/features/profile/components/profile-picture-card";
 import { requireApplicant } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Your application · EDITSTATION" };
@@ -55,6 +56,7 @@ async function ApplyContent() {
       }
     >
       {children}
+      <ProfilePictureCard />
     </AreaShell>
   );
 
