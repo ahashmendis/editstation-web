@@ -403,6 +403,52 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   size, stale clean-up, safe messages) and the signed-URL helper (type allow-list, failures).
 - **Out of scope now:** moderation queue; admin removal of someone else's picture.
 
+## Client area controls (C1, 2026-11-17, uncommitted, pending review)
+
+- **Accounts:** only an admin (MFA) creates client access. The server action
+  (`src/features/client-area/admin-actions.ts`, after `requireAdmin()`) creates the auth account
+  with the secret key (`src/lib/supabase/service.ts`, server-only): confirmed email, no password
+  (Supabase stores a random hash nobody knows) and `app_metadata.client_invite = true`. The
+  database function then re-authorises the admin and links the account; if it refuses, an account
+  just created by the action is deleted again. Chosen over Supabase's invite API: no emailed
+  invite link (a bearer token) exists to be forwarded or replayed, and no extra template or
+  `/auth/confirm` invite type is needed. The admin tells the person to sign in at
+  `/client/sign-in` (client emails are C4).
+- **Pre-registration takeover:** a self-registered sign-up (which someone else could have created
+  with the client's address) is never linked: `admin_invite_client_user` requires the
+  service-only app_metadata flag and a confirmed email (user_metadata is ignored).
+- **Sign-in:** emailed one-time code (`signInWithOtp` with `shouldCreateUser: false`, then
+  `verifyOtp` type `email`); locally 8 digits valid for 10 minutes (`[auth.email]` otp_length 8,
+  otp_expiry 600; hosted not changed, needs approval). The same Auth setting also bounds the
+  confirmation and password-reset links. The code request always shows the same message, so it
+  does not reveal whether an email is invited; the per-email send limit (only reachable for an
+  existing account) gets that same message, and only the per-IP request limit differs. The e2e test proves an unknown email
+  creates no account. Supabase sends a code to **any** existing confirmed account, so an editor or
+  admin could also sign in by code: no weaker than the existing password-reset email, and admins
+  still need MFA (aal2) for anything admin.
+- **Separation:** a client account is never an admin or an editor (guard triggers on
+  `client_users`, `editor_profiles` and `admin_users`). Routing (`src/lib/auth/home-path.ts`)
+  checks the client membership before editor access, so the sign-up trigger's `editor_profiles`
+  row (status none) never sends a client to `/apply`. A client account cannot save an editor
+  profile or apply (ES403, plus a trigger on `editor_applications`). In the database a client
+  otherwise has the powers of a signed-in account with no role (its own profile rows only).
+- **Data:** clients have no table grants. Every read goes through `client_*` functions that check
+  an active membership on every call and return fixed client-safe projections (DATABASE_SCHEMA
+  "Client area C1"); the app also parses them with Zod, which drops any unexpected key. pgTAP
+  proves the projection's exact key set and that it holds no editor id, pay, notes or price.
+- **What clients see:** only projects past draft, never a deadline (editor-facing, may include a
+  buffer), internal `approved` reads "Finalising".
+- **Revocation** applies at once (archiving the client too): the next function call is refused (ES403) and routing sends the
+  account to `/client/access-ended`. The session itself is not ended server-side; it has nothing
+  left to read.
+- **Bank details:** studio business data, admin-editable, hidden until set; the audit row records
+  only that the field changed. Unrelated to editor payout details (still locked, decision E).
+- **Open (owner):** client terms and privacy notice (counsel), OTP email wording, client session
+  length, optional client two-step verification, and a client-facing delivery date (separate from
+  the editor deadline). Runbook: RUNBOOKS §9. The OTP template
+  (`supabase/templates/magic_link.html`, `[auth.email.template.magic_link]`) is configured locally
+  only; pushing it to hosted needs owner approval.
+
 ## Access matrix (target; each cell becomes pgTAP tests)
 
 | Data                               | Anonymous              | Applicant (own)                                                     | Active editor                                                                                                                                                | Admin                                |

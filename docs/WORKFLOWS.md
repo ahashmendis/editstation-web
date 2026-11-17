@@ -299,6 +299,19 @@ recommended §7 call). Direct invitations (Editors card) still work without publ
 Opportunity: `open` → `filled` (editor chosen) | `closed` (admin or project) → `open` (republish).
 Interest: `interested` → `withdrawn` | `selected` | `not_selected` (final; rows are never deleted).
 
+## Client area (C1, 2026-11-17, pending review)
+
+Client access: admin invites (on the client record) -> **active** -> admin removes -> **revoked**
+(final for that row; a new invitation adds a new row). Progress shown to the client: admin-written
+updates (published -> withdrawn, final) plus a status mapped from the project status
+(open/assigned: Planning; in_progress/in_review: In production; revision_requested: Revisions in
+progress; approved: Finalising; completed: Completed; on_hold: On hold; cancelled: Cancelled).
+Draft and archived projects are hidden from clients, and no deadline is shown (a client-facing
+date is an open owner item). Users of an archived client lose access until it is restored. A
+client account can never apply as an editor. Payment status per client
+milestone: Not invoiced yet, Awaiting payment, Received and being confirmed, Paid, Refunded.
+Submit-a-project and messages are C2.
+
 ## Payout details (decision E; Phase 12E, locked)
 
 1. **Locked (now):** `payout_details_enabled` is off until counsel confirms PDPA handling. Editors

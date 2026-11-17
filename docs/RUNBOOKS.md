@@ -267,3 +267,27 @@ re-run the `cron.schedule` above to resume). **Retrying failed rows** (after fix
 `update private.notification_outbox set status = 'queued', attempts = 0, last_error = null,
 claimed_at = null where status = 'failed' and last_error <> 'pre-launch backlog'
 and created_at > now() - interval '2 days';`
+
+## 9. Client invitations (client area C1)
+
+- **Invite:** Admin (MFA) > Clients > open the client > "Client area access" > enter the person's
+  email > Invite client user. The server creates a password-less, confirmed Supabase Auth account
+  marked `app_metadata.client_invite = true`, then links it. No email is sent by EDITSTATION in C1:
+  tell the person to sign in at `/client/sign-in` with that address; they receive an 8-digit code
+  (valid 10 minutes locally; check the hosted Auth settings before launch).
+- **Squatting account:** if someone already self-registered (editor sign-up) with the client's
+  email, the invitation is refused ("already has a self-registered EDITSTATION account"). Check
+  with the client that the account is not theirs in use as an editor, then delete that user in
+  Supabase Dashboard > Authentication > Users and invite again. Never link it any other way.
+- **Refused invitations:** admins, editors and applicants cannot be client users; archived or
+  merged clients cannot get new users (restore the client, or invite on the kept record).
+- **Revoke:** same panel > Remove access. It applies on the person's next request (they see "Client
+  access ended"); their session is not ended server-side but can read nothing. Archiving the
+  client has the same effect for all its users until it is restored. Re-inviting later adds a new
+  record; history is kept.
+- **Codes also work for other accounts:** Supabase sends a sign-in code to any existing confirmed
+  account (editors and admins too). That is no weaker than the password-reset email; admins still
+  need their authenticator (MFA) for the admin area.
+- **Orphan account:** if an invitation fails after the account was created and the automatic
+  clean-up also fails, the server log shows "client invite: rollback of the new auth account
+  failed" with the user id; delete that user in Supabase Auth (it has no access).

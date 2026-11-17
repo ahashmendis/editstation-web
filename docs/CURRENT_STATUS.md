@@ -182,6 +182,13 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   decisions: `docs/EDITOR_WORKSPACE_ARCHITECTURE.md`. Phases 2 to 6 (video review with a Google Drive
   player, moderation, calendar, WhatsApp, AI) are not started. Also local: signed-in visitors on `/`
   go to their own area (`/go`), and the app logo links to the user's dashboard.
+- Client area C1 (2026-11-17, local only, reviewed, uncommitted pending owner approval): `/client`
+  (sign-in by emailed code, projects, payments), admin invitation of client users, client updates and
+  bank-details setting; migration `20261117175810`. Design: `docs/superpowers/specs/2026-11-17-client-area-design.md`.
+  Order matters on hosted: the migration must be applied BEFORE the code is pushed (every signed-in
+  request calls `my_client_status`). Open owner items: bank details, client terms and privacy
+  notice, client-facing deadline, OTP wording and expiry (10 minutes also shortens sign-up and reset
+  links). C2 (submit a project, messages) to C4 not started.
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens

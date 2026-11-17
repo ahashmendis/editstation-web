@@ -27,7 +27,7 @@ export function UserMenuView({
   name: string | null;
   email: string | null;
   url: string | null;
-  profileHref: string;
+  profileHref?: string;
   withLabel: boolean;
 }) {
   const [signingOut, startSignOut] = useTransition();
@@ -55,9 +55,11 @@ export function UserMenuView({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="min-h-11" render={<Link href={profileHref} />}>
-          Profile picture
-        </DropdownMenuItem>
+        {profileHref ? (
+          <DropdownMenuItem className="min-h-11" render={<Link href={profileHref} />}>
+            Profile picture
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           className="min-h-11"
           disabled={signingOut}

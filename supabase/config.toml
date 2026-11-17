@@ -223,10 +223,10 @@ enable_confirmations = true
 secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
-# Number of characters used in the email OTP.
-otp_length = 6
-# Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# Number of characters used in the email OTP (8 for client area sign-in codes, 2026-11-18).
+otp_length = 8
+# Number of seconds before the email OTP expires (10 minutes for client area sign-in codes).
+otp_expiry = 600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -246,6 +246,11 @@ content_path = "./supabase/templates/confirmation.html"
 [auth.email.template.recovery]
 subject = "Reset your EDITSTATION password"
 content_path = "./supabase/templates/recovery.html"
+
+# Client area sign-in (signInWithOtp, shouldCreateUser false): shows the one-time code, no link.
+[auth.email.template.magic_link]
+subject = "Your EDITSTATION sign-in code"
+content_path = "./supabase/templates/magic_link.html"
 
 # Security notifications (sent to the account owner; no links, no tokens).
 [auth.email.notification.password_changed]

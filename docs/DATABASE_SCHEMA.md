@@ -546,6 +546,71 @@ brief_versions 1─* editor_interpretations, brief_confirmations (restrict); bri
   excludes storage-api, so the migration has no guard and pgTAP `116` runs in CI's
   Postgres-only job.
 
+## Client area C1 _(2026-11-17, `20261117175810_client_area_c1`, uncommitted, pending review)_
+
+Spec `docs/superpowers/specs/2026-11-17-client-area-design.md` (owner approved 2026-11-17).
+
+- **`client_users`** (id, user_id -> profiles cascade, client_id -> clients restrict, created_by,
+  created_at, revoked_at, revoked_by). One active row per account (partial unique index on
+  `user_id where revoked_at is null`); revoked rows stay as history and a re-invitation adds a new
+  row. RLS on, **no grants to anon or authenticated, no policies**: read and written only by the
+  functions below. Guard trigger `client_users_guard`: an account that is (or was) an admin, has
+  any editor access status other than `none` or has an editor application can never be linked;
+  identity columns are fixed; a revocation is final. Merging clients (`admin_merge_clients`) moves
+  active memberships to the kept client (trigger `clients_move_client_users_on_merge`, audited).
+- **Guards on other tables:** `editor_profiles_refuse_client` (an account with active client
+  access cannot become an active editor), `admin_users_refuse_client` (nor an admin) and
+  `editor_applications_refuse_client` (no application row for it); ES409.
+  `save_editor_profile` and `submit_editor_application` are replaced (bodies unchanged) with an
+  early ES403 for client accounts.
+- **Archived clients:** `private.require_client()` also requires the client to be unarchived, so
+  its users lose access at once (`my_client_status` reports `revoked`) and regain it on restore.
+- **`client_project_updates`** (id, project_id -> projects cascade, body 1-5000, published,
+  created_by, created_at, withdrawn_at, withdrawn_by). Admin-written; the client sees published
+  rows. Text is immutable; the only change is withdrawing (published -> false), which is final
+  (withdrawn_at and withdrawn_by never change once set; `*_by` columns may only become null when
+  a profile is deleted).
+  RLS on, no grants, no policies.
+- **`app_settings` key `client_bank_details`** (JSON string, max 2000 chars). No row = hidden from
+  clients; never pre-filled. Written only by `admin_set_bank_details` (blank deletes the row).
+- **Mappings (single source of truth, database side, so the raw status never reaches a client
+  session):** `private.client_status_key(project_status)`: draft -> received; open, assigned ->
+  planning; in_progress, in_review -> in_production; revision_requested -> revisions_in_progress;
+  approved -> finalising (no client review step exists yet); completed, on_hold, cancelled ->
+  same name. Draft projects are never shown to clients ('received' is only a fallback).
+  `private.client_payment_status_key`: refund -> refunded; verified -> paid; received_unverified
+  -> confirming; not invoiced -> not_invoiced; otherwise awaiting_payment. Wording lives in
+  `src/features/client-area/constants.ts`.
+- **Client functions** (anon + authenticated executable, authorise in the body through
+  `private.require_client()`: ES401 signed out, ES403 no active membership):
+  `client_list_projects()` (id, title, client_status, created_at, last_update_at; the caller's
+  client's projects past draft and not archived); `client_get_project(id)` (jsonb: id, title,
+  client_status, created_at, deliverables [name, format, resolution, aspect_ratio,
+  duration_seconds], published updates [id, body, published_at], milestones [id, seq, kind,
+  amount, currency, due_date, invoice_issued_at, received_at, payment_status]; null for another
+  client's, a draft, an archived or an unknown project). **No deadline is shown to clients**:
+  `projects.deadline` and the confirmed deadlines are editor-facing and may include a buffer (a
+  client-facing date is an open owner item); `client_get_payment_info()` (bank_details or
+  null, and per project the same milestone projection). Voided milestones are never shown. No
+  editor identity, assignment, editor pay, offer, opportunity, note, brief summary, asset link,
+  client price, transfer reference or reason is ever returned.
+- **Routing read:** `my_client_status()` returns `active`, `revoked` or null, for the caller only.
+- **Admin functions** (`private.require_admin()`, MFA): `admin_invite_client_user(client_id,
+email)` (links an existing account created by the invitation flow: confirmed email and
+  `app_metadata.client_invite = true`, which only the service key can set; refuses merged or
+  archived clients, admins, editors, applicants, self-registered accounts and double
+  membership), `admin_revoke_client_user(id)`, `admin_list_client_users(client_id default null)`
+  (with email and last sign-in), `admin_publish_client_update(project_id, body)` (refuses archived
+  projects), `admin_withdraw_client_update(id)`, `admin_list_client_updates(project_id)` (jsonb:
+  mapped status, has_client, visible_to_client, active_client_users, every update), `admin_set_bank_details(text)`.
+- **Audit** (`activity_logs`, ids and field names only): `client_user.invited`,
+  `client_user.revoked`, `client_user.moved_on_merge`, `client_update.published`,
+  `client_update.withdrawn`, `app_settings.changed` (`client_bank_details`, with a `cleared` flag).
+- **Tests:** pgTAP `117_client_area` (165 assertions as anon, applicant, editor A, editor B, client
+  X user, client Y user, revoked client user, admin with and without MFA). `100` now allow-lists
+  exactly `client_get_project` and `client_get_payment_info` among the non-admin functions that
+  read milestones.
+
 ## RLS summary
 
 See SECURITY_AND_PRIVACY.md for the full model and the per-identity access matrix.

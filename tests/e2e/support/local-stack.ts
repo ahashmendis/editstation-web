@@ -260,6 +260,10 @@ export function cleanupE2eData() {
       where title like 'E2E project %';
     insert into doomed select 'public.client_inquiries'::regclass, ctid from public.client_inquiries
       where email like 'e2e-%@example.test';
+    -- Client area tests create client records with e2e emails (their client_users and
+    -- project_internal rows are found through the foreign keys below).
+    insert into doomed select 'public.clients'::regclass, ctid from public.clients
+      where email like 'e2e-%@example.test';
     do $cleanup$
     declare
       fk record;
@@ -342,4 +346,114 @@ export async function confirmationLinkFor(to: string): Promise<string> {
     await new Promise((r) => setTimeout(r, 500));
   }
   throw new Error(`No confirmation email for ${to} in Mailpit.`);
+}
+
+/** Waits for the newest email to `to` in Mailpit and returns the 8-digit sign-in code inside it. */
+export async function signInCodeFor(to: string): Promise<string> {
+  const { mailpitUrl } = localEnv();
+  const query = encodeURIComponent(`to:"${to}"`);
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const search = await fetch(`${mailpitUrl}/api/v1/search?query=${query}`);
+    const { messages } = (await search.json()) as { messages?: { ID: string }[] };
+    if (messages?.length) {
+      const message = await fetch(`${mailpitUrl}/api/v1/message/${messages[0].ID}`);
+      const { HTML, Text } = (await message.json()) as { HTML?: string; Text?: string };
+      const code = />\s*(\d{8})\s*</.exec(HTML ?? "")?.[1] ?? /\b(\d{8})\b/.exec(Text ?? "")?.[1];
+      if (code) return code;
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`No sign-in code email for ${to} in Mailpit.`);
+}
+
+/** Creates a client record (email `e2e-…@example.test`) and returns its id. */
+export function createE2eClient(name: string): string {
+  const id = randomUUID();
+  sql(
+    `insert into public.clients (id, name, email) values (${lit(id)}, ${lit(name)}, ${lit(uniqueEmail("clientrec"))});`,
+  );
+  return id;
+}
+
+/**
+ * Creates a project (title must start with `E2E project `) for a client, with agreed terms, a
+ * client price and its two client milestones, through the real admin functions (aal2 admin).
+ */
+export function createClientProject(
+  adminId: string,
+  clientId: string,
+  title: string,
+  clientPrice: number,
+): string {
+  const projectId = randomUUID();
+  sql(`
+    insert into public.projects (id, title, brief_type, status, first_opened_at, deadline)
+    values (${lit(projectId)}, ${lit(title)}, 'fully_instructed', 'open', now(), '2099-12-31');
+    insert into public.project_internal (project_id, client_id) values (${lit(projectId)}, ${lit(clientId)});
+    insert into public.project_deliverables (project_id, name, format) values (${lit(projectId)}, 'Main film', 'MP4');
+    begin;
+    select set_config('request.jwt.claims',
+      json_build_object('sub', ${lit(adminId)}, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+    set local role authenticated;
+    select public.admin_update_project(${lit(projectId)}, jsonb_build_object('client_price', ${clientPrice}));
+    select public.admin_agree_terms(${lit(projectId)}, 1);
+    select public.admin_create_client_milestones(${lit(projectId)});
+    commit;
+  `);
+  return projectId;
+}
+
+/** Creates a draft project (title must start with `E2E project `) linked to a client. */
+export function createDraftClientProject(clientId: string, title: string): string {
+  const projectId = randomUUID();
+  sql(`
+    insert into public.projects (id, title, brief_type, status)
+    values (${lit(projectId)}, ${lit(title)}, 'fully_instructed', 'draft');
+    insert into public.project_internal (project_id, client_id) values (${lit(projectId)}, ${lit(clientId)});
+  `);
+  return projectId;
+}
+
+/**
+ * Invites a client user without the UI: creates the password-less account like the admin action
+ * does, then links it through the real admin function (aal2 admin). Returns the email.
+ */
+export async function inviteClientUserDirect(
+  adminId: string,
+  clientId: string,
+  role: string,
+): Promise<string> {
+  const email = uniqueEmail(role);
+  const { error } = await serviceClient().auth.admin.createUser({
+    email,
+    email_confirm: true,
+    app_metadata: { client_invite: true },
+  });
+  if (error) throw error;
+  sql(`
+    begin;
+    select set_config('request.jwt.claims',
+      json_build_object('sub', ${lit(adminId)}, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+    set local role authenticated;
+    select public.admin_invite_client_user(${lit(clientId)}, ${lit(email)});
+    commit;
+  `);
+  return email;
+}
+
+/** Revokes a client user's access through the real admin function (aal2 admin). */
+export function revokeClientUserDirect(adminId: string, email: string) {
+  // Looked up as postgres: no API role can read client_users.
+  const clientUserId = sql(`
+    select cu.id from public.client_users cu join public.profiles p on p.id = cu.user_id
+    where p.email = ${lit(email)} and cu.revoked_at is null;
+  `);
+  sql(`
+    begin;
+    select set_config('request.jwt.claims',
+      json_build_object('sub', ${lit(adminId)}, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+    set local role authenticated;
+    select public.admin_revoke_client_user(${lit(clientUserId)});
+    commit;
+  `);
 }

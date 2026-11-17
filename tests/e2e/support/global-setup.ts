@@ -11,6 +11,8 @@ const WARM_PATHS = [
   "/editor/earnings",
   "/editor/opportunities",
   "/admin/earnings",
+  "/client/sign-in",
+  "/admin/clients",
 ];
 
 export default async function globalSetup() {

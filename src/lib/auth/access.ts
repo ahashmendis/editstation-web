@@ -6,6 +6,10 @@ import { cache } from "react";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
+import { homePathFor, toClientStatus, type ClientStatus } from "./home-path";
+
+export { homePathFor } from "./home-path";
+
 export type EditorAccessStatus = Database["public"]["Enums"]["editor_access_status"];
 
 export type Access = {
@@ -16,6 +20,8 @@ export type Access = {
   /** Session assurance level: aal2 means MFA was verified in this session. */
   aal: "aal1" | "aal2";
   editorAccessStatus: EditorAccessStatus;
+  /** Client area membership: active, revoked (all access removed) or null (not a client). */
+  clientStatus: ClientStatus;
 };
 
 /**
@@ -29,16 +35,19 @@ export const getAccess = cache(async (): Promise<Access | null> => {
   const claims = data?.claims;
   if (error || !claims?.sub) return null;
 
-  const [admin, editor] = await Promise.all([
+  const [admin, editor, client] = await Promise.all([
     supabase.from("admin_users").select("revoked_at").eq("user_id", claims.sub).maybeSingle(),
     supabase
       .from("editor_profiles")
       .select("access_status")
       .eq("user_id", claims.sub)
       .maybeSingle(),
+    // Clients have no table grants; this function reports only the caller's own membership.
+    supabase.rpc("my_client_status"),
   ]);
   if (admin.error) throw admin.error;
   if (editor.error) throw editor.error;
+  if (client.error) throw client.error;
 
   // Every real account has an editor_profiles row (sign-up trigger). No row means the token
   // outlived its account (deleted user, or a reset local DB): treat as signed out.
@@ -50,15 +59,9 @@ export const getAccess = cache(async (): Promise<Access | null> => {
     isAdminAccount: Boolean(admin.data && admin.data.revoked_at === null),
     aal: claims.aal === "aal2" ? "aal2" : "aal1",
     editorAccessStatus: editor.data.access_status,
+    clientStatus: toClientStatus(client.data),
   };
 });
-
-/** Where a signed-in user belongs. */
-export function homePathFor(access: Access): string {
-  if (access.isAdminAccount) return access.aal === "aal2" ? "/admin" : "/mfa";
-  if (access.editorAccessStatus === "active") return "/editor";
-  return "/apply";
-}
 
 export async function requireSignedIn(): Promise<Access> {
   const access = await getAccess();
@@ -66,7 +69,7 @@ export async function requireSignedIn(): Promise<Access> {
   return access;
 }
 
-/** Any signed-in account that is neither an admin nor an active editor. */
+/** Any signed-in account that is neither an admin, a client nor an active editor. */
 export async function requireApplicant(): Promise<Access> {
   const access = await requireSignedIn();
   const home = homePathFor(access);
@@ -76,9 +79,18 @@ export async function requireApplicant(): Promise<Access> {
 
 export async function requireActiveEditor(): Promise<Access> {
   const access = await requireSignedIn();
-  if (access.isAdminAccount || access.editorAccessStatus !== "active") {
-    redirect(homePathFor(access));
-  }
+  if (homePathFor(access) !== "/editor") redirect(homePathFor(access));
+  return access;
+}
+
+/**
+ * A client user with active access (UI gate; the client_* database functions re-check the
+ * membership on every call, so a revocation applies even to an open page's next request).
+ */
+export async function requireClient(): Promise<Access> {
+  const access = await getAccess();
+  if (!access) redirect("/client/sign-in");
+  if (homePathFor(access) !== "/client") redirect(homePathFor(access));
   return access;
 }
 

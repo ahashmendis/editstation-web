@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AdminActionForm } from "@/features/applications/components/admin-action-form";
+import { ClientUsersSection } from "@/features/client-area/components/admin-panels";
+import { listClientUsers } from "@/features/client-area/queries";
 import { mergeClientsAction, updateClientAction } from "@/features/projects/admin-actions";
 import { CreateClientForm } from "@/features/projects/components/create-client-form";
 import { selectClassName } from "@/features/projects/components/select-class";
@@ -27,14 +29,14 @@ export default function ClientsPage() {
 
 async function ClientsContent() {
   await requireAdmin();
-  const clients = await listClients();
+  const [clients, clientUsers] = await Promise.all([listClients(), listClientUsers()]);
   const live = clients.filter((c) => c.merged_into_id === null);
   const mergeTargets = live.filter((c) => c.archived_at === null);
 
   return (
     <AreaShell
       title="Clients"
-      subtitle="Admin only. Clients are created when an inquiry is converted, or added here."
+      subtitle="Admin only. Clients are created when an inquiry is converted, or added here. Open a client to manage who can sign in to the client area."
       actions={<SignOutButton />}
     >
       <Card>
@@ -151,6 +153,12 @@ async function ClientsContent() {
                       </select>
                     </div>
                   </AdminActionForm>
+
+                  <ClientUsersSection
+                    clientId={c.id}
+                    users={clientUsers.filter((u) => u.client_id === c.id)}
+                    canInvite={c.archived_at === null}
+                  />
                 </div>
               </details>
             ))

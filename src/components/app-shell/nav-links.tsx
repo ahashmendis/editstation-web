@@ -9,6 +9,7 @@ import {
   Inbox,
   LayoutDashboard,
   MessageSquareText,
+  Receipt,
   Settings,
   UserRound,
   ShieldCheck,
@@ -40,6 +41,7 @@ const ICONS = {
   profile: UserRound,
   feedback: MessageSquareText,
   notifications: Bell,
+  payments: Receipt,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;

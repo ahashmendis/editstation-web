@@ -18,6 +18,7 @@ export function AppShell({
   items,
   homeHref,
   profileHref,
+  showNotifications = true,
   children,
 }: {
   area: string;
@@ -25,16 +26,20 @@ export function AppShell({
   items: NavEntry[];
   /** The signed-in user's own dashboard: the logo links here, never to the public site. */
   homeHref: string;
-  /** Where the user manages their own picture (linked from the account menu). */
-  profileHref: string;
+  /** Where the user manages their own picture (linked from the account menu). Omit to hide. */
+  profileHref?: string;
+  /** False for areas with no notifications (the client area). */
+  showNotifications?: boolean;
   children: ReactNode;
 }) {
   // The sidebar bell is only for areas whose nav has no Notifications row of its own.
-  const hasNotificationsItem = items.some((entry) =>
-    isNavGroup(entry)
-      ? entry.items.some((item) => item.href === "/notifications")
-      : entry.href === "/notifications",
-  );
+  const hasNotificationsItem =
+    !showNotifications ||
+    items.some((entry) =>
+      isNavGroup(entry)
+        ? entry.items.some((item) => item.href === "/notifications")
+        : entry.href === "/notifications",
+    );
   return (
     <div data-app-shell className="flex min-h-full flex-1 flex-col lg:flex-row">
       <aside className="bg-sidebar text-sidebar-foreground hidden w-60 shrink-0 border-r lg:block">
@@ -65,7 +70,7 @@ export function AppShell({
           area={area}
           items={items}
           homeHref={homeHref}
-          bell={<NotificationBell />}
+          bell={showNotifications ? <NotificationBell /> : undefined}
           userMenu={<UserMenu profileHref={profileHref} />}
         />
         {children}

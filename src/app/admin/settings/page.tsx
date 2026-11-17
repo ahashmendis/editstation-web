@@ -8,6 +8,8 @@ import { AdminActionForm } from "@/features/applications/components/admin-action
 import { setBusinessTimezoneAction } from "@/features/billing/admin-actions";
 import { BillingForm } from "@/features/billing/components/billing-form";
 import { getBusinessTimezone } from "@/features/billing/queries";
+import { BankDetailsForm } from "@/features/client-area/components/admin-forms";
+import { getBankDetails } from "@/features/client-area/queries";
 import { ProfilePictureCard } from "@/features/profile/components/profile-picture-card";
 import { PayoutEnabledForm } from "@/features/payouts/components/payout-forms";
 import { getPayoutEnabled } from "@/features/payouts/queries";
@@ -75,10 +77,11 @@ export default function SettingsPage() {
 
 async function SettingsContent() {
   await requireAdmin();
-  const [{ services, budgets }, timezone, payoutEnabled] = await Promise.all([
+  const [{ services, budgets }, timezone, payoutEnabled, bankDetails] = await Promise.all([
     getSettingsLists(),
     getBusinessTimezone(),
     getPayoutEnabled(),
+    getBankDetails(),
   ]);
 
   return (
@@ -107,6 +110,20 @@ async function SettingsContent() {
             </p>
           </div>
           <PayoutEnabledForm enabled={payoutEnabled} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Studio bank details for clients</CardTitle>
+          <CardDescription>
+            Shown on every client&apos;s Payments page. Currently{" "}
+            <strong>{bankDetails ? "set" : "not set (hidden from clients)"}</strong>. Enter only the
+            details the owner has confirmed; leave empty to hide the panel. Changes are recorded in
+            the activity log without the details themselves.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BankDetailsForm current={bankDetails} />
         </CardContent>
       </Card>
       <Card>

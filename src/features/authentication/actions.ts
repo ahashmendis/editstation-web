@@ -90,9 +90,11 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
 }
 
 export async function signOutAction(): Promise<void> {
+  // Clients sign in with an emailed code, so they return to their own sign-in page.
+  const access = await getAccess();
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/sign-in");
+  redirect(access?.clientStatus ? "/client/sign-in" : "/sign-in");
 }
 
 export async function requestPasswordResetAction(

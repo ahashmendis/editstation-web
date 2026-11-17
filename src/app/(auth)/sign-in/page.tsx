@@ -20,6 +20,11 @@ export default function SignInPage() {
           <Link href="/sign-up" className="underline">
             Create an account
           </Link>
+          <br />
+          Studio client?{" "}
+          <Link href="/client/sign-in" className="underline">
+            Sign in with an email code
+          </Link>
         </>
       }
     >

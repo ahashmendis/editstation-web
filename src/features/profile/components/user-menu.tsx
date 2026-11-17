@@ -12,7 +12,7 @@ export function UserMenu({
   profileHref,
   withLabel = false,
 }: {
-  profileHref: string;
+  profileHref?: string;
   withLabel?: boolean;
 }) {
   return (
@@ -36,7 +36,7 @@ async function UserMenuLoaded({
   profileHref,
   withLabel,
 }: {
-  profileHref: string;
+  profileHref?: string;
   withLabel: boolean;
 }) {
   const me = await getMyProfileSummary();

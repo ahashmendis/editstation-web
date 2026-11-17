@@ -178,8 +178,12 @@ select throws_ok(format($$ update public.assignments set status = 'in_progress',
 select ok(not exists (select 1 from unnest((select proargnames from pg_proc
   where oid = 'public.get_assignment_gate(uuid)'::regprocedure)) n where n ~ 'price|milestone|balance|transfer|due|client_amount')
   and not exists (select 1 from pg_proc f join pg_namespace s on s.oid = f.pronamespace
-    where s.nspname = 'public' and f.prosrc ~ 'client_milestones' and f.prosrc !~ 'private\.require_admin\(\)'),
-  'editors cannot infer client money: the gate returns a yes/no flag, and every public function reading milestones is admin-only');
+    where s.nspname = 'public' and f.prosrc ~ 'client_milestones' and f.prosrc !~ 'private\.require_admin\(\)'
+      -- Client area C1: exactly these two functions show a client their own milestones. They
+      -- require an active client_users membership, which an editor account can never hold
+      -- (117_client_area). Any other non-admin reader still fails this test.
+      and f.proname not in ('client_get_project', 'client_get_payment_info')),
+  'editors cannot infer client money: the gate returns a yes/no flag, and every public function reading milestones is admin-only or client-only');
 
 -- ---------------------------------------------------------------------------
 -- Record and verify

@@ -18,6 +18,8 @@ import { formatDateTime } from "@/features/applications/components/status-badge"
 import { AdminAccessPanels } from "@/features/access/components/admin-panels";
 import { getProjectAccessData } from "@/features/access/queries";
 import { ClientBillingPanel } from "@/features/billing/components/billing-panel";
+import { ClientUpdatesCard } from "@/features/client-area/components/admin-panels";
+import { getAdminClientUpdates } from "@/features/client-area/queries";
 import { getClientBilling } from "@/features/billing/queries";
 import { AdminConfirmationPanel } from "@/features/confirmation/components/admin-panel";
 import { AdminOpportunitySection } from "@/features/opportunities/components/admin-section";
@@ -74,6 +76,7 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
     getAdminAdjustmentData(id),
   ]);
   if (!detail) notFound();
+  const clientUpdates = await getAdminClientUpdates(id);
   const working = access.assignments.filter(
     (a) => a.status === "confirmed" || a.status === "in_progress",
   );
@@ -199,6 +202,8 @@ async function ProjectContent({ params }: { params: PageProps<"/admin/projects/[
           </AdminActionForm>
         </CardContent>
       </Card>
+
+      <ClientUpdatesCard projectId={p.id} data={clientUpdates} archived={archived} />
 
       <Card>
         <CardHeader>

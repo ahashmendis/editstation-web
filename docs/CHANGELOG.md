@@ -3,6 +3,41 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-17: Client area C1
+
+- **Uncommitted, pending owner review; local only.** Spec
+  `docs/superpowers/specs/2026-11-17-client-area-design.md` (owner approved 2026-11-17).
+- Migration `20261117175810_client_area_c1`: `client_users`, `client_project_updates`, the
+  `client_bank_details` setting, status and payment mappings, guard triggers (a client is never an
+  admin or editor), client functions `client_list_projects`, `client_get_project`,
+  `client_get_payment_info`, routing read `my_client_status`, and admin functions to invite,
+  revoke and list client users, publish, withdraw and list client updates, and set the bank
+  details. Details in DATABASE_SCHEMA and SECURITY_AND_PRIVACY "Client area".
+- Routing: `src/lib/auth/home-path.ts` (pure; client before editor; revoked client to
+  `/client/access-ended`); `getAccess()` gains `clientStatus`; `requireClient()`; `src/proxy.ts`
+  sends signed-out visitors of `/client/*` to `/client/sign-in`; sign-out returns clients there.
+- Routes: `/client/sign-in` (emailed code), `/client` (overview), `/client/projects`,
+  `/client/projects/[id]`, `/client/payments`, `/client/access-ended`. App shell gained optional
+  `profileHref` and `showNotifications` (the client area has neither) and a Payments icon.
+- Admin: Clients page "Client area access" per client (invite, remove); project page "Client
+  updates" card (what the client sees, publish, withdraw); Settings "Studio bank details for
+  clients".
+- Auth email template `supabase/templates/magic_link.html` + `[auth.email.template.magic_link]`
+  (local; not pushed to hosted).
+- Tests: pgTAP `117_client_area` (165); `100` adjusted for client-only milestone readers; Vitest
+  `home-path.test.ts`, `client-area/constants.test.ts`, `client-area/schemas.test.ts`; e2e
+  `tests/e2e/client-area.spec.ts` (admin invite through the UI, code sign-in via Mailpit,
+  isolation between two clients, revocation, 375px, unknown email creates no account). E2E
+  cleanup also removes client records with e2e emails.
+- Review fixes (2026-11-18, same migration edited in place, never applied outside local): client
+  accounts cannot save an editor profile or apply (ES403 in `save_editor_profile` and
+  `submit_editor_application`, trigger on `editor_applications`); no deadline shown to clients;
+  draft projects hidden; `approved` reads "Finalising"; users of an archived client lose access;
+  withdrawals immutable; `*_by` columns may be nulled by profile deletion; OTP 8 digits / 10
+  minutes locally; per-email send limit gets the generic message; `next` checked with
+  `isClientPath`; failed invite rollback logged; `100` uses an explicit allow-list; RUNBOOKS §9
+  "Client invitations"; pgTAP `117` grew to 165 assertions.
+
 ## 2026-11-17: Editor workspace Phase 1 (workspace foundation)
 
 - **Uncommitted, pending owner review.** Plan: `docs/EDITOR_WORKSPACE_ARCHITECTURE.md` (Phase 1).

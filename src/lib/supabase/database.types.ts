@@ -1079,6 +1079,122 @@ export type Database = {
           },
         ];
       };
+      client_project_updates: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          project_id: string;
+          published: boolean;
+          withdrawn_at: string | null;
+          withdrawn_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          project_id: string;
+          published?: boolean;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          project_id?: string;
+          published?: boolean;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_project_updates_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_project_updates_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_project_updates_withdrawn_by_fkey";
+            columns: ["withdrawn_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_users: {
+        Row: {
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          user_id: string;
+        };
+        Update: {
+          client_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_users_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_users_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_users_revoked_by_fkey";
+            columns: ["revoked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_users_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       clients: {
         Row: {
           archived_at: string | null;
@@ -3276,7 +3392,21 @@ export type Database = {
         };
         Returns: number;
       };
+      admin_invite_client_user: { Args: { p_client_id: string; p_email: string }; Returns: string };
       admin_issue_client_invoice: { Args: { p_milestone_id: string }; Returns: string };
+      admin_list_client_updates: { Args: { p_project_id: string }; Returns: Json };
+      admin_list_client_users: {
+        Args: { p_client_id?: string };
+        Returns: {
+          client_id: string;
+          created_at: string;
+          email: string;
+          id: string;
+          last_sign_in_at: string;
+          revoked_at: string;
+          user_id: string;
+        }[];
+      };
       admin_list_interests: {
         Args: { p_opportunity_id: string };
         Returns: {
@@ -3334,6 +3464,10 @@ export type Database = {
         }[];
       };
       admin_preview_cancellation_settlement: { Args: { p_project_id: string }; Returns: Json };
+      admin_publish_client_update: {
+        Args: { p_body: string; p_project_id: string };
+        Returns: string;
+      };
       admin_publish_opportunity: {
         Args: {
           p_closes_at?: string;
@@ -3420,6 +3554,7 @@ export type Database = {
         Args: { p_grant_id: string; p_reason?: string };
         Returns: undefined;
       };
+      admin_revoke_client_user: { Args: { p_client_user_id: string }; Returns: undefined };
       admin_revoke_project_access: {
         Args: { p_editor_id: string; p_project_id: string };
         Returns: undefined;
@@ -3437,6 +3572,7 @@ export type Database = {
         Args: { p_asset_id: string; p_value: boolean };
         Returns: undefined;
       };
+      admin_set_bank_details: { Args: { p_details: string }; Returns: undefined };
       admin_set_business_timezone: { Args: { p_timezone: string }; Returns: undefined };
       admin_set_editor_access: {
         Args: {
@@ -3512,11 +3648,24 @@ export type Database = {
         Returns: undefined;
       };
       admin_withdraw_adjustment: { Args: { p_adjustment_id: string }; Returns: undefined };
+      admin_withdraw_client_update: { Args: { p_update_id: string }; Returns: undefined };
       admin_withdraw_offer: {
         Args: { p_assignment_id: string; p_message?: string };
         Returns: undefined;
       };
       clear_my_avatar: { Args: Record<PropertyKey, never>; Returns: undefined };
+      client_get_payment_info: { Args: Record<PropertyKey, never>; Returns: Json };
+      client_get_project: { Args: { p_project_id: string }; Returns: Json };
+      client_list_projects: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          client_status: string;
+          created_at: string;
+          id: string;
+          last_update_at: string;
+          title: string;
+        }[];
+      };
       editor_acknowledge_revision: {
         Args: { p_revision_id: string; p_start?: boolean };
         Returns: undefined;
@@ -3686,6 +3835,7 @@ export type Database = {
       };
       mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
       mark_notification_read: { Args: { p_id: string }; Returns: undefined };
+      my_client_status: { Args: Record<PropertyKey, never>; Returns: string };
       respond_to_application_request: {
         Args: { p_request_id: string; p_response: string; p_response_link?: string };
         Returns: undefined;
