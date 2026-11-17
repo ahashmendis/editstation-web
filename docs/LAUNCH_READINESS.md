@@ -8,7 +8,9 @@ blocks the limited public launch, **F** = blocks the full production launch. Who
 and domain providers, with the owner's approval).
 
 "Built" means implemented and tested on the local stack (pgTAP, unit tests, local Playwright).
-Nothing has run on hosted infrastructure, and nothing here is "production-ready" yet.
+A hosted Supabase project and Vercel deployment were created on 2026-11-17 (first admin with MFA
+works); the hosted smoke test, backups, email sender and everything else below remain open, and
+nothing here is "production-ready" yet.
 
 ## 0. Three milestones
 
@@ -74,10 +76,10 @@ Nothing has run on hosted infrastructure, and nothing here is "production-ready"
 
 | Item                                                    | Status                                                                            | Outstanding work                                                                                      | Blocks                                | Who             | Depends on    |
 | ------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------- | ------------- |
-| Hosted Supabase project                                 | None                                                                              | Create project; choose a plan with backups; region; apply migrations (owner approval each time)       | P                                     | Owner, Provider | —             |
-| Vercel project                                          | None                                                                              | Create, set `NEXT_PUBLIC_*` vars only, production branch rules, domain                                | P                                     | Owner, Provider | Domain        |
-| Auth configuration                                      | Local only                                                                        | TOTP MFA on, email confirmations on, site URL and redirects set, password policy, auth rate limits    | P                                     | Owner, Claude   | Hosting, SMTP |
-| Admin account and MFA enrolment                         | Local flow only                                                                   | Create the first admin on hosted, enrol TOTP, store recovery per runbook                              | P                                     | Owner           | Hosting       |
+| Hosted Supabase project                                 | Created 2026-11-17; 55 migrations applied                                         | Create project; choose a plan with backups; region; apply migrations (owner approval each time)       | P                                     | Owner, Provider | —             |
+| Vercel project                                          | Created and deployed 2026-11-17 (CLI)                                             | Create, set `NEXT_PUBLIC_*` vars only, production branch rules, domain                                | P                                     | Owner, Provider | Domain        |
+| Auth configuration                                      | Pushed 2026-11-17 (no templates)                                                  | TOTP MFA on, email confirmations on, site URL and redirects set, password policy, auth rate limits    | P                                     | Owner, Claude   | Hosting, SMTP |
+| Admin account and MFA enrolment                         | Done on hosted 2026-11-17                                                         | Create the first admin on hosted, enrol TOTP, store recovery per runbook                              | P                                     | Owner           | Hosting       |
 | Hosted Postgres "permission denied" crash re-check (S4) | Mitigated by a pgTAP guardrail locally                                            | Re-check on the hosted image                                                                          | P                                     | Claude          | Hosting       |
 | Timed rules schedule                                    | `private.apply_timed_rules` runs when admin screens load; `pg_cron` not scheduled | Schedule `pg_cron` on hosted (owner approval)                                                         | F                                     | Claude, Owner   | Hosting       |
 | Email notifications                                     | In-app bell only; email "queued" in design (KB10)                                 | Build and send email notifications via the SMTP provider                                              | F                                     | Claude          | SMTP          |
@@ -131,10 +133,13 @@ Nothing has run on hosted infrastructure, and nothing here is "production-ready"
 
 **Internal pilot (small group, controlled):**
 
-1. A hosted Supabase project and a Vercel deployment (neither exists), approved step by step.
+1. ~~A hosted Supabase project and a Vercel deployment~~ Done 2026-11-17 (project
+   `jatxlruwgopzoetqegmo`, https://editstation.vercel.app). Still to do: hosted smoke test, GitHub
+   auto-deploy, confirm the Vercel plan allows this use.
 2. A way to send auth emails (SMTP) so editors can confirm their email; this needs a sender domain
    or at least a provider account.
-3. First admin with MFA on hosted, plus a hosted backup in place.
+3. ~~First admin with MFA on hosted~~ Done 2026-11-17. Still to do: a hosted backup tier and a
+   restore drill.
 4. A basic written agreement with pilot editors and handling of their data, with counsel input.
 5. The routine for paying editors and invoicing clients (process, not code), a short turnaround
    policy, and a hosted smoke test.

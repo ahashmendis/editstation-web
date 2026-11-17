@@ -4,8 +4,11 @@ Operational procedures for EDITSTATION (Phase 11). Items marked **TODO (owner)**
 or a fact only the owner can supply; do not fill them in from guesses. Hosted operations (anything
 touching a hosted Supabase project or Vercel) need owner approval every time.
 
-As of 2026-11-15 there is **no hosted environment**: no Supabase project, no Vercel project, no
-GitHub remote. Procedures below are written for local use now and list what changes once hosting
+As of 2026-11-17 a hosted Supabase project (`jatxlruwgopzoetqegmo`, ap-south-1) and a Vercel
+project (`editstation`, https://editstation.vercel.app) exist; the GitHub remote is
+`ahashmendis/editstation-web`. Hosted auth config is pushed with `supabase config push` (the
+`[remotes.production]` block in `supabase/config.toml`). Deleting and recreating a user cascades
+away their `admin_users` row: re-grant with `select private.grant_admin_by_email(...)`. Procedures below are written for local use now and list what changes once hosting
 exists.
 
 ## 1. Backup and restore

@@ -164,7 +164,11 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
 - **Phase 4 admin screens have not been checked in a signed-in browser session** (pgTAP and unit
   tests only). The app shell likewise has only been seen on a temporary page.
 - `main` is pushed to GitHub (`ahashmendis/editstation-web`, 2026-11-15) and CI is green (app,
-  pgTAP, e2e). No Vercel or hosted Supabase project yet.
+  pgTAP, e2e). Hosted (2026-11-17): Supabase project `editstation` (ref `jatxlruwgopzoetqegmo`,
+  ap-south-1) with all 55 migrations applied, and a Vercel production deployment at
+  https://editstation.vercel.app (CLI deploys; GitHub auto-deploy not connected). First admin
+  created with MFA. Auth config pushed from `supabase/config.toml` `[remotes.production]` (site URL,
+  redirect, password rules). Email templates not pushed (free tier, default sender, org members only).
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens
@@ -219,7 +223,8 @@ Swept every server action (15 files), page gate, route handler and error path. F
 ## KB §16 acceptance criteria: evidence
 
 pgTAP files are in `supabase/tests/database/`; e2e in `tests/e2e/`. "Met" means implemented and
-tested locally; nothing has run on hosted infrastructure.
+tested locally. Hosted stack exists since 2026-11-17 (see Hosted note above); a hosted smoke test,
+backup tier and restore drill are still outstanding.
 
 | KB §16 criterion                                                                         | Evidence                                                                                                              | Status                                                                                   |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
