@@ -416,5 +416,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 project_id = "jatxlruwgopzoetqegmo"
 
 [remotes.production.auth]
-site_url = "https://editstation.vercel.app"
-additional_redirect_urls = ["https://editstation.vercel.app/**"]
+site_url = "https://www.editstation.work"
+additional_redirect_urls = [
+  "https://www.editstation.work/**",
+  "https://editstation.work/**",
+  "https://editstation.vercel.app/**",
+]
