@@ -12,7 +12,7 @@ import { getAccess, homePathFor } from "@/lib/auth/access";
 export function HeaderAccountLink({ className }: { className: string }) {
   const signIn = (
     <Link href="/sign-in" className={className}>
-      Sign in
+      Editor sign-in
     </Link>
   );
   return (

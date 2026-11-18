@@ -5,6 +5,7 @@ import {
   Briefcase,
   ClipboardCheck,
   FolderKanban,
+  FolderPlus,
   History,
   Inbox,
   LayoutDashboard,
@@ -22,8 +23,8 @@ import { useId, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { isCurrent } from "./is-current";
-import { toSections, type BaseNavItem, type NavGroup } from "./nav-sections";
+import { isMostSpecificCurrent } from "./is-current";
+import { isNavGroup, toSections, type BaseNavItem, type NavGroup } from "./nav-sections";
 
 // Icons are looked up by name because server components cannot pass component functions to
 // client components.
@@ -42,6 +43,7 @@ const ICONS = {
   feedback: MessageSquareText,
   notifications: Bell,
   payments: Receipt,
+  newProject: FolderPlus,
 } as const;
 
 export type NavIcon = keyof typeof ICONS;
@@ -59,12 +61,13 @@ export function NavLinks({
 }) {
   const pathname = usePathname();
   const id = useId();
+  const allItems = items.flatMap((entry) => (isNavGroup(entry) ? entry.items : [entry]));
 
   const list = (sectionItems: NavItem[], labelledBy?: string) => (
     <ul className="grid gap-1" aria-labelledby={labelledBy}>
       {sectionItems.map((item) => {
         const Icon = ICONS[item.icon];
-        const current = isCurrent(pathname, item);
+        const current = isMostSpecificCurrent(pathname, item, allItems);
         return (
           <li key={item.href}>
             <Link

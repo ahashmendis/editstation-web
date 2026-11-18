@@ -10,10 +10,12 @@ import { NO_INDEX } from "@/lib/seo/site";
 // Private area: never indexed.
 export const metadata: Metadata = { robots: NO_INDEX };
 
-// Client navigation: no editor, notification or profile links (none exist for clients in C1).
+// Client navigation: no editor, notification or profile links (none exist for clients yet).
 const CLIENT_NAV: NavItem[] = [
   { href: "/client", label: "Overview", icon: "dashboard", exact: true },
   { href: "/client/projects", label: "Projects", icon: "projects" },
+  { href: "/client/projects/new", label: "New project", icon: "newProject" },
+  { href: "/client/requests", label: "My requests", icon: "inquiries" },
   { href: "/client/payments", label: "Payments", icon: "payments" },
 ];
 

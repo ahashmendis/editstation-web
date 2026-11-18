@@ -310,7 +310,15 @@ Draft and archived projects are hidden from clients, and no deadline is shown (a
 date is an open owner item). Users of an archived client lose access until it is restored. A
 client account can never apply as an editor. Payment status per client
 milestone: Not invoiced yet, Awaiting payment, Received and being confirmed, Paid, Refunded.
-Submit-a-project and messages are C2.
+
+**New project (C2a, 2026-11-18, pending review):** a client sends a request from `/client/projects/new`
+(the public form's project fields; contact details come from the client's own account and client record). It is a lead in
+`client_inquiries` (status `new`, linked to the client) and follows the inquiry workflow in §1;
+admins see "From client: X (client account)" and the usual notification. The client follows it
+under `/client/requests`: new -> Received; reviewing, contacted, in discussion -> In review;
+converted -> Accepted as a project (linked once the project leaves draft); declined, closed, spam
+-> Not taken forward. Conversion always links the project to that client. At most 10 requests per
+client per 24 hours. Messages are C2b.
 
 ## Payout details (decision E; Phase 12E, locked)
 

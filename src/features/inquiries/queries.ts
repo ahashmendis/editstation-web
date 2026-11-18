@@ -37,7 +37,9 @@ export async function listInquiries(filter: InquiryFilter) {
   const supabase = await createClient();
   let query = supabase
     .from("client_inquiries")
-    .select("id, contact_name, company, email, service_type_label, status, submitted_at")
+    .select(
+      "id, contact_name, company, email, service_type_label, status, submitted_at, client_id, client:clients(name)",
+    )
     .order("submitted_at", { ascending: false })
     .limit(200);
   const statuses = FILTER_STATUSES[filter];
@@ -49,7 +51,8 @@ export async function getInquiryDetail(inquiryId: string) {
   const supabase = await createClient();
   const { data: inquiry, error } = await supabase
     .from("client_inquiries")
-    .select("*")
+    // client: the client account the request came from (client area), if any.
+    .select("*, client:clients(id, name, company)")
     .eq("id", inquiryId)
     .maybeSingle();
   if (error) throw error;

@@ -62,6 +62,50 @@ export function isClosedStatus(key: string): boolean {
   return key === "completed" || key === "cancelled";
 }
 
+// Project requests (leads the client submitted). The database maps the real inquiry status to one
+// of these keys (private.client_request_status_key); spam is never revealed.
+export const REQUEST_STATUS_KEYS = [
+  "received",
+  "in_review",
+  "accepted",
+  "not_taken_forward",
+] as const;
+export type RequestStatusKey = (typeof REQUEST_STATUS_KEYS)[number];
+
+const REQUEST_STATUS: Record<RequestStatusKey, { label: string; tone: StatusTone; hint: string }> =
+  {
+    received: {
+      label: "Received",
+      tone: "neutral",
+      hint: "The studio has your request and will review it.",
+    },
+    in_review: {
+      label: "In review",
+      tone: "info",
+      hint: "The studio is reviewing your request and may contact you.",
+    },
+    accepted: {
+      label: "Accepted as a project",
+      tone: "success",
+      hint: "The studio is setting this up as a project.",
+    },
+    not_taken_forward: {
+      label: "Not taken forward",
+      tone: "neutral",
+      hint: "The studio is not taking this request forward.",
+    },
+  };
+
+export function requestStatus(key: string): { label: string; tone: StatusTone; hint: string } {
+  return (
+    REQUEST_STATUS[key as RequestStatusKey] ?? {
+      label: "Received",
+      tone: "neutral",
+      hint: "The studio will review your request.",
+    }
+  );
+}
+
 export const PAYMENT_STATUS_KEYS = [
   "not_invoiced",
   "awaiting_payment",

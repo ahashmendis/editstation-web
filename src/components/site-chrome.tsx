@@ -28,6 +28,9 @@ export function SiteHeader() {
           <Link href="/sign-up" className={navLink}>
             Join as an editor
           </Link>
+          <Link href="/client/sign-in" className={navLink}>
+            Client sign-in
+          </Link>
           <Link
             href="/sign-in"
             className={`${navLink} text-muted-foreground hover:text-foreground`}

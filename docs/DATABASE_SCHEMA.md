@@ -611,6 +611,44 @@ email)` (links an existing account created by the invitation flow: confirmed ema
   exactly `client_get_project` and `client_get_payment_info` among the non-admin functions that
   read milestones.
 
+## Client area C2a: a client starts a new project _(2026-11-18, `20261117194443_client_area_c2a_submit_project`, uncommitted, pending review)_
+
+- **`client_inquiries.client_id`** (nullable FK `clients`, `on delete restrict`; partial index
+  `(client_id, submitted_at desc) where client_id is not null`). Null for public-form inquiries.
+  Set only by `client_submit_project`; trigger `client_inquiries_client_guard` (ES409) refuses any
+  later change except following a merge of that client (trigger
+  `clients_move_client_inquiries_on_merge` moves the source client's requests to the kept client,
+  like its users). Admin-only visibility unchanged (RLS select for MFA admins; no API writes).
+- **`client_submit_project(service_type, description, expected_deliverables, budget_range_id,
+expected_deadline, client_notes, links, privacy_notice_version)`** returns the new inquiry id.
+  `private.require_client()` (ES401/ES403). Creates a **lead** (`client_inquiries` status `new`,
+  plus `client_inquiry_links`), never a project. Same validation as `submit_client_inquiry`
+  (description, active service type, active budget option or "Prefer to discuss", privacy notice
+  version, at most 10 https links; over-long or malformed input is ES422). Contact name
+  (account full name, else the client name), company (client), email (account email) and phone
+  (account phone, else the client phone) come from the caller's account and client record; there
+  is no parameter for them (email and client are fixed by the database; name and phone are the
+  caller's own, editable profile values). The client row is locked `FOR NO KEY UPDATE` and
+  re-checked (archived or merged: ES409); a caller without a profile email is ES403. Limit: 10 per client per 24 hours (ES409). The audit trigger writes
+  `inquiry.submitted` (actor = the client user, details `from`, `to`, `client_id`), so admins get
+  the existing `inquiry_new` notification.
+- **`client_list_requests()`** returns (id, service_type_label, description, expected_deadline,
+  submitted_at, request_status, project_id) for the caller's client, newest first (max 200).
+  `request_status` = `private.client_request_status_key(inquiry_status)`: new -> received;
+  reviewing, contacted, in_discussion -> in_review; converted -> accepted; declined, closed, spam
+  -> not_taken_forward (spam is never revealed). `project_id` only when the converted project is
+  visible under the C1 rules (this client, past draft, not archived). Never the raw status,
+  notes, admin identities, contact details, budget or other clients' rows.
+- **`admin_convert_inquiry`** replaced (otherwise unchanged): a lead with `client_id` is converted
+  for that client (`project_internal.client_id`); naming another client is ES409, an archived
+  client is ES409 ("restore the client first"); the client is locked `FOR SHARE` before the
+  inquiry (merge lock order) and a `deadlock_detected` becomes ES409 "try again". Merging moves
+  requests to the kept client and logs `client_inquiry.moved_on_merge` (ids and count).
+- `private.audit_client_inquiries()` replaced: adds `client_id` to the details when set.
+- **Tests:** pgTAP `118_client_area_c2a` (97 assertions as anon, applicant, editor A, editor B,
+  client X user, client Y user, revoked client user, archived client's user, admin with and
+  without MFA).
+
 ## RLS summary
 
 See SECURITY_AND_PRIVACY.md for the full model and the per-identity access matrix.

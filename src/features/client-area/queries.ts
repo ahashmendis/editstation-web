@@ -6,9 +6,11 @@ import {
   adminClientUpdatesSchema,
   clientPaymentInfoSchema,
   clientProjectSchema,
+  clientRequestRowSchema,
   type AdminClientUpdates,
   type ClientPaymentInfo,
   type ClientProject,
+  type ClientRequestRow,
 } from "./schemas";
 
 // Client reads go only through the client_* database functions (clients have no table grants).
@@ -42,6 +44,14 @@ export async function getClientPaymentInfo(): Promise<ClientPaymentInfo> {
   const { data, error } = await supabase.rpc("client_get_payment_info");
   if (error) throw error;
   return clientPaymentInfoSchema.parse(data);
+}
+
+/** The caller's client's project requests (leads), newest first, client-safe fields only. */
+export async function listClientRequests(): Promise<ClientRequestRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("client_list_requests");
+  if (error) throw error;
+  return clientRequestRowSchema.array().parse(data ?? []);
 }
 
 // ---------------------------------------------------------------------------

@@ -3,6 +3,31 @@
 Detailed implementation and verification history, newest first. Read only when you need the
 specifics of an earlier phase; `CURRENT_STATUS.md` is the session starting point.
 
+## 2026-11-18: Client area C2a (client starts a new project)
+
+- **Uncommitted, pending owner review; local only.** Spec item "Submit a project" of C2 (messages
+  not built).
+- Migration `20261117194443_client_area_c2a_submit_project`: `client_inquiries.client_id` (guarded;
+  follows client merges, logged as `client_inquiry.moved_on_merge`), `client_submit_project`
+  (lead only; email and client from the database, name and phone from the caller's profile; 10
+  per client per 24 h, ES409; client row locked `FOR NO KEY UPDATE` and re-checked), `client_list_requests` (client-safe projection with mapped
+  status), `private.client_request_status_key`, `admin_convert_inquiry` keeps the client link
+  (archived client ES409; client locked before the inquiry; deadlock becomes ES409),
+  inquiry audit details gain `client_id`. Details in DATABASE_SCHEMA "Client area C2a".
+- App: `/client/projects/new` (shares `ProjectFields`/`ReferenceLinksFields`, extracted from the
+  public inquiry form into `src/features/inquiries/components/project-fields.tsx`, and
+  `inquirySchema`), `/client/requests`; client nav "New project" and "My requests"; New project
+  and My requests buttons on the overview and projects list. The nav now marks only the most
+  specific matching item (`isMostSpecificCurrent`). Admin inquiries list and detail show "From
+  client: X (client account)"; the convert form hides the client picker for such leads.
+- Accessibility: the service-type and reference-link errors are tied to their inputs
+  (`aria-describedby`, `aria-invalid` on the link inputs); the privacy checkbox error likewise on
+  the client form. Header buttons shared as `NewProjectActions` (client-ui).
+- Tests: pgTAP `118_client_area_c2a` (97); Vitest request status labels, request schema and
+  projection, `isMostSpecificCurrent`, `submitClientProjectAction` (honeypot, privacy checkbox,
+  kept input, only project fields sent, user-safe errors); e2e "a client sends a new project; the admin sees it from
+  the client and converts it" in `tests/e2e/client-area.spec.ts`.
+
 ## 2026-11-17: Client area C1
 
 - **Uncommitted, pending owner review; local only.** Spec

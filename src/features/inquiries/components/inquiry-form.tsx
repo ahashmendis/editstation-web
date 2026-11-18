@@ -1,29 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState, startTransition, type FormEvent } from "react";
+import { useActionState, startTransition, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Field, FormMessage, TextareaField } from "@/features/authentication/components/form-parts";
 import { initialFormState } from "@/features/authentication/schemas";
 
 import { submitInquiryAction } from "../actions";
-import { MAX_REFERENCE_LINKS } from "../constants";
+import { ProjectFields, ReferenceLinksFields, type InquiryFormOptions } from "./project-fields";
 
-const selectClass =
-  "border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm aria-invalid:border-destructive";
-const inputClass = "border-input h-9 rounded-md border bg-transparent px-3 text-sm";
-
-export function InquiryForm({
-  services,
-  budgets,
-}: {
-  services: { code: string; label: string }[];
-  budgets: { id: string; label: string; currency: string }[];
-}) {
+export function InquiryForm({ services, budgets }: InquiryFormOptions) {
   const [state, formAction, pending] = useActionState(submitInquiryAction, initialFormState);
-  const [links, setLinks] = useState([{ url: "", label: "" }]);
 
   // No automatic reset, so a validation error never wipes what the client typed.
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -78,66 +66,7 @@ export function InquiryForm({
 
       <section className="grid gap-4">
         <h2 className="text-lg font-semibold">Your project</h2>
-        <div className="grid gap-2">
-          <Label htmlFor="serviceType">Type of editing</Label>
-          <select
-            id="serviceType"
-            name="serviceType"
-            className={selectClass}
-            defaultValue={state.values?.serviceType ?? ""}
-            aria-invalid={err("serviceType") ? true : undefined}
-            required
-          >
-            <option value="" disabled>
-              Choose…
-            </option>
-            {services.map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-          {err("serviceType") ? (
-            <p className="text-destructive text-sm">{err("serviceType")}</p>
-          ) : null}
-        </div>
-        <TextareaField
-          name="description"
-          label="Project description"
-          hint="What is the video for, who is it for, and what footage do you have?"
-          state={state}
-          required
-        />
-        <TextareaField
-          name="expectedDeliverables"
-          label="Expected deliverables (optional)"
-          hint="For example: one 3-minute film and three 30-second cut-downs for Instagram."
-          state={state}
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor="budgetRangeId">Estimated budget</Label>
-            <select
-              id="budgetRangeId"
-              name="budgetRangeId"
-              className={selectClass}
-              defaultValue={state.values?.budgetRangeId || "discuss"}
-            >
-              {budgets.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.label}
-                </option>
-              ))}
-              <option value="discuss">Prefer to discuss</option>
-            </select>
-          </div>
-          <Field
-            name="expectedDeadline"
-            label="Expected deadline (optional)"
-            type="date"
-            state={state}
-          />
-        </div>
+        <ProjectFields services={services} budgets={budgets} state={state} />
       </section>
 
       <section className="grid gap-3">
@@ -146,57 +75,7 @@ export function InquiryForm({
           Links to videos whose style you like, or to a shared folder. Please use full https://
           links; we can arrange file transfers after we&apos;ve spoken.
         </p>
-        {links.map((link, index) => (
-          <div key={index} className="grid gap-2 sm:grid-cols-[2fr_1fr_auto] sm:items-end">
-            <div className="grid gap-1">
-              <Label htmlFor={`linkUrl-${index}`}>Link {index + 1}</Label>
-              <input
-                id={`linkUrl-${index}`}
-                name="linkUrl"
-                type="url"
-                value={link.url}
-                onChange={(e) =>
-                  setLinks(links.map((l, i) => (i === index ? { ...l, url: e.target.value } : l)))
-                }
-                placeholder="https://"
-                className={inputClass}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor={`linkLabel-${index}`}>What to look at (optional)</Label>
-              <input
-                id={`linkLabel-${index}`}
-                name="linkLabel"
-                value={link.label}
-                onChange={(e) =>
-                  setLinks(links.map((l, i) => (i === index ? { ...l, label: e.target.value } : l)))
-                }
-                className={inputClass}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setLinks(links.filter((_, i) => i !== index))}
-              aria-label={`Remove link ${index + 1}`}
-            >
-              Remove
-            </Button>
-          </div>
-        ))}
-        {err("links") ? <p className="text-destructive text-sm">{err("links")}</p> : null}
-        {links.length < MAX_REFERENCE_LINKS ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="justify-self-start"
-            onClick={() => setLinks([...links, { url: "", label: "" }])}
-          >
-            Add a link
-          </Button>
-        ) : null}
+        <ReferenceLinksFields state={state} />
         <TextareaField name="clientNotes" label="Anything else? (optional)" state={state} />
       </section>
 

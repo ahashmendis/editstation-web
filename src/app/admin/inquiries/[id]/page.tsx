@@ -55,7 +55,11 @@ async function InquiryContent({
     canConvert ? getProjectFormOptions() : null,
   ]);
 
+  const fromClient = q.client ? [q.client.name, q.client.company].filter(Boolean).join(", ") : null;
   const rows: [string, string | null][] = [
+    ...(fromClient
+      ? ([["From client", `${fromClient} (client account)`]] as [string, string][])
+      : []),
     ["Company / agency", q.company],
     ["Email", q.email],
     ["Phone", q.phone],
@@ -151,8 +155,9 @@ async function InquiryContent({
           <CardHeader>
             <CardTitle>Convert to project</CardTitle>
             <CardDescription>
-              Creates a draft project and a client record from this inquiry in one step. Leave a
-              field empty to use what the client sent. You can finish the brief on the next page.
+              {q.client
+                ? "Creates a draft project for this client account's client in one step. Leave a field empty to use what the client sent. You can finish the brief on the next page."
+                : "Creates a draft project and a client record from this inquiry in one step. Leave a field empty to use what the client sent. You can finish the brief on the next page."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -186,22 +191,34 @@ async function InquiryContent({
                   <Label htmlFor="convert-deadline">Deadline (optional)</Label>
                   <Input id="convert-deadline" name="deadline" type="date" />
                 </div>
-                <div className="grid gap-2 sm:col-span-2">
-                  <Label htmlFor="convert-client">Client</Label>
-                  <select
-                    id="convert-client"
-                    name="clientId"
-                    className={selectClassName}
-                    defaultValue=""
-                  >
-                    <option value="">Match or create from this inquiry</option>
-                    {convertOptions.clients.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {[c.name, c.company].filter(Boolean).join(", ")} ({c.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {q.client ? (
+                  // The database converts a client-account lead for its own client (empty
+                  // clientId = no other client chosen).
+                  <>
+                    <input type="hidden" name="clientId" value="" />
+                    <p className="text-muted-foreground text-sm sm:col-span-2">
+                      Client: {fromClient}. A request from a client account always becomes a project
+                      for that client, so its users can follow it.
+                    </p>
+                  </>
+                ) : (
+                  <div className="grid gap-2 sm:col-span-2">
+                    <Label htmlFor="convert-client">Client</Label>
+                    <select
+                      id="convert-client"
+                      name="clientId"
+                      className={selectClassName}
+                      defaultValue=""
+                    >
+                      <option value="">Match or create from this inquiry</option>
+                      {convertOptions.clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {[c.name, c.company].filter(Boolean).join(", ")} ({c.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </AdminActionForm>
           </CardContent>

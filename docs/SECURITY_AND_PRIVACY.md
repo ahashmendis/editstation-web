@@ -443,6 +443,21 @@ Audited. The first admin must then enrol TOTP before any admin data becomes visi
   left to read.
 - **Bank details:** studio business data, admin-editable, hidden until set; the audit row records
   only that the field changed. Unrelated to editor payout details (still locked, decision E).
+- **New project (C2a):** `client_submit_project` creates a lead only (an admin still converts
+  it). The form has no contact fields. The email and the client link come from the database (the
+  caller's account email and active membership), so a client cannot submit as someone else; the
+  contact name and phone come from the caller's own profile (which the caller can edit), falling
+  back to the client record. Abuse limits: 10 requests per client per 24
+  hours (ES409), the public form's input limits, and the app keeps the honeypot. The anonymous
+  form's per-IP and global hourly caps are not applied (the caller is an invited, authenticated
+  client). `client_list_requests` returns only what the client wrote, the date, a mapped status
+  (spam reads "Not taken forward") and a project id once that project is visible to the client;
+  never notes, raw status, admin identities or contact data. A client-account lead is always
+  converted for that client (an archived client is ES409 "restore first"). Concurrency: submission
+  takes a `FOR NO KEY UPDATE` lock on the client row (serialises the daily limit without blocking
+  inserts that reference the client) and re-checks archive/merge under it; conversion locks a
+  client-linked lead's client before the inquiry (same order as a merge) and turns a deadlock into
+  ES409 "try again".
 - **Open (owner):** client terms and privacy notice (counsel), OTP email wording, client session
   length, optional client two-step verification, and a client-facing delivery date (separate from
   the editor deadline). Runbook: RUNBOOKS §9. The OTP template

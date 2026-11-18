@@ -5,3 +5,16 @@ export function isCurrent(pathname: string, item: { href: string; exact?: boolea
   if (item.exact) return false;
   return pathname.startsWith(`${item.href}/`);
 }
+
+/**
+ * Whether `item` is the current page and no other item matches the path more specifically (so
+ * "/client/projects/new" marks "New project", not also "Projects").
+ */
+export function isMostSpecificCurrent(
+  pathname: string,
+  item: { href: string; exact?: boolean },
+  items: readonly { href: string; exact?: boolean }[],
+) {
+  if (!isCurrent(pathname, item)) return false;
+  return !items.some((other) => other.href.length > item.href.length && isCurrent(pathname, other));
+}

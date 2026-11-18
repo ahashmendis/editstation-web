@@ -2,13 +2,21 @@
 
 import { redirect } from "next/navigation";
 
+import { userMessageFromDbError } from "@/features/applications/db-errors";
 import { keptValues, validationError, type FormState } from "@/features/authentication/schemas";
+import { PRIVACY_NOTICE_VERSION } from "@/features/inquiries/constants";
 import { getAccess, homePathFor } from "@/lib/auth/access";
 import { isClientPath } from "@/lib/auth/home-path";
 import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 
-import { requestCodeSchema, verifyCodeSchema } from "./schemas";
+import {
+  clientProjectRequestInput,
+  clientProjectRequestKeptValues,
+  clientProjectRequestSchema,
+  requestCodeSchema,
+  verifyCodeSchema,
+} from "./schemas";
 
 // Client sign-in by emailed one-time code (design "Accounts and sign-in"). Only accounts an admin
 // invited exist, and shouldCreateUser is false, so this flow can never create an account. The
@@ -82,4 +90,58 @@ export async function verifyClientCodeAction(
       ? safeNextPath(next, home)
       : home;
   redirect(destination);
+}
+
+// ---------------------------------------------------------------------------
+// New project (a request: a lead the studio reviews, never a project by itself)
+// ---------------------------------------------------------------------------
+
+const REQUEST_SENT: FormState = {
+  status: "success",
+  message:
+    "Thank you. The studio will review your request and get in touch about scope, timing and pricing. You can follow it under My requests.",
+};
+
+const nullable = <T>(value: T | null) => value as T;
+
+/**
+ * Sends a project request for the signed-in client. Contact details are not part of the form:
+ * the database takes them from the client's own account (client_submit_project), which also
+ * checks the client's access and the daily limit.
+ */
+export async function submitClientProjectAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  // Honeypot, as on the public form: pretend success so bots learn nothing.
+  if (String(formData.get("website") ?? "") !== "") return REQUEST_SENT;
+
+  const values = clientProjectRequestKeptValues(formData);
+  const parsed = clientProjectRequestSchema.safeParse(clientProjectRequestInput(formData));
+  if (!parsed.success) return validationError(parsed.error, values);
+
+  if (formData.get("acceptPrivacy") !== "on") {
+    return {
+      status: "error",
+      message: "Please confirm you've read the privacy notice.",
+      fieldErrors: { acceptPrivacy: ["Required to send your request."] },
+      values,
+    };
+  }
+
+  const v = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("client_submit_project", {
+    p_service_type: v.serviceType,
+    p_description: v.description,
+    p_expected_deliverables: nullable(v.expectedDeliverables),
+    p_budget_range_id: nullable(v.budgetRangeId),
+    p_expected_deadline: nullable(v.expectedDeadline),
+    p_client_notes: nullable(v.clientNotes),
+    p_links: v.links,
+    p_privacy_notice_version: PRIVACY_NOTICE_VERSION,
+  });
+  if (error) return { status: "error", message: userMessageFromDbError(error), values };
+
+  return REQUEST_SENT;
 }

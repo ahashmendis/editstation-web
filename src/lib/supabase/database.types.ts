@@ -794,6 +794,7 @@ export type Database = {
           budget_currency: string;
           budget_label: string;
           budget_range_id: string | null;
+          client_id: string | null;
           client_notes: string | null;
           company: string | null;
           contact_name: string;
@@ -818,6 +819,7 @@ export type Database = {
           budget_currency?: string;
           budget_label: string;
           budget_range_id?: string | null;
+          client_id?: string | null;
           client_notes?: string | null;
           company?: string | null;
           contact_name: string;
@@ -841,6 +843,7 @@ export type Database = {
           budget_currency?: string;
           budget_label?: string;
           budget_range_id?: string | null;
+          client_id?: string | null;
           client_notes?: string | null;
           company?: string | null;
           contact_name?: string;
@@ -866,6 +869,13 @@ export type Database = {
             columns: ["budget_range_id"];
             isOneToOne: false;
             referencedRelation: "budget_ranges";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_inquiries_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
             referencedColumns: ["id"];
           },
           {
@@ -3665,6 +3675,31 @@ export type Database = {
           last_update_at: string;
           title: string;
         }[];
+      };
+      client_list_requests: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          description: string;
+          expected_deadline: string;
+          id: string;
+          project_id: string;
+          request_status: string;
+          service_type_label: string;
+          submitted_at: string;
+        }[];
+      };
+      client_submit_project: {
+        Args: {
+          p_budget_range_id: string;
+          p_client_notes: string;
+          p_description: string;
+          p_expected_deadline: string;
+          p_expected_deliverables: string;
+          p_links: Json;
+          p_privacy_notice_version: string;
+          p_service_type: string;
+        };
+        Returns: string;
       };
       editor_acknowledge_revision: {
         Args: { p_revision_id: string; p_start?: boolean };

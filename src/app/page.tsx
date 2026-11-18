@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ClientsSection } from "@/features/landing/components/clients-section";
 import { ClientsMarquee } from "@/features/landing/components/clients-marquee";
 import { ClosingCta } from "@/features/landing/components/closing-cta";
 import { Hero } from "@/features/landing/components/hero";
@@ -39,6 +40,7 @@ export default function Home() {
         <ClientsMarquee />
         <WorkSection items={WORK} />
         <Platform />
+        <ClientsSection />
         <Transparency />
         <Process />
         <ClosingCta />

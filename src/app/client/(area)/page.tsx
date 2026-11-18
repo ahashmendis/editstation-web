@@ -11,7 +11,7 @@ import {
   isClosedStatus,
   isPaymentDue,
 } from "@/features/client-area/constants";
-import { ClientStatusPill } from "@/features/client-area/components/client-ui";
+import { ClientStatusPill, NewProjectActions } from "@/features/client-area/components/client-ui";
 import { getClientPaymentInfo, listClientProjects } from "@/features/client-area/queries";
 import { requireClient } from "@/lib/auth/access";
 
@@ -36,7 +36,11 @@ async function Overview() {
   );
 
   return (
-    <AreaShell title="Overview" subtitle="Your projects with the studio at a glance.">
+    <AreaShell
+      title="Overview"
+      subtitle="Your projects with the studio at a glance."
+      actions={<NewProjectActions />}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>
@@ -66,7 +70,8 @@ async function Overview() {
                 </Link>
               }
             >
-              When the studio starts a project for you, it appears here.
+              When the studio starts a project for you, it appears here. To ask for a new one, use
+              New project.
             </EmptyState>
           ) : (
             <ul className="divide-y">

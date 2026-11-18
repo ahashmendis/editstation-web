@@ -457,3 +457,21 @@ export function revokeClientUserDirect(adminId: string, email: string) {
     commit;
   `);
 }
+
+/**
+ * Completes a converted draft (one deliverable, brief instructions) and opens it through the real
+ * admin functions (aal2 admin).
+ */
+export function openProjectAsAdmin(adminId: string, projectId: string) {
+  sql(`
+    insert into public.project_deliverables (project_id, name, format) values (${lit(projectId)}, 'Main film', 'MP4');
+    begin;
+    select set_config('request.jwt.claims',
+      json_build_object('sub', ${lit(adminId)}, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+    set local role authenticated;
+    select public.admin_save_brief(${lit(projectId)},
+      '{"brief": {"instructions": "Cut the launch film"}, "change_summary": "e2e"}');
+    select public.admin_set_project_status(${lit(projectId)}, 'open', 'e2e');
+    commit;
+  `);
+}

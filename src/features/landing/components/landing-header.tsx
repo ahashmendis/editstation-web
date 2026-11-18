@@ -4,7 +4,7 @@ import { Wordmark } from "@/components/wordmark";
 import { HeaderAccountLink } from "@/features/landing/components/header-account-link";
 import { container, ctaPrimary, ctaSecondary, ctaSize, focusRing } from "@/features/landing/styles";
 
-const navLink = `${focusRing} font-landing-ui text-muted-foreground hover:text-foreground px-1 py-1 text-[0.8125rem] font-bold transition-colors`;
+const navLink = `${focusRing} font-landing-ui whitespace-nowrap text-muted-foreground hover:text-foreground px-1 py-1 text-[0.8125rem] font-bold transition-colors`;
 
 export function LandingHeader({ showWork }: { showWork: boolean }) {
   return (
@@ -22,18 +22,21 @@ export function LandingHeader({ showWork }: { showWork: boolean }) {
 
         <nav aria-label="Sections" className="hidden items-center gap-5 lg:flex">
           {showWork ? (
-            <a href="#work" className={navLink}>
+            <a href="#work" className={`${navLink} hidden xl:inline`}>
               Work
             </a>
           ) : null}
-          <a href="#platform" className={navLink}>
+          <a href="#platform" className={`${navLink} hidden xl:inline`}>
             Platform
           </a>
-          <a href="#process" className={navLink}>
+          <a href="#process" className={`${navLink} hidden xl:inline`}>
             Process
           </a>
           <Link href="/editors" className={navLink}>
             For editors
+          </Link>
+          <Link href="/client/sign-in" className={navLink}>
+            Client sign-in
           </Link>
           <HeaderAccountLink className={navLink} />
         </nav>

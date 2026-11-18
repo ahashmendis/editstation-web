@@ -188,7 +188,10 @@ needed). Phase 4 design: `docs/superpowers/specs/2026-11-13-phase4-projects-brie
   Order matters on hosted: the migration must be applied BEFORE the code is pushed (every signed-in
   request calls `my_client_status`). Open owner items: bank details, client terms and privacy
   notice, client-facing deadline and OTP wording (the 15-minute expiry, pushed to hosted 2026-11-17, also covers sign-up and reset
-  links). C2 (submit a project, messages) to C4 not started.
+  links). C2a (client starts a new project, `/client/projects/new`, `/client/requests`; migration
+  `20261117194443`) is built and reviewed locally, NOT on hosted yet (apply the migration before pushing
+  the code). Messages (C2b), the shared video review (C3) and client emails (C4) are not started.
+  The landing page has a For clients section and client sign-in links (local until pushed).
 - Not tested: hosted Supabase (MFA plan, SMTP, backups), mobile layouts in depth. Signed-in e2e
   covers inquiry submit, applicant sign-up and gates, editor A/B project isolation and admin MFA
   into `/admin` + `/admin/activity`; the offer, confirmation, submission, review and payment screens

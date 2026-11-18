@@ -64,7 +64,8 @@ async function InquiriesContent({
         <CardContent className="overflow-x-auto pt-6">
           {rows.length === 0 ? (
             <EmptyState title="No inquiries in this view">
-              Try another filter above. Inquiries sent through the public form appear here.
+              Try another filter above. Inquiries from the public form and requests from client
+              accounts appear here.
             </EmptyState>
           ) : (
             <table className="w-full text-left text-sm">
@@ -86,6 +87,11 @@ async function InquiriesContent({
                       <div className="text-muted-foreground text-xs">
                         {[row.company, row.email].filter(Boolean).join(" · ")}
                       </div>
+                      {row.client ? (
+                        <div className="text-xs font-medium">
+                          From client: {row.client.name} (client account)
+                        </div>
+                      ) : null}
                     </td>
                     <td className="py-2 pr-4">{row.service_type_label}</td>
                     <td className="py-2 pr-4">

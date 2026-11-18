@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { emailSchema } from "@/features/authentication/schemas";
+import { inquiryFormInput, inquirySchema } from "@/features/inquiries/schemas";
 
 // ---------------------------------------------------------------------------
 // Forms
@@ -16,6 +17,51 @@ export const verifyCodeSchema = z.object({
     .trim()
     .regex(/^\d{8}$/, { error: "Enter the 8-digit code from the email." }),
 });
+
+/**
+ * "New project" from a signed-in client: the public inquiry form's project fields and rules
+ * (inquirySchema), without contact details. Those come from the client's own account in the
+ * database (client_submit_project) and are never taken from the form.
+ */
+export const clientProjectRequestSchema = inquirySchema.pick({
+  serviceType: true,
+  description: true,
+  expectedDeliverables: true,
+  budgetRangeId: true,
+  expectedDeadline: true,
+  clientNotes: true,
+  links: true,
+});
+export type ClientProjectRequest = z.infer<typeof clientProjectRequestSchema>;
+
+/** Form fields for clientProjectRequestSchema (any contact fields in the form data are ignored). */
+export function clientProjectRequestInput(formData: FormData) {
+  const all = inquiryFormInput(formData);
+  return {
+    serviceType: all.serviceType,
+    description: all.description,
+    expectedDeliverables: all.expectedDeliverables,
+    budgetRangeId: all.budgetRangeId,
+    expectedDeadline: all.expectedDeadline,
+    clientNotes: all.clientNotes,
+    links: all.links,
+  };
+}
+
+/** Non-secret values to refill after a failed submit. */
+export function clientProjectRequestKeptValues(formData: FormData): Record<string, string> {
+  const keep = [
+    "serviceType",
+    "description",
+    "expectedDeliverables",
+    "budgetRangeId",
+    "expectedDeadline",
+    "clientNotes",
+  ];
+  return Object.fromEntries(
+    keep.map((name) => [name, String(formData.get(name) ?? "").slice(0, 5000)]),
+  );
+}
 
 export const inviteClientUserSchema = z.object({
   clientId: z.uuid({ error: "Choose a client." }),
@@ -91,6 +137,18 @@ export const clientPaymentInfoSchema = z.object({
   ),
 });
 export type ClientPaymentInfo = z.infer<typeof clientPaymentInfoSchema>;
+
+/** One row of client_list_requests (client-safe columns only). */
+export const clientRequestRowSchema = z.object({
+  id: z.string(),
+  service_type_label: z.string(),
+  description: z.string(),
+  expected_deadline: z.string().nullable(),
+  submitted_at: z.string(),
+  request_status: z.string(),
+  project_id: z.string().nullable(),
+});
+export type ClientRequestRow = z.infer<typeof clientRequestRowSchema>;
 
 export const adminClientUpdatesSchema = z.object({
   client_status: z.string(),

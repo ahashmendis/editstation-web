@@ -37,8 +37,11 @@ export function LandingFooter() {
             <Link href="/inquire" className={link}>
               Start a project
             </Link>
+            <Link href="/client/sign-in" className={link}>
+              Client sign-in
+            </Link>
             <Link href="/sign-in" className={link}>
-              Sign in
+              Editor and admin sign-in
             </Link>
           </nav>
           <nav aria-label="Legal" className="grid content-start gap-3">

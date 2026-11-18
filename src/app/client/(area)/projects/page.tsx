@@ -6,7 +6,7 @@ import { AreaShell, Loading } from "@/components/auth-shell";
 import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/features/applications/components/status-badge";
-import { ClientStatusPill } from "@/features/client-area/components/client-ui";
+import { ClientStatusPill, NewProjectActions } from "@/features/client-area/components/client-ui";
 import { listClientProjects } from "@/features/client-area/queries";
 import { requireClient } from "@/lib/auth/access";
 
@@ -25,12 +25,17 @@ async function ProjectsList() {
   const projects = await listClientProjects();
 
   return (
-    <AreaShell title="Projects" subtitle="Every project you have with the studio.">
+    <AreaShell
+      title="Projects"
+      subtitle="Every project you have with the studio."
+      actions={<NewProjectActions />}
+    >
       <Card>
         <CardContent>
           {projects.length === 0 ? (
             <EmptyState title="No projects yet">
               Projects the studio is working on for you appear here, with their status and updates.
+              Requests you sent are under My requests until they become projects.
             </EmptyState>
           ) : (
             <ul className="divide-y">

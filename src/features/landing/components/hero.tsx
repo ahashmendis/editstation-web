@@ -133,7 +133,8 @@ export function Hero() {
           </div>
           <p className="hero-fade text-muted-foreground mt-5 max-w-[48ch] text-sm" style={at(600)}>
             Editors apply with a portfolio and are verified before they see any work. Clients send a
-            project without creating an account.
+            project without creating an account, and invited clients follow their projects and
+            payments online.
           </p>
         </div>
 

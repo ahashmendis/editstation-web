@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { StatusPill } from "@/components/status-pill";
+import { buttonVariants } from "@/components/ui/button";
 
 import {
   clientStatus,
@@ -6,12 +9,19 @@ import {
   formatDay,
   milestoneKindLabel,
   paymentStatus,
+  requestStatus,
 } from "../constants";
 import type { ClientMilestone } from "../schemas";
 
 /** Client-facing project status: words plus a dot (never colour alone). */
 export function ClientStatusPill({ status }: { status: string }) {
   const s = clientStatus(status);
+  return <StatusPill tone={s.tone}>{s.label}</StatusPill>;
+}
+
+/** Client-facing status of a project request. */
+export function RequestStatusPill({ status }: { status: string }) {
+  const s = requestStatus(status);
   return <StatusPill tone={s.tone}>{s.label}</StatusPill>;
 }
 
@@ -60,6 +70,25 @@ export function BankDetailsPanel({ details }: { details: string }) {
       <pre className="bg-muted rounded-md p-3 font-sans text-sm break-words whitespace-pre-wrap">
         {details}
       </pre>
+    </div>
+  );
+}
+
+/** "New project" (and optionally "My requests") buttons for client page headers and empty states. */
+export function NewProjectActions({ withRequests = true }: { withRequests?: boolean }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Link href="/client/projects/new" className={buttonVariants({ size: "sm" })}>
+        New project
+      </Link>
+      {withRequests ? (
+        <Link
+          href="/client/requests"
+          className={buttonVariants({ size: "sm", variant: "outline" })}
+        >
+          My requests
+        </Link>
+      ) : null}
     </div>
   );
 }

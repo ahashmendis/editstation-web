@@ -11,6 +11,7 @@ import {
   signInCodeFor,
   sql,
   lit,
+  openProjectAsAdmin,
   uniqueEmail,
   type AdminUser,
 } from "./support/local-stack";
@@ -169,6 +170,103 @@ test.describe("client area (C1)", () => {
     await expect(xPage).toHaveURL(/\/client\/access-ended$/);
     await expect(xPage.getByText(titleX)).toHaveCount(0);
     await xContext.close();
+  });
+
+  test("a client sends a new project; the admin sees it from the client and converts it", async ({
+    browser,
+  }) => {
+    test.setTimeout(180_000);
+    const admin = await createAdminWithTotp();
+    const suffix = Date.now();
+    const clientName = `E2E Client R ${suffix}`;
+    const client = createE2eClient(clientName);
+    const email = await inviteClientUserDirect(admin.id, client, "client-r");
+    const description = `E2E request ${suffix}: a launch film for our new product.`;
+    const projectTitle = `E2E project from request ${suffix}`;
+
+    // Client: New project from the overview; a validation error keeps the input.
+    const cContext = await browser.newContext();
+    const cPage = await cContext.newPage();
+    await clientSignIn(cPage, email);
+    await cPage.getByRole("main").getByRole("link", { name: "New project" }).click();
+    await expect(cPage).toHaveURL(/\/client\/projects\/new$/, { timeout: 30_000 });
+    await cPage.waitForLoadState("networkidle");
+    await expect(cPage.getByLabel("Type of editing")).toBeVisible({ timeout: 30_000 });
+    await expect(cPage.getByRole("textbox", { name: "Email", exact: true })).toHaveCount(0);
+    await cPage.getByLabel("Type of editing").selectOption("long_form");
+    await cPage.getByLabel("Expected deliverables (optional)").fill("One 3-minute film");
+    await cPage.getByRole("button", { name: "Send request" }).click();
+    await expect(cPage.getByText("Please fix the highlighted fields.")).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(cPage.getByLabel("Expected deliverables (optional)")).toHaveValue(
+      "One 3-minute film",
+    );
+    await cPage.getByLabel("Project description").fill(description);
+    await cPage.getByLabel("When would you like it by? (optional)").fill("2099-03-01");
+    await cPage.getByLabel("Link 1", { exact: true }).fill("https://example.com/style");
+    await cPage.getByRole("checkbox", { name: /privacy notice/ }).check();
+    await cPage.getByRole("button", { name: "Send request" }).click();
+    await expect(cPage.getByText("The studio will review your request")).toBeVisible({
+      timeout: 30_000,
+    });
+    await cPage.getByRole("link", { name: "See my requests" }).click();
+    await expect(cPage).toHaveURL(/\/client\/requests$/);
+    const request = cPage.getByTestId("client-request").filter({ hasText: description });
+    await expect(request).toBeVisible();
+    await expect(request.getByText("Received", { exact: true })).toBeVisible();
+    await expect(request.getByRole("link", { name: "Open the project" })).toHaveCount(0);
+
+    // 375px: no horizontal scroll on the new pages.
+    await cPage.setViewportSize({ width: 375, height: 812 });
+    for (const path of ["/client/projects/new", "/client/requests"]) {
+      await cPage.goto(path);
+      await expect(cPage.getByRole("heading").first()).toBeVisible();
+      await noHorizontalScroll(cPage);
+    }
+    await cPage.setViewportSize({ width: 1280, height: 800 });
+
+    // Admin: the lead is marked as coming from the client account, and converts it.
+    const adminContext = await browser.newContext();
+    const adminPage = await adminContext.newPage();
+    await adminSignIn(adminPage, admin);
+    await adminPage.goto("/admin/inquiries");
+    await expect(
+      adminPage.getByText(`From client: ${clientName} (client account)`).first(),
+    ).toBeVisible();
+    await adminPage.getByRole("link", { name: clientName }).first().click();
+    await expect(adminPage).toHaveURL(/\/admin\/inquiries\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    await expect(adminPage.getByText(description)).toBeVisible({ timeout: 30_000 });
+    await expect(
+      adminPage.getByText(`${clientName} (client account)`, { exact: true }),
+    ).toBeVisible();
+    await adminPage.waitForLoadState("networkidle");
+    await adminPage.getByLabel("Project title (optional)").fill(projectTitle);
+    await adminPage.getByLabel("Brief type").selectOption("fully_instructed");
+    await expect(adminPage.getByLabel("Client", { exact: true })).toHaveCount(0);
+    await adminPage.getByRole("button", { name: "Convert to project" }).click();
+    // Conversion plus the redirect compiles the admin project page under `next dev`: allow time.
+    await expect(adminPage).toHaveURL(/\/admin\/projects\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+    const projectId = adminPage.url().split("/").at(-1)!;
+    expect(
+      sql(`select client_id from public.project_internal where project_id = ${lit(projectId)};`),
+    ).toBe(client);
+    await adminContext.close();
+
+    // Client: accepted; once the studio opens the project it is linked and listed.
+    await cPage.goto("/client/requests");
+    await expect(request.getByText("Accepted as a project")).toBeVisible();
+    await expect(request.getByRole("link", { name: "Open the project" })).toHaveCount(0);
+    openProjectAsAdmin(admin.id, projectId);
+    await cPage.reload();
+    await request.getByRole("link", { name: "Open the project" }).click();
+    await expect(cPage).toHaveURL(new RegExp(`/client/projects/${projectId}$`), {
+      timeout: 30_000,
+    });
+    await expect(cPage.getByRole("heading", { name: projectTitle })).toBeVisible();
+    await cPage.goto("/client/projects");
+    await expect(cPage.getByRole("link", { name: projectTitle })).toBeVisible();
+    await cContext.close();
   });
 
   test("the code sign-in never creates an account and never says whether an email is invited", async ({

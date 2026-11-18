@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLIENT_STATUS_KEYS,
   PAYMENT_STATUS_KEYS,
+  REQUEST_STATUS_KEYS,
   clientStatus,
   formatAmount,
   formatDay,
@@ -10,6 +11,7 @@ import {
   isPaymentDue,
   milestoneKindLabel,
   paymentStatus,
+  requestStatus,
 } from "./constants";
 
 describe("client status labels", () => {
@@ -71,5 +73,28 @@ describe("formatting", () => {
     expect(formatDay(null)).toBeNull();
     expect(milestoneKindLabel("extra_work")).toBe("Additional work");
     expect(milestoneKindLabel("other")).toBe("Payment");
+  });
+});
+
+describe("request status labels", () => {
+  it("words every key the database mapping can return (private.client_request_status_key)", () => {
+    // Keep in step with supabase/tests/database/118_client_area_c2a.test.sql "the request status mapping".
+    expect([...REQUEST_STATUS_KEYS].sort()).toEqual(
+      ["accepted", "in_review", "not_taken_forward", "received"].sort(),
+    );
+    expect(REQUEST_STATUS_KEYS.map((k) => requestStatus(k).label)).toEqual([
+      "Received",
+      "In review",
+      "Accepted as a project",
+      "Not taken forward",
+    ]);
+  });
+
+  it("never shows a raw inquiry status, even an unknown key", () => {
+    for (const raw of ["spam", "declined", "contacted", "new", "converted", ""]) {
+      const label = requestStatus(raw).label.toLowerCase();
+      expect(label).not.toMatch(/spam|declined|contacted|converted/);
+    }
+    expect(requestStatus("spam").label).toBe("Received");
   });
 });

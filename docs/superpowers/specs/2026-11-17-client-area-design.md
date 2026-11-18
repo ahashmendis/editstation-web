@@ -52,7 +52,8 @@ still a lead and only an admin converts it.
   project page with status, updates, deliverables summary, milestones and payment status),
   admin screens (invite/revoke client users, write and publish updates, bank details setting),
   full pgTAP matrix, unit tests, e2e.
-- **C2:** submit-a-project form, messages. **C3:** client use of the video review (shared with
+- **C2:** [x] submit-a-project form (C2a, built 2026-11-18, pending review: `/client/projects/new`,
+  `/client/requests`, `client_submit_project`, `client_list_requests`); [ ] messages. **C3:** client use of the video review (shared with
   Editor Workspace Phase 2). **C4:** client emails; WhatsApp later.
 
 ## Tests (C1)
